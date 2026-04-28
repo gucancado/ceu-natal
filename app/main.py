@@ -4,15 +4,15 @@ from app.models.request import NatalChartRequest
 from app.services.chart import calcular_mapa
 
 app = FastAPI(
-    title="Céu Natal API",
-    description="Calcula o mapa astral natal a partir de nome, data, hora e local de nascimento.",
-    version="1.0.0",
+    title="Ceu Natal API",
+    description="Calcula o mapa astral natal com planetas, casas, aspectos, nodos e sintese.",
+    version="2.0.0",
 )
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "ceu-natal"}
+    return {"status": "ok", "service": "ceu-natal", "version": "2.0.0"}
 
 
 @app.post("/natal-chart")
@@ -23,6 +23,8 @@ def natal_chart(request: NatalChartRequest):
             data=request.data,
             hora=request.hora,
             local=request.local,
+            sistema_casas=request.sistema_casas or "Placidus",
+            incluir_aspectos=request.incluir_aspectos if request.incluir_aspectos is not None else True,
         )
         return JSONResponse(content=resultado)
     except ValueError as e:
