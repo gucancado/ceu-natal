@@ -1,10 +1,8 @@
-import os
 from kerykeion import AstrologicalSubjectFactory, ChartDataFactory
 from app.models.request import SISTEMAS_CASAS
 from app.utils.validators import parse_data, parse_hora, parse_local
+from app.utils.geocoder import geocode
 from app.services.formatter import formatar_mapa
-
-GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "gucancado")
 
 
 def calcular_mapa(nome: str, data: str, hora: str | None, local: str | None,
@@ -23,14 +21,15 @@ def calcular_mapa(nome: str, data: str, hora: str | None, local: str | None,
     houses_id = SISTEMAS_CASAS.get(sistema_casas, "P")
 
     if tem_local:
+        coords = geocode(cidade, nacao)
         subject = AstrologicalSubjectFactory.from_birth_data(
             name=nome,
             year=ano, month=mes, day=dia,
             hour=hora_calc, minute=min_calc,
             city=cidade, nation=nacao,
+            lat=coords["lat"], lng=coords["lng"], tz_str=coords["tz_str"],
             houses_system_identifier=houses_id,
-            online=True,
-            geonames_username=GEONAMES_USERNAME,
+            online=False,
         )
     else:
         subject = AstrologicalSubjectFactory.from_birth_data(
