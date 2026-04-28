@@ -1,74 +1,90 @@
-# 🌌 Céu Natal API
+# Ceu Natal API
 
-API REST para cálculo de mapas astrais natais. Recebe nome, data, hora e local de nascimento e retorna um JSON estruturado com posições planetárias, casas e ângulos.
+API REST para calculo de mapas astrais natais. Desenvolvida para ser consumida por agentes de IA especializados em astrologia.
 
 ## Stack
 
-- **Python 3.11**
-- **FastAPI**
-- **Kerykeion** (Swiss Ephemeris / NASA JPL)
-- **Docker**
+- **Python 3.11** + **FastAPI**
+- - **Kerykeion 5.x** com **Swiss Ephemeris** (precisao NASA JPL)
+  - - **Nominatim / GeoNames** para geocodificacao (cidade para coordenadas + timezone)
+    - - **Docker**
+     
+      - ---
 
-## Rodando localmente
+      ## URLs
 
-```bash
-# Clone o repositório
-git clone https://github.com/gucancado/ceu-natal.git
-cd ceu-natal
+      | Ambiente | URL |
+      |---|---|
+      | Producao | `https://ceu-natal-api.pu5h6p.easypanel.host` |
+      | Interno (EasyPanel) | `http://ceu-natal_api:8000` |
+      | Swagger/Docs | `https://ceu-natal-api.pu5h6p.easypanel.host/docs` |
+      | Local | `http://localhost:8000` |
 
-# Configure o .env
-cp .env.example .env
-# Edite o .env e coloque seu GEONAMES_USERNAME
+      ---
 
-# Suba com Docker
-docker-compose up --build
-```
+      ## Autenticacao
 
-A API estará disponível em `http://localhost:8000`
+      A API nao requer autenticacao - e aberta para qualquer chamada HTTP.
 
-## Endpoints
+      ---
 
-### `GET /health`
-Verifica se a API está rodando.
+      ## Endpoints
 
-### `POST /natal-chart`
-Calcula o mapa astral natal.
+      ### `GET /health`
 
-**Body:**
-```json
-{
-  "nome": "Brina Vasconcelos",
-  "data": "03/05/1987",
-  "hora": "13:47",
-  "local": "Mariana, MG"
-}
-```
+      ```json
+      { "status": "ok", "service": "ceu-natal", "version": "2.0.0" }
+      ```
 
-- `hora` e `local` são opcionais.
-- Sem `hora` ou `local`, ângulos e casas são omitidos.
+      ---
 
-**Resposta:**
-```json
-{
-  "nome": "Brina Vasconcelos",
-  "nascimento": {
-    "data": "03/05/1987",
-    "hora": "13:47",
-    "local": "Mariana, MG"
-  },
-  "planetas": {
-    "sol": { "signo": "Touro", "casa": 9, "grau": "12°44'", "retrogrado": false },
-    "lua": { "signo": "Câncer", "casa": 11, "grau": "16°29'", "retrogrado": false }
-  },
-  "angulos": {
-    "ascendente": { "signo": "Virgem", "grau": "3°41'" },
-    "meio_do_ceu": { "signo": "Gêmeos", "grau": "10°58'" },
-    "descendente": { "signo": "Peixes", "grau": "3°41'" },
-    "fundo_do_ceu": { "signo": "Sagitário", "grau": "10°58'" }
-  }
-}
-```
+      ### `POST /natal-chart`
 
-## Documentação interativa
+      Calcula o mapa astral natal completo.
 
-Acesse `http://localhost:8000/docs` para o Swagger UI.
+      **Parametros:**
+
+      | Campo | Tipo | Obrigatorio | Formato | Exemplo |
+      |---|---|---|---|---|
+      | `nome` | string | sim | Texto livre | `"Brina Vasconcelos"` |
+      | `data` | string | sim | DD/MM/YYYY | `"03/05/1987"` |
+      | `hora` | string | nao | HH:MM | `"13:47"` |
+      | `local` | string | nao | Cidade, UF ou Cidade, Pais | `"Mariana, MG"` |
+      | `sistema_casas` | string | nao | Ver tabela abaixo | `"Placidus"` (padrao) |
+      | `incluir_aspectos` | boolean | nao | true/false | `true` (padrao) |
+
+      **Sistemas de casas disponiveis:** Placidus, Whole Sign, Koch, Equal House, Regiomontanus, Campanus, Porphyry, Morinus, Topocentric.
+
+      **Comportamento com campos opcionais:**
+
+      | hora | local | Resultado |
+      |---|---|---|
+      | sim | sim | Mapa completo (planetas + casas + angulos + aspectos) |
+      | nao | sim | Planetas + aspectos - angulos e casas sao null |
+      | sim | nao | Planetas + aspectos - angulos e casas sao null |
+      | nao | nao | Apenas posicoes planetarias basicas (meio-dia UTC) |
+
+      ---
+
+      ## Campos de cada planeta
+
+      | Campo | Tipo | Descricao |
+      |---|---|---|
+      | `signo` | string | Signo zodiacal em portugues |
+      | `casa` | integer | Casa astrologica (1-12) |
+      | `grau` | string | Posicao no signo no formato grau minuto |
+      | `grau_decimal` | float | Posicao decimal no signo |
+      | `posicao_absoluta` | float | Longitude eclitica 0-360 |
+      | `retrogrado` | boolean | Se esta em movimento retrogrado |
+      | `velocidade` | float | Velocidade diaria em graus/dia |
+      | `declinacao` | float | Declinacao eclitica em graus |
+      | `elemento` | string | Fogo, Terra, Ar ou Agua |
+      | `qualidade` | string | Cardinal, Fixo ou Mutavel |
+
+      ---
+
+      ## Planetas e pontos calculados
+
+      | Grupo | Pontos |
+      |---|---|
+      | Planetas classicos | Sol, Lua, Mercurio, V
