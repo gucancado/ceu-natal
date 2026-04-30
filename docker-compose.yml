@@ -8,4 +8,9 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - MCP_SERVER_NAME=${MCP_SERVER_NAME:-ceu-natal}
+      - MCP_SERVER_VERSION=${MCP_SERVER_VERSION:-2.0.0}
+      - MCP_HOST=${MCP_HOST:-0.0.0.0}
+      - MCP_PORT=${MCP_PORT:-8000}
     restart: unless-stopped

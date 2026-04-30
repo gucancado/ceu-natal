@@ -9,7 +9,7 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 
 GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "gucancado")
-NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "ceu-natal-api/2.0")
+NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "ceu-natal-mcp/2.0")
 HTTP_TIMEOUT = 8
 
 CACHE_PATH = os.path.join(tempfile.gettempdir(), "geocoder_cache.json")
@@ -79,8 +79,7 @@ def _try_nominatim(cidade: str, nacao: str) -> Optional[tuple[float, float]]:
 def geocode(cidade: str, nacao: str) -> dict:
     """
     Resolve cidade/nação para {lat, lng, tz_str}.
-    Tenta GeoNames (HTTP direto), depois Nominatim (OSM) como fallback.
-    Cacheia resultados em /tmp/geocoder_cache.json.
+    GeoNames (HTTP direto) -> Nominatim/OSM (fallback). Cache em /tmp.
     """
     if not cidade:
         raise ValueError("Cidade obrigatória para geocodificação.")
