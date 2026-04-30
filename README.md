@@ -80,21 +80,29 @@ docker compose up --build
 Servidor sobe em `http://localhost:8000`:
 
 - `GET /health` — healthcheck (público)
+- `GET /tools` — lista as tools registradas em JSON (autenticado, útil pra debug)
 - `GET /sse` — handshake MCP via SSE (autenticado)
 - `POST /messages/` — canal de mensagens MCP (autenticado)
+
+Exemplo de inspeção rápida sem cliente MCP:
+
+```bash
+curl http://localhost:8000/tools | jq
+```
 
 ---
 
 ## Variáveis de ambiente
 
-| Variável             | Default       | Descrição                                          |
-|----------------------|---------------|----------------------------------------------------|
-| `GEONAMES_USERNAME`  | `gucancado`   | conta GeoNames para geocodificação                 |
-| `MCP_API_KEY`        | *(vazio)*     | se vazio, libera tudo (modo dev)                   |
-| `MCP_HOST`           | `0.0.0.0`     | bind                                               |
-| `MCP_PORT`           | `8000`        | porta                                              |
-| `MCP_SERVER_NAME`    | `ceu-natal`   | nome retornado em `initialize`                     |
-| `MCP_SERVER_VERSION` | `2.0.0`       | versão exposta                                     |
+| Variável                | Default                                          | Descrição                                                       |
+|-------------------------|--------------------------------------------------|-----------------------------------------------------------------|
+| `GEONAMES_USERNAME`     | `gucancado`                                      | conta GeoNames para geocodificação                              |
+| `GEOCODER_CACHE_PATH`   | `/tmp/ceu-natal-geocode-cache.json`              | caminho do cache persistente. Em Docker, montar volume em `/var/cache/ceu-natal` |
+| `MCP_API_KEY`           | *(vazio)*                                        | se vazio, libera tudo (modo dev)                                |
+| `MCP_HOST`              | `0.0.0.0`                                        | bind                                                            |
+| `MCP_PORT`              | `8000`                                           | porta                                                           |
+| `MCP_SERVER_NAME`       | `ceu-natal`                                      | nome retornado em `initialize`                                  |
+| `MCP_SERVER_VERSION`    | `2.0.0`                                          | versão exposta                                                  |
 
 ---
 

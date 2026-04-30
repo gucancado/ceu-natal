@@ -22,28 +22,33 @@ def parse_hora(hora: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
         raise ValueError(f"Hora inválida: '{hora}'. Use o formato HH:MM.") from exc
 
 
-_ESTADOS_BR = {
-    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO",
-    "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
-    "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
-}
-
-
-def parse_local(local: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+def parse_local(local: Optional[str]) -> Tuple[Optional[str], str]:
     """
-    'Cidade, UF/País' -> (cidade, nação). Inferência de país por UF brasileira.
+    'Cidade, UF/País' -> (cidade, nacao).
+
+    Usa apenas a última vírgula como separador, então cidades cujo nome
+    contém vírgula (ex: 'Washington, D.C.') são preservadas:
+      'Washington, D.C., USA' -> ('Washington, D.C.', 'USA')
+
+    Sem vírgula, nacao volta como string vazia — o geocoder decide o que fazer.
+    `None` retorna (None, "") — ausência total de local.
+    String vazia ou só espaços levanta ValueError.
     """
-    if not local:
-        return None, None
+    if local is None:
+        return None, ""
 
-    partes = [p.strip() for p in local.split(",") if p.strip()]
-    if not partes:
-        return None, None
+    if not local.strip():
+        raise ValueError("Local inválido: string vazia.")
 
-    cidade = partes[0]
-    if len(partes) >= 2:
-        segundo = partes[1].upper()
-        if segundo in _ESTADOS_BR:
-            return f"{cidade}, {partes[1]}", "BR"
-        return cidade, partes[1]
-    return cidade, "BR"
+    if "," in local:
+        cidade, nacao = local.rsplit(",", 1)
+        cidade = cidade.strip()
+        nacao = nacao.strip()
+    else:
+        cidade = local.strip()
+        nacao = ""
+
+    if not cidade:
+        raise ValueError(f"Local inválido: '{local}'.")
+
+    return cidade, nacao

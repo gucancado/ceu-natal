@@ -26,6 +26,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
 
 from app.core.aspectos import listar_tipos_aspectos
+from app.core.geocoder import GeocodingError
 from app.tools.mapa_natal import calcular_mapa_natal
 from app.tools.sinastria import calcular_sinastria
 
@@ -160,6 +161,8 @@ async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
             raise ValueError(f"Tool desconhecida: {name}")
 
         return [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
+    except GeocodingError as exc:
+        return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
     except ValueError as exc:
         return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
     except Exception as exc:  # noqa: BLE001
@@ -219,10 +222,31 @@ async def _health(_: Request) -> JSONResponse:
     })
 
 
+async def _list_tools_http(_: Request) -> JSONResponse:
+    """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
+    payload_tools = []
+    for tool in TOOLS:
+        schema = tool.inputSchema or {}
+        properties = list((schema.get("properties") or {}).keys())
+        payload_tools.append({
+            "name": tool.name,
+            "description": tool.description,
+            "required": list(schema.get("required") or []),
+            "properties": properties,
+        })
+    return JSONResponse({
+        "service": SERVER_NAME,
+        "versao": SERVER_VERSION,
+        "count": len(payload_tools),
+        "tools": payload_tools,
+    })
+
+
 app = Starlette(
     debug=False,
     routes=[
         Route("/health", endpoint=_health, methods=["GET"]),
+        Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
         Route("/sse", endpoint=_handle_sse, methods=["GET"]),
         Mount("/messages/", app=sse_transport.handle_post_message),
     ],
