@@ -13,4 +13,10 @@ services:
       - MCP_SERVER_VERSION=${MCP_SERVER_VERSION:-2.0.0}
       - MCP_HOST=${MCP_HOST:-0.0.0.0}
       - MCP_PORT=${MCP_PORT:-8000}
+      - GEOCODER_CACHE_PATH=${GEOCODER_CACHE_PATH:-/var/cache/ceu-natal/geocode-cache.json}
+    volumes:
+      - ceu-natal-cache:/var/cache/ceu-natal
     restart: unless-stopped
+
+volumes:
+  ceu-natal-cache:
