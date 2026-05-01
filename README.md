@@ -140,7 +140,12 @@ curl http://localhost:8000/tools | jq
 
 ---
 
-## Conectar ao Claude Desktop
+## Conectar ao Claude (web ou Desktop)
+
+Guia passo-a-passo pra usuário final em
+[docs/CONECTAR-CLAUDE-AI.md](docs/CONECTAR-CLAUDE-AI.md). Resumo abaixo.
+
+### Claude Desktop
 
 Em `claude_desktop_config.json`:
 
