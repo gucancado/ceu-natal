@@ -2,6 +2,31 @@ from datetime import datetime
 from typing import Optional, Tuple
 
 
+# Identificadores de sistemas de casas aceitos pelo Kerykeion (subset comum).
+SISTEMAS_CASAS_VALIDOS = ("P", "K", "O", "R", "C", "E", "W", "B", "M", "T")
+
+
+def validar_sistema_casas(valor: Optional[str]) -> str:
+    """Normaliza e valida o identificador de sistema de casas.
+
+    `None` → 'P' (Placidus, default). Strings fora da lista levantam ValueError
+    com mensagem listando todas as opções válidas.
+    """
+    if valor is None:
+        return "P"
+    if not isinstance(valor, str):
+        raise ValueError(
+            f"sistema_casas deve ser string ou null, recebi {type(valor).__name__}."
+        )
+    valor_norm = valor.strip().upper()
+    if valor_norm not in SISTEMAS_CASAS_VALIDOS:
+        opcoes = ", ".join(SISTEMAS_CASAS_VALIDOS)
+        raise ValueError(
+            f"sistema_casas '{valor}' inválido. Use um de: {opcoes}."
+        )
+    return valor_norm
+
+
 def parse_data(data: str) -> Tuple[int, int, int]:
     """DD/MM/YYYY -> (dia, mes, ano)."""
     try:
