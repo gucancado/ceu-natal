@@ -14,21 +14,25 @@ sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
 
 ## Tools expostas
 
+7 tools no total. Todas aceitam `sistema_casas` opcional (P=Placidus, K=Koch,
+W=Whole Sign, E=Equal, R=Regiomontanus, C=Campanus, O=Porphyrius, B=Alcabitus,
+M=Morinus, T=Topocentric — default `P`).
+
 ### `calcular_mapa_natal`
 
-Mapa natal completo com posições planetárias, casas (Placidus strict), ângulos
-(ASC, MC, DESC, FC), aspectos entre planetas, pontos sensíveis (nodos
-verdadeiros e Quíron) e síntese (elementos, qualidades, hemisférios,
-stelliums).
+Mapa natal completo com posições planetárias, casas, ângulos (ASC, MC, DESC,
+FC), aspectos entre planetas, pontos sensíveis (nodos verdadeiros e Quíron) e
+síntese (elementos, qualidades, hemisférios, stelliums).
 
 **Parâmetros:**
 
-| campo  | tipo            | obrigatório | descrição                                  |
-|--------|-----------------|-------------|--------------------------------------------|
-| `data` | `string`        | sim         | DD/MM/YYYY                                 |
-| `hora` | `string \| null`| não         | HH:MM                                      |
-| `local`| `string \| null`| não         | "Cidade, UF" (BR) ou "Cidade, País"        |
-| `nome` | `string \| null`| não         | identificador no retorno                   |
+| campo           | tipo            | obrigatório | descrição                                  |
+|-----------------|-----------------|-------------|--------------------------------------------|
+| `data`          | `string`        | sim         | DD/MM/YYYY                                 |
+| `hora`          | `string \| null`| não         | HH:MM                                      |
+| `local`         | `string \| null`| não         | "Cidade, UF" (BR) ou "Cidade, País"        |
+| `nome`          | `string \| null`| não         | identificador no retorno                   |
+| `sistema_casas` | `string \| null`| não         | identificador (P, K, W, ...). Default P.   |
 
 Sem `hora` ou `local`, retorna apenas posições por signo (sem casas/ângulos).
 
@@ -37,8 +41,38 @@ Sem `hora` ou `local`, retorna apenas posições por signo (sem casas/ângulos).
 Aspectos cruzados entre os mapas de duas pessoas e em quais casas de uma os
 planetas da outra caem. Útil para análise de relacionamento.
 
-**Parâmetros:** `pessoa_a` e `pessoa_b`, cada um com o mesmo formato de
-`calcular_mapa_natal`.
+**Parâmetros:** `pessoa_a`, `pessoa_b` (mesmo formato do `calcular_mapa_natal`)
+e `sistema_casas` opcional (aplicado nos dois mapas).
+
+### `calcular_transitos`
+
+Trânsitos planetários para uma data específica em relação a um mapa natal.
+Posições atuais, aspectos cruzados (com aplicando/separando), em qual casa
+natal cada planeta em trânsito cai, e síntese com destaque para trânsitos
+de planetas lentos (Saturno, Urano, Netuno, Plutão, Quíron) com orbe < 2°.
+
+**Parâmetros:** `natal` (mesmo formato), `data_transito` (DD/MM/YYYY,
+obrigatório), `hora_transito` (HH:MM — default 12:00 UTC), `local_transito`
+(default Greenwich/UTC), `sistema_casas`.
+
+### `calcular_progressoes`
+
+Progressões secundárias (técnica "um dia = um ano") para uma data alvo.
+Posições progredidas, aspectos progredido↔natal, destaque para Lua progredida
+(fase emocional atual, ~2.5 anos por signo) e Sol progredido (~30 anos por
+signo), com sinalização de ingressos recentes e mudanças iminentes de signo.
+
+**Parâmetros:** `natal`, `data_alvo` (DD/MM/YYYY, obrigatório), `sistema_casas`.
+
+### `calcular_mapa_composto`
+
+Mapa composto (composite chart) de duas pessoas pelo método de **midpoints** —
+o mapa da "relação como entidade". Posições compostas, ângulos (ASC e MC
+compostos quando ambos têm hora+local), aspectos internos e síntese de
+elementos. **Não retorna casas** — composto por midpoint não tem instante/local
+definidos.
+
+**Parâmetros:** `pessoa_a`, `pessoa_b` (mesmo formato), `sistema_casas`.
 
 ### `listar_aspectos_tipos`
 

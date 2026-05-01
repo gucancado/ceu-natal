@@ -27,8 +27,11 @@ from starlette.routing import Mount, Route
 
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.geocoder import GeocodingError
+from app.tools.composto import calcular_mapa_composto
 from app.tools.mapa_natal import calcular_mapa_natal
+from app.tools.progressoes import calcular_progressoes
 from app.tools.sinastria import calcular_sinastria
+from app.tools.transitos import calcular_transitos
 
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
 SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
@@ -46,10 +49,10 @@ TOOLS: list[Tool] = [
         name="calcular_mapa_natal",
         description=(
             "Calcula o mapa astral natal completo de uma pessoa. Retorna posições "
-            "planetárias, casas (Placidus strict), ângulos, aspectos entre planetas, "
-            "pontos sensíveis (nodos verdadeiros e Quíron) e síntese (elementos, "
-            "qualidades, hemisférios, stelliums). Se hora ou local forem omitidos, "
-            "retorna apenas posições por signo, sem casas nem ângulos."
+            "planetárias, casas (Placidus por padrão; sistema configurável), ângulos, "
+            "aspectos entre planetas, pontos sensíveis (nodos verdadeiros e Quíron) e "
+            "síntese (elementos, qualidades, hemisférios, stelliums). Se hora ou local "
+            "forem omitidos, retorna apenas posições por signo, sem casas nem ângulos."
         ),
         inputSchema={
             "type": "object",
@@ -70,6 +73,14 @@ TOOLS: list[Tool] = [
                 "nome": {
                     "type": ["string", "null"],
                     "description": "Nome da pessoa (apenas para identificação). Opcional.",
+                },
+                "sistema_casas": {
+                    "type": ["string", "null"],
+                    "description": (
+                        "Sistema de casas: P (Placidus, default), K (Koch), W (Whole "
+                        "Sign), E (Equal), R (Regiomontanus), C (Campanus), O "
+                        "(Porphyrius), B (Alcabitus), M (Morinus), T (Topocentric)."
+                    ),
                 },
             },
         },
@@ -106,6 +117,124 @@ TOOLS: list[Tool] = [
                         "nome":  {"type": ["string", "null"]},
                     },
                 },
+                "sistema_casas": {
+                    "type": ["string", "null"],
+                    "description": (
+                        "Sistema de casas usado nos dois mapas. Default Placidus. "
+                        "Identificadores: P, K, W, E, R, C, O, B, M, T."
+                    ),
+                },
+            },
+        },
+    ),
+    Tool(
+        name="calcular_transitos",
+        description=(
+            "Calcula os trânsitos planetários para uma data específica em relação "
+            "a um mapa natal. Retorna a posição atual dos planetas, aspectos entre "
+            "planetas em trânsito e planetas natais (com aplicando/separando), em "
+            "qual casa natal cada planeta em trânsito está caindo, e síntese com "
+            "destaque para trânsitos de planetas lentos (Saturno, Urano, Netuno, "
+            "Plutão e Quíron) com orbe < 2°."
+        ),
+        inputSchema={
+            "type": "object",
+            "required": ["natal", "data_transito"],
+            "properties": {
+                "natal": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string"},
+                        "hora":  {"type": ["string", "null"]},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "data_transito": {
+                    "type": "string",
+                    "description": "Data do trânsito no formato DD/MM/YYYY.",
+                },
+                "hora_transito": {
+                    "type": ["string", "null"],
+                    "description": "Hora HH:MM. Default 12:00 UTC se omitida.",
+                },
+                "local_transito": {
+                    "type": ["string", "null"],
+                    "description": "Local de observação. Default Greenwich/UTC.",
+                },
+                "sistema_casas": {"type": ["string", "null"]},
+            },
+        },
+    ),
+    Tool(
+        name="calcular_progressoes",
+        description=(
+            "Calcula as progressões secundárias (técnica 'um dia = um ano') de um "
+            "mapa natal para uma data alvo. Retorna posições progredidas, aspectos "
+            "entre planetas progredidos e natais, destaque para Lua progredida (fase "
+            "emocional atual, ~2.5 anos por signo), Sol progredido (capítulo de vida, "
+            "~30 anos por signo), e sinaliza ingressos recentes e mudanças iminentes "
+            "de signo."
+        ),
+        inputSchema={
+            "type": "object",
+            "required": ["natal", "data_alvo"],
+            "properties": {
+                "natal": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string"},
+                        "hora":  {"type": ["string", "null"]},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "data_alvo": {
+                    "type": "string",
+                    "description": "Data alvo (presente/futuro) no formato DD/MM/YYYY.",
+                },
+                "sistema_casas": {"type": ["string", "null"]},
+            },
+        },
+    ),
+    Tool(
+        name="calcular_mapa_composto",
+        description=(
+            "Calcula o mapa composto (composite chart) de duas pessoas pelo método "
+            "de midpoints — o mapa da 'relação como entidade'. Diferente da sinastria, "
+            "que compara dois mapas, o composto cria um terceiro mapa a partir dos "
+            "pontos médios das longitudes planetárias. Retorna posições compostas, "
+            "ângulos (ASC e MC compostos quando ambas as pessoas têm hora+local), "
+            "aspectos internos do composto e síntese de elementos. Não retorna casas "
+            "— composto por midpoint não tem instante/local definidos."
+        ),
+        inputSchema={
+            "type": "object",
+            "required": ["pessoa_a", "pessoa_b"],
+            "properties": {
+                "pessoa_a": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string"},
+                        "hora":  {"type": ["string", "null"]},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "pessoa_b": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string"},
+                        "hora":  {"type": ["string", "null"]},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "sistema_casas": {"type": ["string", "null"]},
             },
         },
     ),
@@ -147,11 +276,33 @@ async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
                 hora=arguments.get("hora"),
                 local=arguments.get("local"),
                 nome=arguments.get("nome"),
+                sistema_casas=arguments.get("sistema_casas"),
             )
         elif name == "calcular_sinastria":
             resultado = calcular_sinastria(
                 pessoa_a=arguments["pessoa_a"],
                 pessoa_b=arguments["pessoa_b"],
+                sistema_casas=arguments.get("sistema_casas"),
+            )
+        elif name == "calcular_transitos":
+            resultado = calcular_transitos(
+                natal=arguments["natal"],
+                data_transito=arguments["data_transito"],
+                hora_transito=arguments.get("hora_transito"),
+                local_transito=arguments.get("local_transito"),
+                sistema_casas=arguments.get("sistema_casas"),
+            )
+        elif name == "calcular_progressoes":
+            resultado = calcular_progressoes(
+                natal=arguments["natal"],
+                data_alvo=arguments["data_alvo"],
+                sistema_casas=arguments.get("sistema_casas"),
+            )
+        elif name == "calcular_mapa_composto":
+            resultado = calcular_mapa_composto(
+                pessoa_a=arguments["pessoa_a"],
+                pessoa_b=arguments["pessoa_b"],
+                sistema_casas=arguments.get("sistema_casas"),
             )
         elif name == "listar_aspectos_tipos":
             resultado = {"aspectos": listar_tipos_aspectos()}

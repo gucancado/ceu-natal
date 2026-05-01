@@ -1,3 +1,5 @@
+import pytest
+
 from app.tools.mapa_natal import calcular_mapa_natal
 from tests.conftest import BH
 
@@ -84,3 +86,32 @@ def test_planetas_tem_campos_enriquecidos():
     for campo in ("signo", "casa", "grau", "grau_decimal", "posicao_absoluta",
                   "retrogrado", "velocidade", "declinacao", "elemento", "qualidade"):
         assert campo in sol, f"Campo '{campo}' ausente em planetas.sol"
+
+
+def test_sistema_casas_default_placidus():
+    mapa = _gustavo()
+    assert mapa["sistema_casas"] == "Placidus"
+
+
+def test_sistema_casas_whole_sign_casa_1_em_zero_grau():
+    """Whole Sign: cúspide da casa 1 sempre em 0° do signo do ASC."""
+    mapa = calcular_mapa_natal(
+        data="24/07/1989", hora="09:20", local="Belo Horizonte, MG", nome="Gustavo",
+        sistema_casas="W",
+        lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
+    )
+    assert mapa["sistema_casas"] == "Whole Sign"
+    casa_1 = mapa["casas"]["casa_1"]
+    # No Whole Sign, casa_1 começa em 0° do signo do ASC — grau_decimal == 0.0
+    assert casa_1["grau_decimal"] == pytest.approx(0.0, abs=1e-3)
+    # E o signo da casa 1 == signo do ASC
+    assert casa_1["signo"] == mapa["angulos"]["ascendente"]["signo"]
+
+
+def test_sistema_casas_invalido_levanta_value_error():
+    with pytest.raises(ValueError):
+        calcular_mapa_natal(
+            data="24/07/1989", hora="09:20", local="Belo Horizonte, MG",
+            sistema_casas="Z",
+            lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
+        )

@@ -1,6 +1,12 @@
 import pytest
 
-from app.core.validators import parse_data, parse_hora, parse_local
+from app.core.validators import (
+    SISTEMAS_CASAS_VALIDOS,
+    parse_data,
+    parse_hora,
+    parse_local,
+    validar_sistema_casas,
+)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -77,3 +83,39 @@ class TestParseHora:
     def test_hora_invalida(self):
         with pytest.raises(ValueError):
             parse_hora("25:00")
+
+
+# ─────────────────────────────────────────────────────────────
+# validar_sistema_casas
+# ─────────────────────────────────────────────────────────────
+class TestValidarSistemaCasas:
+    def test_none_retorna_placidus(self):
+        assert validar_sistema_casas(None) == "P"
+
+    def test_identificador_valido_minusculo(self):
+        assert validar_sistema_casas("w") == "W"
+
+    def test_identificador_valido_maiusculo(self):
+        assert validar_sistema_casas("K") == "K"
+
+    def test_todos_os_validos_passam(self):
+        for ident in SISTEMAS_CASAS_VALIDOS:
+            assert validar_sistema_casas(ident) == ident
+
+    def test_invalido_levanta_value_error(self):
+        with pytest.raises(ValueError, match="sistema_casas"):
+            validar_sistema_casas("Z")
+
+    def test_mensagem_lista_opcoes_validas(self):
+        with pytest.raises(ValueError) as exc_info:
+            validar_sistema_casas("XYZ")
+        msg = str(exc_info.value)
+        for ident in SISTEMAS_CASAS_VALIDOS:
+            assert ident in msg
+
+    def test_tipo_errado_levanta_value_error(self):
+        with pytest.raises(ValueError):
+            validar_sistema_casas(123)  # type: ignore[arg-type]
+
+    def test_strip_whitespace(self):
+        assert validar_sistema_casas("  P  ") == "P"

@@ -5,6 +5,7 @@ from app.core.formatter import (
     formatar_angulo,
     formatar_casas,
     formatar_planeta,
+    nome_sistema_casas,
     planeta_pt,
 )
 from app.core.kerykeion import (
@@ -14,7 +15,12 @@ from app.core.kerykeion import (
     pontos_sensiveis_iter,
 )
 from app.core.sintese import calcular_sintese
-from app.core.validators import parse_data, parse_hora, parse_local
+from app.core.validators import (
+    parse_data,
+    parse_hora,
+    parse_local,
+    validar_sistema_casas,
+)
 
 
 def calcular_mapa_natal(
@@ -22,6 +28,7 @@ def calcular_mapa_natal(
     hora: Optional[str] = None,
     local: Optional[str] = None,
     nome: Optional[str] = None,
+    sistema_casas: Optional[str] = None,
     *,
     lat: Optional[float] = None,
     lng: Optional[float] = None,
@@ -35,6 +42,7 @@ def calcular_mapa_natal(
     dia, mes, ano = parse_data(data)
     h, m = parse_hora(hora)
     cidade, nacao = parse_local(local)
+    sistema_id = validar_sistema_casas(sistema_casas)
 
     tem_hora = h is not None
     tem_local = cidade is not None or (lat is not None and lng is not None)
@@ -48,7 +56,7 @@ def calcular_mapa_natal(
         hora=hora_calc, minuto=min_calc,
         cidade=cidade, nacao=nacao,
         lat=lat, lng=lng, tz_str=tz_str,
-        sistema_casas="P",
+        sistema_casas=sistema_id,
     )
 
     incluir_casas = tem_hora and tem_local
@@ -92,7 +100,7 @@ def calcular_mapa_natal(
     resultado = {
         "nome": nome,
         "nascimento": {"data": data, "hora": hora, "local": local},
-        "sistema_casas": "Placidus",
+        "sistema_casas": nome_sistema_casas(sistema_id),
         "planetas": planetas_dict,
         "angulos": angulos,
         "casas": casas,

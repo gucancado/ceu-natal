@@ -30,6 +30,16 @@ CASAS_NOMES = [
     "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
 ]
 
+SISTEMAS_CASAS_NOMES = {
+    "P": "Placidus", "K": "Koch", "O": "Porphyrius", "R": "Regiomontanus",
+    "C": "Campanus", "E": "Equal", "W": "Whole Sign", "B": "Alcabitus",
+    "M": "Morinus", "T": "Topocentric",
+}
+
+
+def nome_sistema_casas(identificador: str) -> str:
+    return SISTEMAS_CASAS_NOMES.get(identificador, identificador)
+
 
 def signo_pt(s):
     return SIGNOS_PT.get(s, s)

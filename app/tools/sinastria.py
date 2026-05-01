@@ -9,10 +9,15 @@ from app.core.kerykeion import (
     pontos_sensiveis_iter,
 )
 from app.core.sintese import sintese_sinastria
-from app.core.validators import parse_data, parse_hora, parse_local
+from app.core.validators import (
+    parse_data,
+    parse_hora,
+    parse_local,
+    validar_sistema_casas,
+)
 
 
-def _build_subject(pessoa: dict):
+def _build_subject(pessoa: dict, sistema_id: str = "P"):
     data = pessoa.get("data")
     if not data:
         raise ValueError("Campo 'data' obrigatório em cada pessoa.")
@@ -39,7 +44,7 @@ def _build_subject(pessoa: dict):
         lat=pessoa.get("lat"),
         lng=pessoa.get("lng"),
         tz_str=pessoa.get("tz_str"),
-        sistema_casas="P",
+        sistema_casas=sistema_id,
     )
     return subject, nome, tem_hora, tem_local
 
@@ -90,9 +95,14 @@ def _ativacoes(planetas_da_pessoa: list[dict], subject_outro,
     return saida
 
 
-def calcular_sinastria(pessoa_a: dict, pessoa_b: dict) -> dict:
-    subject_a, nome_a, _, tem_local_a = _build_subject(pessoa_a)
-    subject_b, nome_b, _, tem_local_b = _build_subject(pessoa_b)
+def calcular_sinastria(
+    pessoa_a: dict,
+    pessoa_b: dict,
+    sistema_casas: Optional[str] = None,
+) -> dict:
+    sistema_id = validar_sistema_casas(sistema_casas)
+    subject_a, nome_a, _, tem_local_a = _build_subject(pessoa_a, sistema_id)
+    subject_b, nome_b, _, tem_local_b = _build_subject(pessoa_b, sistema_id)
 
     pontos_a = _coletar_pontos(subject_a)
     pontos_b = _coletar_pontos(subject_b)
