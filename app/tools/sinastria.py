@@ -66,13 +66,16 @@ def _coletar_pontos(subject) -> list[dict]:
     return pontos
 
 
-def _resumo_pessoa(subject, nome: str, tem_local: bool) -> dict:
+def _resumo_pessoa(subject, nome: str, tem_local: bool, tem_hora: bool) -> dict:
     asc = subject.first_house
+    # Asc só é confiável quando a pessoa tem hora E local — sem hora, o
+    # cálculo cai num default de 12:00 que produz um Asc arbitrário.
+    asc_confiavel = tem_local and tem_hora
     return {
         "nome": nome,
         "sol": signo_pt(subject.sun.sign),
         "lua": signo_pt(subject.moon.sign),
-        "asc": signo_pt(asc.sign) if tem_local else None,
+        "asc": signo_pt(asc.sign) if asc_confiavel else None,
     }
 
 
@@ -101,8 +104,8 @@ def calcular_sinastria(
     sistema_casas: Optional[str] = None,
 ) -> dict:
     sistema_id = validar_sistema_casas(sistema_casas)
-    subject_a, nome_a, _, tem_local_a = _build_subject(pessoa_a, sistema_id)
-    subject_b, nome_b, _, tem_local_b = _build_subject(pessoa_b, sistema_id)
+    subject_a, nome_a, tem_hora_a, tem_local_a = _build_subject(pessoa_a, sistema_id)
+    subject_b, nome_b, tem_hora_b, tem_local_b = _build_subject(pessoa_b, sistema_id)
 
     pontos_a = _coletar_pontos(subject_a)
     pontos_b = _coletar_pontos(subject_b)
@@ -116,8 +119,8 @@ def calcular_sinastria(
         ativacoes.extend(_ativacoes(pontos_b, subject_a, nome_b, nome_a))
 
     return {
-        "pessoa_a": _resumo_pessoa(subject_a, nome_a, tem_local_a),
-        "pessoa_b": _resumo_pessoa(subject_b, nome_b, tem_local_b),
+        "pessoa_a": _resumo_pessoa(subject_a, nome_a, tem_local_a, tem_hora_a),
+        "pessoa_b": _resumo_pessoa(subject_b, nome_b, tem_local_b, tem_hora_b),
         "aspectos_sinastria": aspectos,
         "ativacoes_de_casas": ativacoes,
         "sintese_sinastria": sintese_sinastria(aspectos),

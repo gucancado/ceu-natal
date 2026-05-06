@@ -61,6 +61,20 @@ def test_estrutura_completa_para_alvo_2026():
     assert "planetas_progredidos" in res
     assert "aspectos_progredido_natal" in res
     assert "destaques" in res
+    assert "metodo" in res
+
+
+def test_campo_metodo_explicita_progressao_e_mc():
+    """Agentes interpretadores precisam saber qual técnica foi usada,
+    sobretudo pra ponderar a precisão do MC progredido."""
+    res = calcular_progressoes(natal=GUSTAVO, data_alvo="30/04/2026")
+    metodo = res["metodo"]
+    assert metodo["progressao"] == "secundaria"
+    assert "regra" in metodo
+    assert "mc" in metodo
+    assert "nota" in metodo
+    # Sanity: nota não-vazia e descritiva
+    assert len(metodo["nota"]) > 30
 
 
 def test_planetas_progredidos_tem_lua_e_sol():
