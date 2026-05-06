@@ -10,6 +10,14 @@ sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
 - Autenticação: API key via header `Authorization: Bearer ...` ou query `?api_key=...`
 - Produção: `https://ceu-natal-api.pu5h6p.easypanel.host`
 
+> **Para LLMs / agentes que vão propor mudanças:** leia
+> [CLAUDE.md](CLAUDE.md) primeiro. Anti-padrões mais comuns:
+> não é mais REST FastAPI (foi migrado para MCP), tools de trânsitos /
+> progressões / composto **já existem** em `app/tools/`, e o deploy no
+> EasyPanel é manual. Verifique o estado real com
+> `curl https://ceu-natal-api.pu5h6p.easypanel.host/tools` antes de
+> planejar trabalho novo.
+
 ---
 
 ## Tools expostas
