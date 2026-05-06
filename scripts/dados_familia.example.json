@@ -1,0 +1,22 @@
+{
+  "_referencia": "pessoa_a",
+  "_sequencia_estabilidade": [
+    "pessoa_a", "pessoa_b", "pessoa_c", "pessoa_d", "pessoa_e",
+    "pessoa_f", "pessoa_g", "pessoa_h", "pessoa_a", "pessoa_f"
+  ],
+  "pessoa_a": {
+    "nome": "Pessoa A",
+    "data": "01/01/1990",
+    "hora": "12:00",
+    "local": "Belo Horizonte, MG"
+  },
+  "pessoa_b": {
+    "nome": "Pessoa B",
+    "data": "15/06/1985",
+    "local": "São Paulo, SP"
+  },
+  "pessoa_c": {
+    "nome": "Pessoa C",
+    "data": "20/03/2000"
+  }
+}
