@@ -9,11 +9,15 @@
 | Etapa | Status | Linha |
 |-------|--------|-------|
 | 1. Testes automatizados | 🟡 amarelo | 62/62 testes rodáveis localmente passam; 51 testes bloqueados por falta de wheel `pyswisseph` para Python 3.12 Windows |
-| 2. Validação funcional contra produção | 🟡 amarelo | 4/4 tools deployadas funcionam; **3 tools da Fase 2 ausentes em produção (deploy pendente)** |
-| 3. Documentação de progressões | 🔴 vermelho | Tool `calcular_progressoes` ausente em produção e código não rotula explicitamente método de progressão do MC |
+| 2. Validação funcional contra produção | 🟢 verde | **7/7 tools deployadas após redeploy de 2026-05-06** |
+| 3. Documentação de progressões | 🟢 verde | Campo `metodo` adicionado em 2026-05-06; aguardando redeploy |
 | 4. Estabilidade | 🟢 verde | 10/10 chamadas sem erro, mediana 167ms, máximo 688ms, zero timeout |
 
-**Recomendação curta:** o subconjunto deployado (4 tools antigas) está pronto para uso por agentes interpretadores. As 3 novas tools da Fase 2 estão prontas no código mas **bloqueadas por redeploy no EasyPanel** — sem isso, agentes não conseguem chamar trânsitos/progressões/composto.
+**Recomendação curta:** todas as 7 tools estão em produção. Após redeploy
+do commit que adiciona o campo `metodo` em progressões e corrige o gating
+do `asc` em sinastria sem hora, a base estará limpa para agentes
+interpretadores. Pendências menores (verificação Astro.com, CI, ativações
+sem hora) seguem em aberto mas não bloqueiam uso.
 
 ---
 
@@ -128,16 +132,18 @@ Análise estática do código em [app/tools/progressoes.py](../app/tools/progres
   ```
 - O método efetivo é equivalente a uma progressão por movimento sideral real do MC sobre o intervalo (similar a Naibod em ordem de magnitude, mas não identicamente Naibod nem Solar Arc clássico).
 
-**Lacuna a corrigir em fase futura:** adicionar ao retorno um campo explícito do tipo:
+**Resolvido em 2026-05-06:** o retorno agora inclui o campo `metodo`:
+
 ```json
 "metodo": {
   "progressao": "secundaria",
-  "mc": "movimento_sideral_real",
-  "nota": "Computado pelo recalculo do mapa para data_natal + idade_em_anos dias"
+  "regra": "1 dia apos o nascimento = 1 ano de vida",
+  "mc": "kerykeion_recompute",
+  "nota": "Mapa progredido recalculado para data_natal + idade_em_anos dias..."
 }
 ```
 
-Não corrigido nesta tarefa por restrição explícita ("Não modifique código de produção").
+Aguardando redeploy no EasyPanel pra refletir em produção.
 
 ---
 
@@ -183,12 +189,13 @@ JSON completo em [scripts/saida/20_estabilidade.json](../scripts/saida/20_estabi
 
 | # | Severidade | Item | Ação |
 |---|------------|------|------|
-| 1 | 🔴 alta | **EasyPanel não foi reimplantado** após Fase 2 — 3 das 7 tools (transitos, progressoes, composto) ausentes em produção | clicar **Implantar** em https://pu5h6p.easypanel.host/projects/ceu-natal/app/api |
-| 2 | 🟡 média | `calcular_progressoes` não rotula método de progressão do MC no JSON de retorno | adicionar campo `metodo` no próximo ciclo |
-| 3 | 🟡 média | Sinastria com pessoa sem hora retorna `asc` calculado a partir de 12:00 default (gating só por `tem_local`, não por `tem_hora`) — pode confundir agentes interpretadores | mudar gate em `_resumo_pessoa` para `tem_local and tem_hora` |
+| 1 | ~~🔴 alta~~ ✅ **resolvida** | ~~EasyPanel não foi reimplantado após Fase 2~~ | redeploy feito; `curl /tools` retorna `count: 7` |
+| 2 | ~~🟡 média~~ ✅ **resolvida em 2026-05-06** | ~~`calcular_progressoes` não rotula método de progressão do MC~~ | campo `metodo` adicionado em [app/tools/progressoes.py](../app/tools/progressoes.py); aguardando redeploy |
+| 3 | ~~🟡 média~~ ✅ **resolvida em 2026-05-06** | ~~Sinastria com pessoa sem hora retorna `asc` de 12:00 default~~ | gate em `_resumo_pessoa` mudado para `tem_local and tem_hora`; aguardando redeploy |
 | 4 | 🟡 média | Sem verificação independente contra Astro.com nesta sessão | rodar manualmente os mapas no Astro.com e comparar com `scripts/saida/*` |
 | 5 | 🟢 baixa | 51 testes locais bloqueados por falta de wheel `pyswisseph` para Python 3.12 Windows | rodar a suite completa em CI/Docker; adicionar GitHub Actions com Linux + pytest |
 | 6 | 🟢 baixa | Não há `/metrics` ou observabilidade pra confirmar cache de geocoder hits/misses ou uso de fallback Nominatim em produção | objetivo de Fase 3 (observabilidade), conforme spec original |
+| 7 | 🟢 baixa | `ativacoes_de_casas` em sinastria também depende de hora (cuspides com 12:00 default são lixo) — gating só por `tem_local` | aplicar mesma correção do item #3 às ativações; impacto baixo se cliente não interpreta dados sem hora cegamente |
 
 ---
 

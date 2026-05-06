@@ -212,6 +212,20 @@ def calcular_progressoes(
         },
         "data_alvo": data_alvo,
         "idade_aproximada": idade_aproximada,
+        "metodo": {
+            "progressao": "secundaria",
+            "regra": "1 dia apos o nascimento = 1 ano de vida",
+            "mc": "kerykeion_recompute",
+            "nota": (
+                "Mapa progredido recalculado para data_natal + idade_em_anos "
+                "dias no local natal. O MC e demais cuspides resultam da "
+                "recomputacao do AstrologicalSubject pelo Kerykeion para esse "
+                "datetime — equivalente em ordem de magnitude a Naibod, mas "
+                "nao identico a Naibod nem a Solar Arc classicos. Use o campo "
+                "para que agentes interpretadores ponderem a precisao do MC "
+                "progredido em analises de transicoes."
+            ),
+        },
         "planetas_progredidos": planetas_progredidos,
         "aspectos_progredido_natal": aspectos,
         "destaques": _destaques(planetas_progredidos, subject_p),
