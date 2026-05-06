@@ -7,6 +7,12 @@ __pycache__/
 dist/
 build/
 .venv/
+.venv-*/
 venv/
 .claude/
 .pytest_cache/
+
+# Validação contém dados pessoais (datas/locais de nascimento)
+# — manter local, não publicar
+scripts/saida/
+scripts/dados_familia.json
