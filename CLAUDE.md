@@ -50,9 +50,9 @@ Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
 |------|---------|---------------------|
 | `calcular_mapa_natal` | [app/tools/mapa_natal.py](app/tools/mapa_natal.py) | ✅ deployada |
 | `calcular_sinastria` | [app/tools/sinastria.py](app/tools/sinastria.py) | ✅ deployada |
-| `calcular_transitos` | [app/tools/transitos.py](app/tools/transitos.py) | ⏳ aguardando deploy |
-| `calcular_progressoes` | [app/tools/progressoes.py](app/tools/progressoes.py) | ⏳ aguardando deploy |
-| `calcular_mapa_composto` | [app/tools/composto.py](app/tools/composto.py) | ⏳ aguardando deploy |
+| `calcular_transitos` | [app/tools/transitos.py](app/tools/transitos.py) | ✅ deployada |
+| `calcular_progressoes` | [app/tools/progressoes.py](app/tools/progressoes.py) | ✅ deployada |
+| `calcular_mapa_composto` | [app/tools/composto.py](app/tools/composto.py) | ✅ deployada |
 | `listar_aspectos_tipos` | inline em [app/server.py](app/server.py) | ✅ deployada |
 | `healthcheck` | inline em [app/server.py](app/server.py) | ✅ deployada |
 
@@ -64,6 +64,15 @@ curl -s https://ceu-natal-api.pu5h6p.easypanel.host/tools | jq '.tools[].name'
 
 Ou, se um cliente MCP estiver conectado, listar as tools via protocolo.
 
+A coluna "Status em produção" pode ser sincronizada com a produção rodando
+`python .github/scripts/sync_tools_status.py` — o script compara `/tools`
+com a tabela acima e reescreve as células que mudaram (não comita nada
+por conta própria). Existe também um workflow preparado em
+`.github/workflows/sync-tools-status.yml` (não habilitado por padrão)
+que roda esse script em cron diário e auto-comita quando há drift; para
+ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
+`workflow`.
+
 ---
 
 ## Estado atual (verificável)
@@ -72,11 +81,10 @@ Ou, se um cliente MCP estiver conectado, listar as tools via protocolo.
 - **Deploy não é automático** — push pra `main` não publica em produção.
   É necessário clicar **Implantar** em
   https://pu5h6p.easypanel.host/projects/ceu-natal/app/api
-- **Diferença atual entre `main` e produção:** as 3 tools da Fase 2
-  (`calcular_transitos`, `calcular_progressoes`, `calcular_mapa_composto`)
-  estão em `main` desde o commit `8aa5c1e` mas ainda não foram
-  reimplantadas. Antes de planejar trabalho novo nessas tools, vale
-  pedir o redeploy.
+- **Estado verificado em runtime:** confira a tabela "Status em produção"
+  acima (sincronizada diariamente pelo workflow) ou rode `curl /tools`.
+  Se o número de tools deployadas for diferente do número em
+  `app/tools/`, há drift entre `main` e produção — peça redeploy.
 - **Auth:** modo aberto (`MCP_API_KEY=` vazia em produção). Decisão
   consciente — Claude.ai web só aceita OAuth para conector custom, e
   ainda não implementamos OAuth no servidor.
