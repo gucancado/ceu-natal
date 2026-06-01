@@ -8,14 +8,14 @@ sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
 - Transporte: **SSE** sobre HTTP (servidor remoto multi-cliente)
 - Protocolo: MCP 2024-11-05
 - Autenticação: API key via header `Authorization: Bearer ...` ou query `?api_key=...`
-- Produção: `https://ceu-natal-api.pu5h6p.easypanel.host`
+- Produção: `https://astrologia-mcp.gustavocancado.com.br`
 
 > **Para LLMs / agentes que vão propor mudanças:** leia
 > [CLAUDE.md](CLAUDE.md) primeiro. Anti-padrões mais comuns:
 > não é mais REST FastAPI (foi migrado para MCP), tools de trânsitos /
 > progressões / composto **já existem** em `app/tools/`, e o deploy no
-> EasyPanel é manual. Verifique o estado real com
-> `curl https://ceu-natal-api.pu5h6p.easypanel.host/tools` antes de
+> Coolify é manual. Verifique o estado real com
+> `curl https://astrologia-mcp.gustavocancado.com.br/tools` antes de
 > planejar trabalho novo.
 
 ---
@@ -161,7 +161,7 @@ Em `claude_desktop_config.json`:
 {
   "mcpServers": {
     "ceu-natal": {
-      "url": "https://ceu-natal-api.pu5h6p.easypanel.host/sse",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/sse",
       "headers": {
         "Authorization": "Bearer SEU_MCP_API_KEY"
       }
@@ -179,7 +179,7 @@ omitido.
 
 No nó **MCP Client** do n8n:
 
-- **Endpoint URL:** `https://ceu-natal-api.pu5h6p.easypanel.host/sse`
+- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/sse`
 - **Authentication:** Header Auth → `Authorization: Bearer SEU_MCP_API_KEY`
 
 ---

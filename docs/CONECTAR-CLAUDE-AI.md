@@ -32,7 +32,7 @@ final).
 | Campo | Valor |
 |-------|-------|
 | **Nome** | `ceu-natal` |
-| **URL** | `https://ceu-natal-api.pu5h6p.easypanel.host/sse` |
+| **URL** | `https://astrologia-mcp.gustavocancado.com.br/sse` |
 
 Clicar em **Adicionar** / **Add**.
 
@@ -120,7 +120,7 @@ Se você está no Free ou prefere o Claude Desktop:
 {
   "mcpServers": {
     "ceu-natal": {
-      "url": "https://ceu-natal-api.pu5h6p.easypanel.host/sse"
+      "url": "https://astrologia-mcp.gustavocancado.com.br/sse"
     }
   }
 }
@@ -138,7 +138,7 @@ Se você está no Free ou prefere o Claude Desktop:
 
 - Verifica se o conector está **habilitado** na conversa (ícone de
   ferramentas/🔧 antes de mandar a mensagem).
-- Confirma que a URL é exatamente `https://ceu-natal-api.pu5h6p.easypanel.host/sse`
+- Confirma que a URL é exatamente `https://astrologia-mcp.gustavocancado.com.br/sse`
   (sem espaços, sem barra no final).
 
 ### Erro de geocodificação ("Não foi possível geocodificar...")
@@ -157,8 +157,8 @@ Cola no chat: `chame healthcheck do ceu-natal`. Se der erro, me avisa
 Se quiser bater diretamente no servidor:
 
 ```bash
-curl https://ceu-natal-api.pu5h6p.easypanel.host/health
-curl https://ceu-natal-api.pu5h6p.easypanel.host/tools
+curl https://astrologia-mcp.gustavocancado.com.br/health
+curl https://astrologia-mcp.gustavocancado.com.br/tools
 ```
 
 `/health` é público; `/tools` lista os schemas das 7 ferramentas.
