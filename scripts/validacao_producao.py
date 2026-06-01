@@ -19,7 +19,7 @@ from pathlib import Path
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 
-URL = "https://ceu-natal-api.pu5h6p.easypanel.host/sse"
+URL = "https://astrologia-mcp.gustavocancado.com.br/sse"
 OUT_DIR = Path("scripts/saida")
 DADOS_PATH = Path("scripts/dados_familia.json")
 DADOS_EXEMPLO = Path("scripts/dados_familia.example.json")

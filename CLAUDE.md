@@ -15,7 +15,7 @@ Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
 - Kerykeion 5.x (Swiss Ephemeris) para cálculo astrológico
 - GeoNames + Nominatim com cache persistente para geocodificação
 
-**URL produção:** https://ceu-natal-api.pu5h6p.easypanel.host
+**URL produção:** https://astrologia-mcp.gustavocancado.com.br
 
 **Endpoints HTTP:**
 
@@ -59,7 +59,7 @@ Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
 **Como verificar quais tools estão deployadas agora:**
 
 ```bash
-curl -s https://ceu-natal-api.pu5h6p.easypanel.host/tools | jq '.tools[].name'
+curl -s https://astrologia-mcp.gustavocancado.com.br/tools | jq '.tools[].name'
 ```
 
 Ou, se um cliente MCP estiver conectado, listar as tools via protocolo.
@@ -79,8 +79,18 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
 
 - **Branch ativa:** `main`
 - **Deploy não é automático** — push pra `main` não publica em produção.
-  É necessário clicar **Implantar** em
-  https://pu5h6p.easypanel.host/projects/ceu-natal/app/api
+  Disparar deploy via API do Coolify (servidor `monstro-de-meleca`,
+  projeto `astrologia`, app uuid `ejbfwl0yfego72kk5n2us1gh`):
+
+  ```bash
+  curl -X POST \
+    -H "Authorization: Bearer $COOLIFY_TOKEN" \
+    "http://5.78.199.192:8000/api/v1/deploy?uuid=ejbfwl0yfego72kk5n2us1gh"
+  ```
+
+  Ou pela UI do Coolify em http://5.78.199.192:8000 → projeto
+  `astrologia` → app `ceu-natal` → **Deploy**. Token e mais detalhes em
+  `~/.claude/CLAUDE.md`.
 - **Estado verificado em runtime:** confira a tabela "Status em produção"
   acima (sincronizada diariamente pelo workflow) ou rode `curl /tools`.
   Se o número de tools deployadas for diferente do número em
@@ -128,7 +138,7 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
    ambiente; suite completa exige Linux + pyswisseph compilado)
 3. Commit em `main` (projeto pessoal — sem PR formal)
 4. Push para `origin/main`
-5. **Clicar Implantar no EasyPanel** (deploy manual)
+5. **Disparar deploy no Coolify** (manual — via API ou UI, ver seção "Estado atual" acima)
 6. Validar com `curl /health` e `curl /tools`
 7. Atualizar `docs/validacao.md` se for mudança que afete contrato
    ou estabilidade

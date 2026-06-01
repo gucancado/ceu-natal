@@ -2,7 +2,8 @@
 
 **Data:** 2026-05-01
 **Branch:** `main` @ `1466114`
-**URL produção:** https://ceu-natal-api.pu5h6p.easypanel.host
+**URL produção:** https://astrologia-mcp.gustavocancado.com.br
+(à época da validação: `https://ceu-natal-api.pu5h6p.easypanel.host` — migrado pra Coolify em 2026-05-12)
 
 ## Sumário executivo
 

@@ -22,7 +22,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-PROD_URL = os.environ.get("PROD_URL", "https://ceu-natal-api.pu5h6p.easypanel.host")
+PROD_URL = os.environ.get("PROD_URL", "https://astrologia-mcp.gustavocancado.com.br")
 CLAUDE_MD = Path("CLAUDE.md")
 
 DEPLOYED_MARK = "✅ deployada"
