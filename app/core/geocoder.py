@@ -76,6 +76,16 @@ def _throttle_nominatim() -> None:
         _last_nominatim = time.monotonic()
 
 
+def _log_geocode(cidade: str, nacao: str, source: str, cache_hit: bool) -> None:
+    logger.info(json.dumps({
+        "event": "geocode",
+        "cidade": cidade,
+        "nacao": nacao,
+        "source": source,
+        "cache_hit": cache_hit,
+    }, ensure_ascii=False))
+
+
 def _load_cache() -> dict:
     global _cache, _cache_loaded
     with _cache_lock:
@@ -191,11 +201,15 @@ def geocode(cidade: str, nacao: str) -> dict:
 
     cache = _load_cache()
     if cache_key in cache:
+        _log_geocode(cidade, nacao, source="cache", cache_hit=True)
         return cache[cache_key]
 
     geonames_result = _try_geonames(cidade, nacao)
-    nominatim_result = None if geonames_result else _try_nominatim(cidade, nacao)
-    coords = geonames_result or nominatim_result
+    if geonames_result:
+        coords, source = geonames_result, "geonames"
+    else:
+        nominatim_result = _try_nominatim(cidade, nacao)
+        coords, source = nominatim_result, "nominatim"
 
     if coords is None:
         # Diferenciar "todos os provedores indisponíveis" vs "cidade não encontrada"
@@ -218,4 +232,5 @@ def geocode(cidade: str, nacao: str) -> dict:
     with _cache_lock:
         cache[cache_key] = resultado
         _save_cache()
+    _log_geocode(cidade, nacao, source=source, cache_hit=False)
     return resultado
