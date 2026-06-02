@@ -21,7 +21,7 @@ Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
 
 | Path | Tipo | Descrição |
 |------|------|-----------|
-| `/mcp` | POST/GET | endpoint MCP Streamable HTTP (recomendado) |
+| `/mcp/` | POST/GET | endpoint MCP Streamable HTTP (recomendado; use barra final — `/mcp` redireciona 307) |
 | `/sse` | GET | handshake MCP via SSE (legado — em descontinuação) |
 | `/messages/` | POST | canal de mensagens SSE (legado) |
 | `/health` | GET | healthcheck (público) |
