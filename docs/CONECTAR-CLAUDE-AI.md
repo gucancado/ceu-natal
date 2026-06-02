@@ -32,7 +32,11 @@ final).
 | Campo | Valor |
 |-------|-------|
 | **Nome** | `ceu-natal` |
-| **URL** | `https://astrologia-mcp.gustavocancado.com.br/sse` |
+| **URL** | `https://astrologia-mcp.gustavocancado.com.br/mcp` |
+
+> **Endpoint recomendado:** `/mcp` (Streamable HTTP, protocolo MCP ≥ 2025-03-26).
+> O endpoint antigo `/sse` continua funcionando temporariamente para clientes
+> legados, mas será descontinuado — prefira `/mcp`.
 
 Clicar em **Adicionar** / **Add**.
 
@@ -120,7 +124,7 @@ Se você está no Free ou prefere o Claude Desktop:
 {
   "mcpServers": {
     "ceu-natal": {
-      "url": "https://astrologia-mcp.gustavocancado.com.br/sse"
+      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp"
     }
   }
 }
@@ -138,7 +142,7 @@ Se você está no Free ou prefere o Claude Desktop:
 
 - Verifica se o conector está **habilitado** na conversa (ícone de
   ferramentas/🔧 antes de mandar a mensagem).
-- Confirma que a URL é exatamente `https://astrologia-mcp.gustavocancado.com.br/sse`
+- Confirma que a URL é exatamente `https://astrologia-mcp.gustavocancado.com.br/mcp`
   (sem espaços, sem barra no final).
 
 ### Erro de geocodificação ("Não foi possível geocodificar...")
