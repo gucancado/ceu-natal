@@ -3,6 +3,7 @@ import logging
 import os
 import tempfile
 import threading
+import time
 import urllib.parse
 import urllib.request
 from typing import Optional, Tuple
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "gucancado")
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "ceu-natal-mcp/2.0")
 HTTP_TIMEOUT = 8
+# Nominatim/OSM exige no máximo 1 req/s. Serializamos as chamadas.
+_NOMINATIM_MIN_INTERVAL = float(os.getenv("NOMINATIM_MIN_INTERVAL_S", "1.0"))
 
 CACHE_PATH = os.getenv(
     "GEOCODER_CACHE_PATH",
@@ -57,6 +60,30 @@ _tf = TimezoneFinder()
 _cache_lock = threading.Lock()
 _cache: dict = {}
 _cache_loaded = False
+
+_nominatim_lock = threading.Lock()
+_last_nominatim = 0.0
+
+
+def _throttle_nominatim() -> None:
+    """Garante intervalo mínimo entre chamadas ao Nominatim (política OSM ≤ 1 req/s)."""
+    global _last_nominatim
+    # Serializa intencionalmente: N chamadas concorrentes ao Nominatim ficam ~interval apart (política OSM).
+    with _nominatim_lock:
+        espera = _NOMINATIM_MIN_INTERVAL - (time.monotonic() - _last_nominatim)
+        if espera > 0:
+            time.sleep(espera)
+        _last_nominatim = time.monotonic()
+
+
+def _log_geocode(cidade: str, nacao: str, source: str, cache_hit: bool) -> None:
+    logger.info(json.dumps({
+        "event": "geocode",
+        "cidade": cidade,
+        "nacao": nacao,
+        "source": source,
+        "cache_hit": cache_hit,
+    }, ensure_ascii=False))
 
 
 def _load_cache() -> dict:
@@ -144,6 +171,7 @@ def _try_geonames(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
 
 
 def _try_nominatim(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
+    _throttle_nominatim()
     try:
         geolocator = Nominatim(user_agent=NOMINATIM_USER_AGENT, timeout=HTTP_TIMEOUT)
         location = geolocator.geocode(_build_query(cidade, nacao),
@@ -173,11 +201,15 @@ def geocode(cidade: str, nacao: str) -> dict:
 
     cache = _load_cache()
     if cache_key in cache:
+        _log_geocode(cidade, nacao, source="cache", cache_hit=True)
         return cache[cache_key]
 
     geonames_result = _try_geonames(cidade, nacao)
-    nominatim_result = None if geonames_result else _try_nominatim(cidade, nacao)
-    coords = geonames_result or nominatim_result
+    if geonames_result:
+        coords, source = geonames_result, "geonames"
+    else:
+        nominatim_result = _try_nominatim(cidade, nacao)
+        coords, source = nominatim_result, "nominatim"
 
     if coords is None:
         # Diferenciar "todos os provedores indisponíveis" vs "cidade não encontrada"
@@ -200,4 +232,5 @@ def geocode(cidade: str, nacao: str) -> dict:
     with _cache_lock:
         cache[cache_key] = resultado
         _save_cache()
+    _log_geocode(cidade, nacao, source=source, cache_hit=False)
     return resultado

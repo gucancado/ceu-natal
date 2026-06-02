@@ -138,3 +138,82 @@ class TestCountryISO:
     def test_desconhecido_retorna_none(self, geocoder):
         assert geocoder._country_iso("Vulcano") is None
         assert geocoder._country_iso("") is None
+
+
+# ─────────────────────────────────────────────────────────────
+# Rate-limit do Nominatim (≤ 1 req/s por padrão)
+# ─────────────────────────────────────────────────────────────
+class TestThrottleNominatim:
+    def test_segunda_chamada_imediata_dorme(self, geocoder, monkeypatch):
+        dormidas = []
+        monkeypatch.setattr(geocoder.time, "sleep", lambda s: dormidas.append(s))
+        # relógio que avança 0.0s entre leituras → segunda chamada precisa esperar
+        monkeypatch.setattr(geocoder.time, "monotonic", lambda: 100.0)
+        geocoder._last_nominatim = 0.0
+
+        geocoder._throttle_nominatim()  # primeira: marca o relógio, não dorme
+        geocoder._throttle_nominatim()  # segunda: gap = 0 → dorme ~intervalo
+
+        assert len(dormidas) == 1
+        assert dormidas[0] == pytest.approx(geocoder._NOMINATIM_MIN_INTERVAL)
+
+    def test_apos_intervalo_nao_dorme(self, geocoder, monkeypatch):
+        dormidas = []
+        monkeypatch.setattr(geocoder.time, "sleep", lambda s: dormidas.append(s))
+        relogio = {"t": 100.0}
+        monkeypatch.setattr(geocoder.time, "monotonic", lambda: relogio["t"])
+        geocoder._last_nominatim = 0.0
+
+        geocoder._throttle_nominatim()      # marca t=100
+        relogio["t"] = 100.0 + geocoder._NOMINATIM_MIN_INTERVAL + 0.1
+        geocoder._throttle_nominatim()      # já passou o intervalo → não dorme
+
+        assert dormidas == []
+
+
+# ─────────────────────────────────────────────────────────────
+# Log estruturado de resolução (telemetria)
+# ─────────────────────────────────────────────────────────────
+import json as _json
+
+
+class TestLogResolucao:
+    def _eventos(self, caplog):
+        eventos = []
+        for rec in caplog.records:
+            try:
+                obj = _json.loads(rec.getMessage())
+            except (ValueError, TypeError):
+                continue
+            if obj.get("event") == "geocode":
+                eventos.append(obj)
+        return eventos
+
+    def test_loga_fonte_geonames(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: (-19.92, -43.94))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "America/Sao_Paulo")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Belo Horizonte", "MG")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["source"] == "geonames"
+        assert eventos[-1]["cache_hit"] is False
+
+    def test_loga_cache_hit_na_segunda(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: (-19.92, -43.94))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "America/Sao_Paulo")
+        geocoder.geocode("Belo Horizonte", "MG")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Belo Horizonte", "MG")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["cache_hit"] is True
+        assert eventos[-1]["source"] == "cache"
+
+    def test_loga_fonte_nominatim_no_fallback(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: None)
+        monkeypatch.setattr(geocoder, "_try_nominatim", lambda c, n: (38.72, -9.13))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "Europe/Lisbon")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Lisboa", "Portugal")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["source"] == "nominatim"
+        assert eventos[-1]["cache_hit"] is False

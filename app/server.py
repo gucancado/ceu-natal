@@ -2,21 +2,33 @@
 Servidor MCP do céu-natal: expõe tools de astrologia via SSE sobre HTTP.
 
 Endpoints:
-  GET  /sse        — abre o canal SSE (handshake MCP)
-  POST /messages/  — recebe as mensagens do cliente MCP
+  GET  /sse        — abre o canal SSE (handshake MCP, legado)
+  POST /messages/  — canal de mensagens SSE
+  POST /mcp        — Streamable HTTP (protocolo MCP >= 2025-03-26)
   GET  /health     — healthcheck público (sem auth)
 
 Autenticação: header `Authorization: Bearer <key>` ou query `?api_key=<key>`.
 Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
+
+Variáveis de ambiente opcionais:
+  MCP_ALLOWED_HOSTS — hosts permitidos no Streamable HTTP (anti-DNS rebinding),
+                      separados por vírgula. Vazio = sem validação de host.
 """
+import contextlib
 import json
 import logging
 import os
+import time
+from collections.abc import AsyncIterator
 from typing import Any
+
+import anyio
 
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.types import Tool, TextContent
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from mcp.server.streamable_http import TransportSecuritySettings
+from mcp.types import Tool, ToolAnnotations, TextContent, CallToolResult
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -36,9 +48,47 @@ from app.tools.transitos import calcular_transitos
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
 SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
 API_KEY = os.getenv("MCP_API_KEY", "").strip()
+# Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
+# Vazio = sem validação (modo dev / proxy reverso confiável).
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+
+# Annotations compartilhadas:
+# • tools de cálculo astrológico — somente leitura, idempotentes, podem
+#   acionar geocodificação externa (openWorldHint=True).
+# • tools puramente locais (healthcheck, listar_aspectos_tipos) não chamam
+#   nada externo (openWorldHint=False).
+_ANOTACOES_CALCULO = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
+_ANOTACOES_LOCAL = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
+
+
+def _log_tool_call(tool: str, status: str, duration_ms: float) -> None:
+    logger.info(json.dumps({
+        "event": "tool_call",
+        "tool": tool,
+        "status": status,
+        "duration_ms": duration_ms,
+    }, ensure_ascii=False))
+
+
+def _resultado_erro(mensagem: str) -> CallToolResult:
+    return CallToolResult(
+        content=[TextContent(type="text", text=json.dumps({"erro": mensagem}, ensure_ascii=False))],
+        isError=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────
@@ -54,6 +104,7 @@ TOOLS: list[Tool] = [
             "síntese (elementos, qualidades, hemisférios, stelliums). Se hora ou local "
             "forem omitidos, retorna apenas posições por signo, sem casas nem ângulos."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["data"],
@@ -93,6 +144,7 @@ TOOLS: list[Tool] = [
             "da outra cai, e síntese com contagem de aspectos harmônicos / tensão / "
             "neutros. Útil para análise de relacionamento."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
@@ -137,6 +189,7 @@ TOOLS: list[Tool] = [
             "destaque para trânsitos de planetas lentos (Saturno, Urano, Netuno, "
             "Plutão e Quíron) com orbe < 2°."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["natal", "data_transito"],
@@ -177,6 +230,7 @@ TOOLS: list[Tool] = [
             "~30 anos por signo), e sinaliza ingressos recentes e mudanças iminentes "
             "de signo."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["natal", "data_alvo"],
@@ -210,6 +264,7 @@ TOOLS: list[Tool] = [
             "aspectos internos do composto e síntese de elementos. Não retorna casas "
             "— composto por midpoint não tem instante/local definidos."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
@@ -245,12 +300,41 @@ TOOLS: list[Tool] = [
             "ângulos, orbes padrão (e orbes ampliados quando há luminar), e "
             "natureza (harmônico, tensão ou neutro)."
         ),
+        annotations=_ANOTACOES_LOCAL,
         inputSchema={"type": "object", "properties": {}},
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "aspectos": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "tipo":             {"type": "string"},
+                            "angulo":           {"type": "number"},
+                            "orbe_padrao":      {"type": "number"},
+                            "orbe_com_luminar": {"type": "number"},
+                            "natureza":         {"type": "string"},
+                        },
+                    },
+                },
+            },
+        },
     ),
     Tool(
         name="healthcheck",
         description="Verifica se o servidor está operacional e retorna a versão.",
+        annotations=_ANOTACOES_LOCAL,
         inputSchema={"type": "object", "properties": {}},
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "status":     {"type": "string"},
+                "versao":     {"type": "string"},
+                "transporte": {"type": "string"},
+            },
+            "required": ["status", "versao", "transporte"],
+        },
     ),
 ]
 
@@ -266,61 +350,74 @@ async def _list_tools() -> list[Tool]:
     return TOOLS
 
 
-@server.call_tool()
-async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-    logger.info("tool call: %s", name)
-    try:
-        if name == "calcular_mapa_natal":
-            resultado = calcular_mapa_natal(
-                data=arguments["data"],
-                hora=arguments.get("hora"),
-                local=arguments.get("local"),
-                nome=arguments.get("nome"),
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_sinastria":
-            resultado = calcular_sinastria(
-                pessoa_a=arguments["pessoa_a"],
-                pessoa_b=arguments["pessoa_b"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_transitos":
-            resultado = calcular_transitos(
-                natal=arguments["natal"],
-                data_transito=arguments["data_transito"],
-                hora_transito=arguments.get("hora_transito"),
-                local_transito=arguments.get("local_transito"),
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_progressoes":
-            resultado = calcular_progressoes(
-                natal=arguments["natal"],
-                data_alvo=arguments["data_alvo"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_mapa_composto":
-            resultado = calcular_mapa_composto(
-                pessoa_a=arguments["pessoa_a"],
-                pessoa_b=arguments["pessoa_b"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "listar_aspectos_tipos":
-            resultado = {"aspectos": listar_tipos_aspectos()}
-        elif name == "healthcheck":
-            resultado = {"status": "ok", "versao": SERVER_VERSION, "transporte": "sse"}
-        else:
-            raise ValueError(f"Tool desconhecida: {name}")
+def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
+    """Despacho síncrono puro. Levanta ValueError/GeocodingError; sem I/O async."""
+    if name == "calcular_mapa_natal":
+        return calcular_mapa_natal(
+            data=arguments["data"],
+            hora=arguments.get("hora"),
+            local=arguments.get("local"),
+            nome=arguments.get("nome"),
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_sinastria":
+        return calcular_sinastria(
+            pessoa_a=arguments["pessoa_a"],
+            pessoa_b=arguments["pessoa_b"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_transitos":
+        return calcular_transitos(
+            natal=arguments["natal"],
+            data_transito=arguments["data_transito"],
+            hora_transito=arguments.get("hora_transito"),
+            local_transito=arguments.get("local_transito"),
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_progressoes":
+        return calcular_progressoes(
+            natal=arguments["natal"],
+            data_alvo=arguments["data_alvo"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_mapa_composto":
+        return calcular_mapa_composto(
+            pessoa_a=arguments["pessoa_a"],
+            pessoa_b=arguments["pessoa_b"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "listar_aspectos_tipos":
+        return {"aspectos": listar_tipos_aspectos()}
+    elif name == "healthcheck":
+        return {"status": "ok", "versao": SERVER_VERSION, "transporte": "streamable-http+sse"}
+    else:
+        raise ValueError(f"Tool desconhecida: {name}")
 
-        return [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
-    except GeocodingError as exc:
-        return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
-    except ValueError as exc:
-        return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("erro inesperado em %s", name)
-        return [TextContent(type="text", text=json.dumps(
-            {"erro": "Erro interno do servidor.", "detalhe": str(exc)}, ensure_ascii=False
-        ))]
+
+@server.call_tool()
+async def _call_tool(name: str, arguments: dict[str, Any]):
+    """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
+    inicio = time.monotonic()
+    status = "ok"
+    try:
+        try:
+            resultado = await anyio.to_thread.run_sync(_dispatch, name, arguments)
+        except GeocodingError as exc:
+            status = "geocoding_error"
+            return _resultado_erro(str(exc))
+        except ValueError as exc:
+            status = "value_error"
+            return _resultado_erro(str(exc))
+        except Exception:  # noqa: BLE001
+            status = "internal_error"
+            logger.exception("erro inesperado em %s", name)
+            return _resultado_erro("Erro interno do servidor.")
+
+        conteudo = [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
+        return (conteudo, resultado)
+    finally:
+        duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
+        _log_tool_call(name, status, duracao_ms)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -350,7 +447,28 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 
 # ─────────────────────────────────────────────────────────────
-# Starlette app: SSE + /messages + /health
+# Transporte Streamable HTTP (MCP >= 2025-03-26) + lifespan
+# ─────────────────────────────────────────────────────────────
+_security = (
+    TransportSecuritySettings(allowed_hosts=ALLOWED_HOSTS)
+    if ALLOWED_HOSTS
+    else None
+)
+
+session_manager = StreamableHTTPSessionManager(
+    app=server,
+    security_settings=_security,
+)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(_app: Any) -> AsyncIterator[None]:
+    async with session_manager.run():
+        yield
+
+
+# ─────────────────────────────────────────────────────────────
+# Transporte SSE legado + /messages
 # ─────────────────────────────────────────────────────────────
 sse_transport = SseServerTransport("/messages/")
 
@@ -368,7 +486,7 @@ async def _health(_: Request) -> JSONResponse:
         "status": "ok",
         "service": SERVER_NAME,
         "versao": SERVER_VERSION,
-        "transporte": "sse",
+        "transporte": "streamable-http+sse",
         "auth_required": bool(API_KEY),
     })
 
@@ -395,11 +513,13 @@ async def _list_tools_http(_: Request) -> JSONResponse:
 
 app = Starlette(
     debug=False,
+    lifespan=lifespan,
     routes=[
         Route("/health", endpoint=_health, methods=["GET"]),
         Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
         Route("/sse", endpoint=_handle_sse, methods=["GET"]),
         Mount("/messages/", app=sse_transport.handle_post_message),
+        Mount("/mcp", app=session_manager.handle_request),
     ],
     middleware=[Middleware(APIKeyMiddleware)],
 )
