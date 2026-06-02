@@ -83,15 +83,23 @@ def test_tools_tem_annotations_read_only(monkeypatch):
 
 
 def test_tools_tem_output_schema(monkeypatch):
+    # outputSchema estrito só nas tools triviais e estáveis. Os 5 cálculos
+    # NÃO declaram outputSchema: o retorno é profundamente aninhado e tem
+    # campos nuláveis (nome/casas=None sem hora/local) que um schema rígido
+    # rejeitaria no validador do SDK, quebrando a tool. Decisão deliberada.
     _carregar_app(monkeypatch, api_key="")
     import importlib
     import app.server as s
     importlib.reload(s)
+    com_schema = {"healthcheck", "listar_aspectos_tipos"}
     for tool in s.TOOLS:
-        assert tool.outputSchema is not None, f"Tool '{tool.name}' sem outputSchema"
-        assert tool.outputSchema.get("type") == "object", (
-            f"Tool '{tool.name}': outputSchema.type != 'object'"
-        )
+        if tool.name in com_schema:
+            assert tool.outputSchema is not None, f"Tool '{tool.name}' devia ter outputSchema"
+            assert tool.outputSchema.get("type") == "object"
+        else:
+            assert tool.outputSchema is None, (
+                f"Tool de cálculo '{tool.name}' não deve ter outputSchema (campos nuláveis)"
+            )
 
 
 def test_tools_exige_auth_quando_key_configurada(monkeypatch):
