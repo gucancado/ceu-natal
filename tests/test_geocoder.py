@@ -207,3 +207,13 @@ class TestLogResolucao:
         eventos = self._eventos(caplog)
         assert eventos and eventos[-1]["cache_hit"] is True
         assert eventos[-1]["source"] == "cache"
+
+    def test_loga_fonte_nominatim_no_fallback(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: None)
+        monkeypatch.setattr(geocoder, "_try_nominatim", lambda c, n: (38.72, -9.13))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "Europe/Lisbon")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Lisboa", "Portugal")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["source"] == "nominatim"
+        assert eventos[-1]["cache_hit"] is False
