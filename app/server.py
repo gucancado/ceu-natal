@@ -12,11 +12,14 @@ Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
 import json
 import logging
 import os
+import time
 from typing import Any
+
+import anyio
 
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.types import Tool, TextContent
+from mcp.types import Tool, TextContent, CallToolResult
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -39,6 +42,22 @@ API_KEY = os.getenv("MCP_API_KEY", "").strip()
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+
+def _log_tool_call(tool: str, status: str, duration_ms: float) -> None:
+    logger.info(json.dumps({
+        "event": "tool_call",
+        "tool": tool,
+        "status": status,
+        "duration_ms": duration_ms,
+    }, ensure_ascii=False))
+
+
+def _resultado_erro(mensagem: str) -> CallToolResult:
+    return CallToolResult(
+        content=[TextContent(type="text", text=json.dumps({"erro": mensagem}, ensure_ascii=False))],
+        isError=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────
@@ -266,61 +285,74 @@ async def _list_tools() -> list[Tool]:
     return TOOLS
 
 
-@server.call_tool()
-async def _call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
-    logger.info("tool call: %s", name)
-    try:
-        if name == "calcular_mapa_natal":
-            resultado = calcular_mapa_natal(
-                data=arguments["data"],
-                hora=arguments.get("hora"),
-                local=arguments.get("local"),
-                nome=arguments.get("nome"),
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_sinastria":
-            resultado = calcular_sinastria(
-                pessoa_a=arguments["pessoa_a"],
-                pessoa_b=arguments["pessoa_b"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_transitos":
-            resultado = calcular_transitos(
-                natal=arguments["natal"],
-                data_transito=arguments["data_transito"],
-                hora_transito=arguments.get("hora_transito"),
-                local_transito=arguments.get("local_transito"),
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_progressoes":
-            resultado = calcular_progressoes(
-                natal=arguments["natal"],
-                data_alvo=arguments["data_alvo"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "calcular_mapa_composto":
-            resultado = calcular_mapa_composto(
-                pessoa_a=arguments["pessoa_a"],
-                pessoa_b=arguments["pessoa_b"],
-                sistema_casas=arguments.get("sistema_casas"),
-            )
-        elif name == "listar_aspectos_tipos":
-            resultado = {"aspectos": listar_tipos_aspectos()}
-        elif name == "healthcheck":
-            resultado = {"status": "ok", "versao": SERVER_VERSION, "transporte": "sse"}
-        else:
-            raise ValueError(f"Tool desconhecida: {name}")
+def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
+    """Despacho síncrono puro. Levanta ValueError/GeocodingError; sem I/O async."""
+    if name == "calcular_mapa_natal":
+        return calcular_mapa_natal(
+            data=arguments["data"],
+            hora=arguments.get("hora"),
+            local=arguments.get("local"),
+            nome=arguments.get("nome"),
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_sinastria":
+        return calcular_sinastria(
+            pessoa_a=arguments["pessoa_a"],
+            pessoa_b=arguments["pessoa_b"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_transitos":
+        return calcular_transitos(
+            natal=arguments["natal"],
+            data_transito=arguments["data_transito"],
+            hora_transito=arguments.get("hora_transito"),
+            local_transito=arguments.get("local_transito"),
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_progressoes":
+        return calcular_progressoes(
+            natal=arguments["natal"],
+            data_alvo=arguments["data_alvo"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_mapa_composto":
+        return calcular_mapa_composto(
+            pessoa_a=arguments["pessoa_a"],
+            pessoa_b=arguments["pessoa_b"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "listar_aspectos_tipos":
+        return {"aspectos": listar_tipos_aspectos()}
+    elif name == "healthcheck":
+        return {"status": "ok", "versao": SERVER_VERSION, "transporte": "streamable-http+sse"}
+    else:
+        raise ValueError(f"Tool desconhecida: {name}")
 
-        return [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
-    except GeocodingError as exc:
-        return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
-    except ValueError as exc:
-        return [TextContent(type="text", text=json.dumps({"erro": str(exc)}, ensure_ascii=False))]
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("erro inesperado em %s", name)
-        return [TextContent(type="text", text=json.dumps(
-            {"erro": "Erro interno do servidor.", "detalhe": str(exc)}, ensure_ascii=False
-        ))]
+
+@server.call_tool()
+async def _call_tool(name: str, arguments: dict[str, Any]):
+    """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
+    inicio = time.monotonic()
+    status = "ok"
+    try:
+        try:
+            resultado = await anyio.to_thread.run_sync(_dispatch, name, arguments)
+        except GeocodingError as exc:
+            status = "geocoding_error"
+            return _resultado_erro(str(exc))
+        except ValueError as exc:
+            status = "value_error"
+            return _resultado_erro(str(exc))
+        except Exception:  # noqa: BLE001
+            status = "internal_error"
+            logger.exception("erro inesperado em %s", name)
+            return _resultado_erro("Erro interno do servidor.")
+
+        conteudo = [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
+        return (conteudo, resultado)
+    finally:
+        duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
+        _log_tool_call(name, status, duracao_ms)
 
 
 # ─────────────────────────────────────────────────────────────

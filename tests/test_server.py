@@ -82,3 +82,67 @@ def test_tools_exige_auth_quando_key_configurada(monkeypatch):
     # Com Bearer errado → 401
     resp = client.get("/tools", headers={"Authorization": "Bearer outro"})
     assert resp.status_code == 401
+
+
+import asyncio
+import json as _json
+
+
+def test_dispatch_tool_desconhecida_levanta(monkeypatch):
+    mod = _carregar_app(monkeypatch, api_key="")
+    with pytest.raises(ValueError, match="Tool desconhecida"):
+        mod._dispatch("nao_existe", {})
+
+
+def test_call_tool_healthcheck_retorna_tupla_estruturada(monkeypatch):
+    mod = _carregar_app(monkeypatch, api_key="")
+    conteudo, estruturado = asyncio.run(mod._call_tool("healthcheck", {}))
+    assert estruturado["status"] == "ok"
+    # texto preserva acentos (ensure_ascii=False), não \uXXXX
+    assert conteudo[0].text == _json.dumps(estruturado, ensure_ascii=False)
+
+
+def test_call_tool_erro_marca_iserror_sem_vazar_detalhe(monkeypatch):
+    mod = _carregar_app(monkeypatch, api_key="")
+
+    def explode(name, arguments):
+        raise RuntimeError("segredo interno: /etc/coisa")
+    monkeypatch.setattr(mod, "_dispatch", explode)
+
+    resultado = asyncio.run(mod._call_tool("calcular_mapa_natal", {"data": "01/01/2000"}))
+    assert resultado.isError is True
+    corpo = _json.loads(resultado.content[0].text)
+    assert corpo["erro"] == "Erro interno do servidor."
+    assert "detalhe" not in corpo
+    assert "segredo interno" not in resultado.content[0].text
+
+
+def test_call_tool_value_error_marca_iserror(monkeypatch):
+    mod = _carregar_app(monkeypatch, api_key="")
+
+    def explode(name, arguments):
+        raise ValueError("data inválida")
+    monkeypatch.setattr(mod, "_dispatch", explode)
+
+    resultado = asyncio.run(mod._call_tool("calcular_mapa_natal", {"data": "x"}))
+    assert resultado.isError is True
+    assert _json.loads(resultado.content[0].text)["erro"] == "data inválida"
+
+
+def test_call_tool_emite_telemetria(monkeypatch, caplog):
+    mod = _carregar_app(monkeypatch, api_key="")
+    with caplog.at_level("INFO", logger="ceu-natal"):
+        asyncio.run(mod._call_tool("healthcheck", {}))
+    eventos = []
+    for rec in caplog.records:
+        try:
+            obj = _json.loads(rec.getMessage())
+        except (ValueError, TypeError):
+            continue
+        if obj.get("event") == "tool_call":
+            eventos.append(obj)
+    assert eventos
+    ev = eventos[-1]
+    assert ev["tool"] == "healthcheck"
+    assert ev["status"] == "ok"
+    assert isinstance(ev["duration_ms"], (int, float))
