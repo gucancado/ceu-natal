@@ -169,3 +169,41 @@ class TestThrottleNominatim:
         geocoder._throttle_nominatim()      # já passou o intervalo → não dorme
 
         assert dormidas == []
+
+
+# ─────────────────────────────────────────────────────────────
+# Log estruturado de resolução (telemetria)
+# ─────────────────────────────────────────────────────────────
+import json as _json
+
+
+class TestLogResolucao:
+    def _eventos(self, caplog):
+        eventos = []
+        for rec in caplog.records:
+            try:
+                obj = _json.loads(rec.getMessage())
+            except (ValueError, TypeError):
+                continue
+            if obj.get("event") == "geocode":
+                eventos.append(obj)
+        return eventos
+
+    def test_loga_fonte_geonames(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: (-19.92, -43.94))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "America/Sao_Paulo")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Belo Horizonte", "MG")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["source"] == "geonames"
+        assert eventos[-1]["cache_hit"] is False
+
+    def test_loga_cache_hit_na_segunda(self, geocoder, monkeypatch, caplog):
+        monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: (-19.92, -43.94))
+        monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "America/Sao_Paulo")
+        geocoder.geocode("Belo Horizonte", "MG")
+        with caplog.at_level("INFO", logger="app.core.geocoder"):
+            geocoder.geocode("Belo Horizonte", "MG")
+        eventos = self._eventos(caplog)
+        assert eventos and eventos[-1]["cache_hit"] is True
+        assert eventos[-1]["source"] == "cache"
