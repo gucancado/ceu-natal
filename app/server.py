@@ -19,7 +19,7 @@ import anyio
 
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.types import Tool, TextContent, CallToolResult
+from mcp.types import Tool, ToolAnnotations, TextContent, CallToolResult
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -42,6 +42,25 @@ API_KEY = os.getenv("MCP_API_KEY", "").strip()
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+
+# Annotations compartilhadas:
+# • tools de cálculo astrológico — somente leitura, idempotentes, podem
+#   acionar geocodificação externa (openWorldHint=True).
+# • tools puramente locais (healthcheck, listar_aspectos_tipos) não chamam
+#   nada externo (openWorldHint=False).
+_ANOTACOES_CALCULO = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=True,
+)
+_ANOTACOES_LOCAL = ToolAnnotations(
+    readOnlyHint=True,
+    destructiveHint=False,
+    idempotentHint=True,
+    openWorldHint=False,
+)
 
 
 def _log_tool_call(tool: str, status: str, duration_ms: float) -> None:
@@ -73,6 +92,7 @@ TOOLS: list[Tool] = [
             "síntese (elementos, qualidades, hemisférios, stelliums). Se hora ou local "
             "forem omitidos, retorna apenas posições por signo, sem casas nem ângulos."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["data"],
@@ -103,6 +123,21 @@ TOOLS: list[Tool] = [
                 },
             },
         },
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "nome":             {"type": "string"},
+                "nascimento":       {"type": "object"},
+                "sistema_casas":    {"type": "string"},
+                "planetas":         {"type": "object"},
+                "angulos":          {"type": "object"},
+                "casas":            {"type": "object"},
+                "aspectos":         {"type": "array"},
+                "pontos_sensiveis": {"type": "object"},
+                "sintese":          {"type": "object"},
+                "aviso":            {"type": "string"},
+            },
+        },
     ),
     Tool(
         name="calcular_sinastria",
@@ -112,6 +147,7 @@ TOOLS: list[Tool] = [
             "da outra cai, e síntese com contagem de aspectos harmônicos / tensão / "
             "neutros. Útil para análise de relacionamento."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
@@ -145,6 +181,16 @@ TOOLS: list[Tool] = [
                 },
             },
         },
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "pessoa_a":           {"type": "object"},
+                "pessoa_b":           {"type": "object"},
+                "aspectos_sinastria": {"type": "array"},
+                "ativacoes_de_casas": {"type": "object"},
+                "sintese_sinastria":  {"type": "object"},
+            },
+        },
     ),
     Tool(
         name="calcular_transitos",
@@ -156,6 +202,7 @@ TOOLS: list[Tool] = [
             "destaque para trânsitos de planetas lentos (Saturno, Urano, Netuno, "
             "Plutão e Quíron) com orbe < 2°."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["natal", "data_transito"],
@@ -185,6 +232,16 @@ TOOLS: list[Tool] = [
                 "sistema_casas": {"type": ["string", "null"]},
             },
         },
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "natal":                   {"type": "object"},
+                "transito":                {"type": "object"},
+                "planetas_em_transito":    {"type": "object"},
+                "aspectos_transito_natal": {"type": "array"},
+                "sintese":                 {"type": "object"},
+            },
+        },
     ),
     Tool(
         name="calcular_progressoes",
@@ -196,6 +253,7 @@ TOOLS: list[Tool] = [
             "~30 anos por signo), e sinaliza ingressos recentes e mudanças iminentes "
             "de signo."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["natal", "data_alvo"],
@@ -217,6 +275,17 @@ TOOLS: list[Tool] = [
                 "sistema_casas": {"type": ["string", "null"]},
             },
         },
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "natal":                    {"type": "object"},
+                "data_alvo":               {"type": "string"},
+                "idade_aproximada":        {"type": "number"},
+                "metodo":                  {"type": "object"},
+                "planetas_progredidos":    {"type": "object"},
+                "aspectos_progredido_natal": {"type": "array"},
+            },
+        },
     ),
     Tool(
         name="calcular_mapa_composto",
@@ -229,6 +298,7 @@ TOOLS: list[Tool] = [
             "aspectos internos do composto e síntese de elementos. Não retorna casas "
             "— composto por midpoint não tem instante/local definidos."
         ),
+        annotations=_ANOTACOES_CALCULO,
         inputSchema={
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
@@ -256,6 +326,20 @@ TOOLS: list[Tool] = [
                 "sistema_casas": {"type": ["string", "null"]},
             },
         },
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "pessoa_a":                   {"type": "object"},
+                "pessoa_b":                   {"type": "object"},
+                "tipo_composto":              {"type": "string"},
+                "planetas_compostos":         {"type": "object"},
+                "pontos_sensiveis_compostos": {"type": "object"},
+                "angulos_compostos":          {"type": "object"},
+                "aspectos_compostos":         {"type": "array"},
+                "casas":                      {"type": ["object", "null"]},
+                "sintese":                    {"type": "object"},
+            },
+        },
     ),
     Tool(
         name="listar_aspectos_tipos",
@@ -264,12 +348,41 @@ TOOLS: list[Tool] = [
             "ângulos, orbes padrão (e orbes ampliados quando há luminar), e "
             "natureza (harmônico, tensão ou neutro)."
         ),
+        annotations=_ANOTACOES_LOCAL,
         inputSchema={"type": "object", "properties": {}},
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "aspectos": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "tipo":             {"type": "string"},
+                            "angulo":           {"type": "number"},
+                            "orbe_padrao":      {"type": "number"},
+                            "orbe_com_luminar": {"type": "number"},
+                            "natureza":         {"type": "string"},
+                        },
+                    },
+                },
+            },
+        },
     ),
     Tool(
         name="healthcheck",
         description="Verifica se o servidor está operacional e retorna a versão.",
+        annotations=_ANOTACOES_LOCAL,
         inputSchema={"type": "object", "properties": {}},
+        outputSchema={
+            "type": "object",
+            "properties": {
+                "status":     {"type": "string"},
+                "versao":     {"type": "string"},
+                "transporte": {"type": "string"},
+            },
+            "required": ["status", "versao", "transporte"],
+        },
     ),
 ]
 
