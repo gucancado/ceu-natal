@@ -61,7 +61,30 @@ def test_tools_traz_required_e_properties(monkeypatch):
     body = TestClient(mod.app).get("/tools").json()
     mapa_natal = next(t for t in body["tools"] if t["name"] == "calcular_mapa_natal")
     assert "data" in mapa_natal["required"]
-    assert set(mapa_natal["properties"]) == {"data", "hora", "local", "nome"}
+    assert set(mapa_natal["properties"]) == {"data", "hora", "local", "nome", "sistema_casas"}
+
+
+def test_tools_tem_annotations_read_only(monkeypatch):
+    _carregar_app(monkeypatch, api_key="")
+    import importlib
+    import app.server as s
+    importlib.reload(s)
+    for tool in s.TOOLS:
+        assert tool.annotations is not None, f"Tool '{tool.name}' sem annotations"
+        assert tool.annotations.readOnlyHint is True, f"Tool '{tool.name}': readOnlyHint != True"
+        assert tool.annotations.destructiveHint is False, f"Tool '{tool.name}': destructiveHint != False"
+
+
+def test_tools_tem_output_schema(monkeypatch):
+    _carregar_app(monkeypatch, api_key="")
+    import importlib
+    import app.server as s
+    importlib.reload(s)
+    for tool in s.TOOLS:
+        assert tool.outputSchema is not None, f"Tool '{tool.name}' sem outputSchema"
+        assert tool.outputSchema.get("type") == "object", (
+            f"Tool '{tool.name}': outputSchema.type != 'object'"
+        )
 
 
 def test_tools_exige_auth_quando_key_configurada(monkeypatch):
