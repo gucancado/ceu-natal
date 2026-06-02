@@ -68,6 +68,7 @@ _last_nominatim = 0.0
 def _throttle_nominatim() -> None:
     """Garante intervalo mínimo entre chamadas ao Nominatim (política OSM ≤ 1 req/s)."""
     global _last_nominatim
+    # Serializa intencionalmente: N chamadas concorrentes ao Nominatim ficam ~interval apart (política OSM).
     with _nominatim_lock:
         espera = _NOMINATIM_MIN_INTERVAL - (time.monotonic() - _last_nominatim)
         if espera > 0:

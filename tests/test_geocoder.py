@@ -155,7 +155,7 @@ class TestThrottleNominatim:
         geocoder._throttle_nominatim()  # segunda: gap = 0 → dorme ~intervalo
 
         assert len(dormidas) == 1
-        assert dormidas[0] > 0
+        assert dormidas[0] == pytest.approx(geocoder._NOMINATIM_MIN_INTERVAL)
 
     def test_apos_intervalo_nao_dorme(self, geocoder, monkeypatch):
         dormidas = []
