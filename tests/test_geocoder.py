@@ -138,3 +138,34 @@ class TestCountryISO:
     def test_desconhecido_retorna_none(self, geocoder):
         assert geocoder._country_iso("Vulcano") is None
         assert geocoder._country_iso("") is None
+
+
+# ─────────────────────────────────────────────────────────────
+# Rate-limit do Nominatim (≤ 1 req/s por padrão)
+# ─────────────────────────────────────────────────────────────
+class TestThrottleNominatim:
+    def test_segunda_chamada_imediata_dorme(self, geocoder, monkeypatch):
+        dormidas = []
+        monkeypatch.setattr(geocoder.time, "sleep", lambda s: dormidas.append(s))
+        # relógio que avança 0.0s entre leituras → segunda chamada precisa esperar
+        monkeypatch.setattr(geocoder.time, "monotonic", lambda: 100.0)
+        geocoder._last_nominatim = 0.0
+
+        geocoder._throttle_nominatim()  # primeira: marca o relógio, não dorme
+        geocoder._throttle_nominatim()  # segunda: gap = 0 → dorme ~intervalo
+
+        assert len(dormidas) == 1
+        assert dormidas[0] > 0
+
+    def test_apos_intervalo_nao_dorme(self, geocoder, monkeypatch):
+        dormidas = []
+        monkeypatch.setattr(geocoder.time, "sleep", lambda s: dormidas.append(s))
+        relogio = {"t": 100.0}
+        monkeypatch.setattr(geocoder.time, "monotonic", lambda: relogio["t"])
+        geocoder._last_nominatim = 0.0
+
+        geocoder._throttle_nominatim()      # marca t=100
+        relogio["t"] = 100.0 + geocoder._NOMINATIM_MIN_INTERVAL + 0.1
+        geocoder._throttle_nominatim()      # já passou o intervalo → não dorme
+
+        assert dormidas == []
