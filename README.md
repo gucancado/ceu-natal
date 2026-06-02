@@ -123,8 +123,9 @@ Servidor sobe em `http://localhost:8000`:
 
 - `GET /health` — healthcheck (público)
 - `GET /tools` — lista as tools registradas em JSON (autenticado, útil pra debug)
-- `GET /sse` — handshake MCP via SSE (autenticado)
-- `POST /messages/` — canal de mensagens MCP (autenticado)
+- `POST/GET /mcp` — endpoint MCP Streamable HTTP (recomendado)
+- `GET /sse` — handshake MCP via SSE (legado, autenticado)
+- `POST /messages/` — canal de mensagens SSE (legado, autenticado)
 
 Exemplo de inspeção rápida sem cliente MCP:
 
@@ -161,7 +162,7 @@ Em `claude_desktop_config.json`:
 {
   "mcpServers": {
     "ceu-natal": {
-      "url": "https://astrologia-mcp.gustavocancado.com.br/sse",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp",
       "headers": {
         "Authorization": "Bearer SEU_MCP_API_KEY"
       }
@@ -179,7 +180,7 @@ omitido.
 
 No nó **MCP Client** do n8n:
 
-- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/sse`
+- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/mcp`
 - **Authentication:** Header Auth → `Authorization: Bearer SEU_MCP_API_KEY`
 
 ---
