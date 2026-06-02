@@ -8,12 +8,16 @@ existe pra eliminar planos baseados em premissas desatualizadas.
 ## O que é
 
 Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
-**SSE sobre HTTP**. Stack:
+**Streamable HTTP** (`/mcp/`, recomendado) com **SSE legado** (`/sse`)
+em paralelo durante grace period. Stack:
 
 - Python 3.11 + Starlette + uvicorn
-- MCP SDK (`mcp>=1.2.0`) com `SseServerTransport`
+- MCP SDK (`mcp>=1.9.0`): `StreamableHTTPSessionManager` (`/mcp/`) +
+  `SseServerTransport` (`/sse`, legado)
 - Kerykeion 5.x (Swiss Ephemeris) para cálculo astrológico
-- GeoNames + Nominatim com cache persistente para geocodificação
+- GeoNames + Nominatim (rate-limit 1 req/s) com cache persistente para geocodificação
+- Despacho de tools em threadpool (`anyio.to_thread`) — não bloqueia o event loop
+- Telemetria: log estruturado JSON por chamada (`event:"tool_call"` / `event:"geocode"`)
 
 **URL produção:** https://astrologia-mcp.gustavocancado.com.br
 
@@ -99,6 +103,9 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
 - **Auth:** modo aberto (`MCP_API_KEY=` vazia em produção). Decisão
   consciente — Claude.ai web só aceita OAuth para conector custom, e
   ainda não implementamos OAuth no servidor.
+- **`MCP_ALLOWED_HOSTS`** (env, setada em prod): hosts permitidos no
+  Streamable HTTP (anti-DNS-rebinding). Vazia = sem validação de Host.
+  Redundante atrás do Traefik (que já roteia por Host), mas defensivo.
 
 ---
 
@@ -119,13 +126,13 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
 - **Type hints:** sempre, estilo `Optional[str]`, `dict[str, Any]`
 - **Estilo:** aspas duplas, indentação 4 espaços, sem black/ruff
   configurados — manter o que já está
-- **Erros pro usuário final:** levantar `ValueError` com mensagem PT-BR
-  clara — cai no `except ValueError` do `_call_tool` em
-  [app/server.py](app/server.py) e vira `{"erro": "..."}` no retorno
-  da tool MCP
+- **Erros pro usuário final:** levantar `ValueError`/`GeocodingError` com
+  mensagem PT-BR clara — `_call_tool` em [app/server.py](app/server.py)
+  captura e retorna `CallToolResult(isError=True)` com `{"erro": "..."}`.
+  Exceção genérica vira `"Erro interno do servidor."` (sem vazar detalhe).
 - **Lógica nova:** mora em `app/core/` (cálculo) ou `app/tools/`
-  (handler MCP). Não inflar `app/server.py` — ele só registra schemas
-  e despacha
+  (handler MCP). Não inflar `app/server.py` — ele registra schemas e
+  despacha via `_dispatch` (síncrono, rodado em threadpool por `_call_tool`)
 - **Testes:** padrão `pytest`, fixtures em `tests/conftest.py`. Casos
   com Kerykeion devem passar lat/lng/tz_str diretos pra evitar
   dependência de rede
