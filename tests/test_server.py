@@ -27,7 +27,7 @@ def test_health_publico_sem_auth(monkeypatch):
     body = resp.json()
     assert body["status"] == "ok"
     assert body["service"] == "ceu-natal"
-    assert body["transporte"] == "sse"
+    assert body["transporte"] == "streamable-http+sse"
     assert body["auth_required"] is True
 
 
@@ -36,6 +36,13 @@ def test_health_sem_auth_quando_key_vazia(monkeypatch):
     client = TestClient(mod.app)
     body = client.get("/health").json()
     assert body["auth_required"] is False
+
+
+def test_mcp_rota_registrada(monkeypatch):
+    """Rota /mcp (Streamable HTTP) deve estar presente nas rotas da app."""
+    mod = _carregar_app(monkeypatch, api_key="")
+    caminhos = [getattr(r, "path", None) for r in mod.app.routes]
+    assert "/mcp" in caminhos, f"Rota /mcp não encontrada; rotas: {caminhos}"
 
 
 # ─────────────────────────────────────────────────────────────

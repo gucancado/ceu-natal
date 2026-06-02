@@ -2,23 +2,32 @@
 Servidor MCP do céu-natal: expõe tools de astrologia via SSE sobre HTTP.
 
 Endpoints:
-  GET  /sse        — abre o canal SSE (handshake MCP)
-  POST /messages/  — recebe as mensagens do cliente MCP
+  GET  /sse        — abre o canal SSE (handshake MCP, legado)
+  POST /messages/  — canal de mensagens SSE
+  POST /mcp        — Streamable HTTP (protocolo MCP >= 2025-03-26)
   GET  /health     — healthcheck público (sem auth)
 
 Autenticação: header `Authorization: Bearer <key>` ou query `?api_key=<key>`.
 Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
+
+Variáveis de ambiente opcionais:
+  MCP_ALLOWED_HOSTS — hosts permitidos no Streamable HTTP (anti-DNS rebinding),
+                      separados por vírgula. Vazio = sem validação de host.
 """
+import contextlib
 import json
 import logging
 import os
 import time
+from collections.abc import AsyncIterator
 from typing import Any
 
 import anyio
 
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from mcp.server.streamable_http import TransportSecuritySettings
 from mcp.types import Tool, ToolAnnotations, TextContent, CallToolResult
 
 from starlette.applications import Starlette
@@ -39,6 +48,9 @@ from app.tools.transitos import calcular_transitos
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
 SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
 API_KEY = os.getenv("MCP_API_KEY", "").strip()
+# Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
+# Vazio = sem validação (modo dev / proxy reverso confiável).
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -495,7 +507,28 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 
 # ─────────────────────────────────────────────────────────────
-# Starlette app: SSE + /messages + /health
+# Transporte Streamable HTTP (MCP >= 2025-03-26) + lifespan
+# ─────────────────────────────────────────────────────────────
+_security = (
+    TransportSecuritySettings(allowed_hosts=ALLOWED_HOSTS)
+    if ALLOWED_HOSTS
+    else None
+)
+
+session_manager = StreamableHTTPSessionManager(
+    app=server,
+    security_settings=_security,
+)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(_app: Any) -> AsyncIterator[None]:
+    async with session_manager.run():
+        yield
+
+
+# ─────────────────────────────────────────────────────────────
+# Transporte SSE legado + /messages
 # ─────────────────────────────────────────────────────────────
 sse_transport = SseServerTransport("/messages/")
 
@@ -513,7 +546,7 @@ async def _health(_: Request) -> JSONResponse:
         "status": "ok",
         "service": SERVER_NAME,
         "versao": SERVER_VERSION,
-        "transporte": "sse",
+        "transporte": "streamable-http+sse",
         "auth_required": bool(API_KEY),
     })
 
@@ -540,11 +573,13 @@ async def _list_tools_http(_: Request) -> JSONResponse:
 
 app = Starlette(
     debug=False,
+    lifespan=lifespan,
     routes=[
         Route("/health", endpoint=_health, methods=["GET"]),
         Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
         Route("/sse", endpoint=_handle_sse, methods=["GET"]),
         Mount("/messages/", app=sse_transport.handle_post_message),
+        Mount("/mcp", app=session_manager.handle_request),
     ],
     middleware=[Middleware(APIKeyMiddleware)],
 )
