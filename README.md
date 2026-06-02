@@ -162,7 +162,7 @@ Em `claude_desktop_config.json`:
 {
   "mcpServers": {
     "ceu-natal": {
-      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/",
       "headers": {
         "Authorization": "Bearer SEU_MCP_API_KEY"
       }
@@ -180,7 +180,7 @@ omitido.
 
 No nó **MCP Client** do n8n:
 
-- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/mcp`
+- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/mcp/`
 - **Authentication:** Header Auth → `Authorization: Bearer SEU_MCP_API_KEY`
 
 ---

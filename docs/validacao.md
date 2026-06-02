@@ -1,3 +1,30 @@
+# Relatório de validação — ceu-natal
+
+## 2026-06-02 — Boas práticas MCP (PR #1, `main` @ `df0184a`)
+
+Deploy em produção validado após merge do PR #1 (concorrência em threadpool,
+telemetria por tool, `isError`, annotations, transporte Streamable HTTP).
+
+| Checagem | Resultado |
+|----------|-----------|
+| `GET /health` | ✅ `transporte: "streamable-http+sse"`, versão 2.0.0 |
+| `GET /tools` | ✅ 7 tools |
+| `POST /mcp/` initialize | ✅ 200, `Mcp-Session-Id` presente, `serverInfo.name=ceu-natal` (SDK mcp 1.27.2) |
+| Deploy Coolify | ✅ `uuid=ejbfwl0yfego72kk5n2us1gh`, live ~105s |
+
+**Observações:**
+- ⚠️ `POST /mcp` (sem barra) responde **307 → `/mcp/`** com `Location: http://` (downgrade de
+  esquema atrás do Traefik). Use sempre a URL **com barra final** `/mcp/` ao configurar conectores.
+  Docs já atualizadas.
+- `MCP_ALLOWED_HOSTS` **não setado** → proteção anti-DNS-rebinding desligada (modo aberto, igual ao
+  SSE legado). Setar a env se quiser travar por host.
+- Telemetria estruturada (`event:"tool_call"` e `event:"geocode"`) sai nos logs do Coolify.
+- Pendente (gate humano): reconfigurar conector Claude.ai de `/sse` → `/mcp/`.
+- Suíte de servidor: 128/129 no ambiente Linux remoto (1 falha preexistente:
+  `test_data_alvo_igual_nascimento_idade_zero`).
+
+---
+
 # Relatório de validação — ceu-natal (pós Fase 2)
 
 **Data:** 2026-05-01
