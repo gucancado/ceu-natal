@@ -82,18 +82,25 @@ class TestAncoraRevolucaoSolar:
 
 
 class TestVigencia:
+    # Tolerância de 1 segundo: a saída trunca microssegundos de propósito.
     def test_solar_cobre_um_ano_tropico(self):
         inicio = datetime(2026, 7, 24, 15, 30)
         v = vigencia_solar(inicio)
         assert v["inicio"] == inicio.isoformat()
         fim = datetime.fromisoformat(v["fim_aproximado"])
-        assert abs((fim - inicio).total_seconds() / 86400.0 - ANO_TROPICO_DIAS) < 1e-6
+        assert abs((fim - inicio).total_seconds() - ANO_TROPICO_DIAS * 86400.0) <= 1.0
 
     def test_lunar_cobre_um_mes_sideral(self):
         inicio = datetime(2026, 7, 24, 15, 30)
         v = vigencia_lunar(inicio)
         fim = datetime.fromisoformat(v["fim_aproximado"])
-        assert abs((fim - inicio).total_seconds() / 86400.0 - MES_SIDERAL_DIAS) < 1e-6
+        assert abs((fim - inicio).total_seconds() - MES_SIDERAL_DIAS * 86400.0) <= 1.0
+
+    def test_saida_sem_microssegundos(self):
+        inicio = datetime(2026, 7, 24, 15, 30, 12, 345678)
+        v = vigencia_solar(inicio)
+        assert "." not in v["inicio"]
+        assert "." not in v["fim_aproximado"]
 
     def test_fim_sempre_posterior_ao_inicio(self):
         inicio = datetime(2026, 1, 1)

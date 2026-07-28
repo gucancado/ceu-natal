@@ -1,5 +1,40 @@
 # Relatório de validação — ceu-natal
 
+## 2026-07-27 — Revoluções solar e lunar (`main` @ `a9376c9`)
+
+Deploy `xqpyvmxv5ec61pifmqzp4j9x` concluído em ~110s. Duas tools novas,
+`calcular_revolucao_solar` e `calcular_revolucao_lunar`, sobre a
+`PlanetaryReturnFactory` do Kerykeion 5.12.7. Sem dependência nova.
+
+| Checagem | Resultado |
+|----------|-----------|
+| `GET /health` | ✅ versão 2.0.0, `transporte: "streamable-http+sse"` |
+| `GET /tools` | ✅ 9 tools; as duas novas com `required` correto |
+| Sol da revolução × Sol natal | ✅ **idênticos** — 121,5745° nos dois (delta 0,0") |
+| Lua da revolução × Lua natal | ✅ **idênticas** — 17,6445° nas duas (delta 0,0") |
+| Instante invariante ao local | ✅ BH e Lisboa devolvem `2026-07-24T10:47:31Z` |
+| Longitudes invariantes ao local | ✅ nenhum dos 10 planetas muda entre BH e Lisboa |
+| Ângulos variam com o local | ✅ ASC Leão 22°35' (BH) vs Libra 3°58' (Lisboa) |
+| Regentes do ASC | ✅ Leão → sol/sol; Aquário → urano (moderno) / saturno (tradicional) |
+| Erro sem hora natal | ✅ `isError`, mensagem PT-BR explicando o impacto de 12h |
+| Erro `ano` fora de 1800–2200 | ✅ `isError` |
+| Erro `local_revolucao` vazio | ✅ `isError` |
+| Borda: aniversário 01/01 | ✅ nascido 01/01/1990 → retorno em `2026-01-01T05:47:12Z` |
+| Borda: nascido 29/02 | ✅ 29/02/1988 → retorno em `2026-02-28T18:13:47Z` |
+| Revolução lunar dentro do ciclo | ✅ referência 01/07/2026 → retorno em 07/07/2026 |
+
+**Observações:**
+- A validação do Sol e da Lua é a garantia astrológica central da técnica: o
+  retorno é *definido* como o instante em que o astro reencontra sua longitude
+  natal. Bater na quarta casa decimal confirma o `swe.solcross_ut`.
+- Revolução trópica, **sem correção de precessão** — declarado no campo
+  `metodo.precessao` de todo retorno.
+- `local_revolucao` é obrigatório por decisão de design: não afeta nenhuma
+  longitude, só ângulos e casas, e um default silencioso entregaria as casas do
+  local natal a quem mudou de cidade.
+- Testes: `tests/test_periodos.py` (21 casos de borda de calendário) roda em
+  qualquer ambiente, inclusive Windows; `tests/test_revolucoes.py` exige Linux.
+
 ## 2026-06-02 — Boas práticas MCP (PR #1, `main` @ `df0184a`)
 
 Deploy em produção validado após merge do PR #1 (concorrência em threadpool,
