@@ -69,9 +69,12 @@ def vigencia(inicio: datetime, duracao_dias: float) -> dict:
     O fim é aproximado — obter o exato exigiria calcular um segundo mapa
     completo. O nome do campo na saída declara isso.
     """
+    fim = inicio + timedelta(days=duracao_dias)
     return {
-        "inicio": inicio.isoformat(),
-        "fim_aproximado": (inicio + timedelta(days=duracao_dias)).isoformat(),
+        "inicio": inicio.replace(microsecond=0).isoformat(),
+        # Microssegundos aqui seriam ruído: a duração média do ciclo já é uma
+        # aproximação de horas.
+        "fim_aproximado": fim.replace(microsecond=0).isoformat(),
     }
 
 
