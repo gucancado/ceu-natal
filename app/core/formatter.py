@@ -30,6 +30,25 @@ CASAS_NOMES = [
     "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth",
 ]
 
+# Regentes por signo, chaveados pelo nome em português (saída de `signo_pt`).
+# Guardamos as duas escolas porque a leitura do regente do ascendente numa
+# revolução muda conforme a tradição adotada — quem lê Escorpião por Marte não
+# quer receber Plutão em silêncio.
+REGENTES_SIGNO = {
+    "Aries":       {"moderno": "marte",   "tradicional": "marte"},
+    "Touro":       {"moderno": "venus",   "tradicional": "venus"},
+    "Gemeos":      {"moderno": "mercurio", "tradicional": "mercurio"},
+    "Cancer":      {"moderno": "lua",     "tradicional": "lua"},
+    "Leao":        {"moderno": "sol",     "tradicional": "sol"},
+    "Virgem":      {"moderno": "mercurio", "tradicional": "mercurio"},
+    "Libra":       {"moderno": "venus",   "tradicional": "venus"},
+    "Escorpiao":   {"moderno": "plutao",  "tradicional": "marte"},
+    "Sagitario":   {"moderno": "jupiter", "tradicional": "jupiter"},
+    "Capricornio": {"moderno": "saturno", "tradicional": "saturno"},
+    "Aquario":     {"moderno": "urano",   "tradicional": "saturno"},
+    "Peixes":      {"moderno": "netuno",  "tradicional": "jupiter"},
+}
+
 SISTEMAS_CASAS_NOMES = {
     "P": "Placidus", "K": "Koch", "O": "Porphyrius", "R": "Regiomontanus",
     "C": "Campanus", "E": "Equal", "W": "Whole Sign", "B": "Alcabitus",
@@ -55,6 +74,11 @@ def qualidade_pt(q):
 
 def planeta_pt(nome_en: str) -> str:
     return PLANETAS_NOMES_PT.get(nome_en, nome_en.lower())
+
+
+def regentes_de(signo_em_portugues: str) -> dict:
+    """Regentes moderno e tradicional de um signo. Signo desconhecido → None."""
+    return REGENTES_SIGNO.get(signo_em_portugues, {"moderno": None, "tradicional": None})
 
 
 def formatar_grau(pos: float) -> str:
