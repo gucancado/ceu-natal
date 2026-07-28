@@ -22,7 +22,7 @@ sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
 
 ## Tools expostas
 
-7 tools no total. Todas aceitam `sistema_casas` opcional (P=Placidus, K=Koch,
+9 tools no total. Todas aceitam `sistema_casas` opcional (P=Placidus, K=Koch,
 W=Whole Sign, E=Equal, R=Regiomontanus, C=Campanus, O=Porphyrius, B=Alcabitus,
 M=Morinus, T=Topocentric — default `P`).
 
@@ -81,6 +81,45 @@ elementos. **Não retorna casas** — composto por midpoint não tem instante/lo
 definidos.
 
 **Parâmetros:** `pessoa_a`, `pessoa_b` (mesmo formato), `sistema_casas`.
+
+### `calcular_revolucao_solar`
+
+Revolução solar (solar return) — o mapa do instante exato em que o Sol retorna à
+longitude eclíptica que ocupava no nascimento. Técnica de **previsão anual**: o
+mapa rege o período até a revolução seguinte. Como o ano trópico tem 365,2422
+dias, o retorno cai na véspera, no dia ou no dia seguinte ao aniversário.
+
+Retorna o mapa completo da revolução (planetas, casas, ângulos, aspectos
+internos), os aspectos revolução↔natal, a sobreposição dos dois mapas nos dois
+sentidos e destaques da leitura: ascendente da revolução com regentes moderno e
+tradicional, casa ocupada pelo Sol, planetas angulares e a Lua da revolução.
+
+**Parâmetros:**
+
+| campo             | tipo            | obrigatório | descrição                                     |
+|-------------------|-----------------|-------------|-----------------------------------------------|
+| `natal`           | `object`        | sim         | mesmo formato das outras tools; exige `hora` e `local` |
+| `ano`             | `integer`       | sim         | ano da revolução (1800–2200)                  |
+| `local_revolucao` | `string`        | sim         | onde a pessoa estará no momento do retorno    |
+| `sistema_casas`   | `string \| null`| não         | default P                                     |
+
+`local_revolucao` é obrigatório de propósito: ele **não altera nenhuma posição
+planetária** — define apenas ascendente, meio do céu e cúspides. Um default
+silencioso entregaria as casas do local natal a quem mudou de cidade, que é a
+maioria dos casos.
+
+Revolução **trópica, sem correção de precessão** (declarado no campo `metodo` do
+retorno). A hora de nascimento é obrigatória: sem ela o Sol natal erra até 0,5°,
+o que desloca o instante do retorno em até 12 horas.
+
+### `calcular_revolucao_lunar`
+
+Revolução lunar (lunar return) — mesma mecânica com a Lua, ciclo de ~27,32 dias.
+Técnica de **previsão mensal**. Devolve o primeiro retorno que ocorre a partir da
+data de referência, com destaques centrados na Lua.
+
+**Parâmetros:** `natal`, `data_referencia` (DD/MM/YYYY, obrigatório),
+`local_revolucao` (obrigatório), `sistema_casas`.
 
 ### `listar_aspectos_tipos`
 
@@ -194,24 +233,33 @@ docker compose run --rm ceu-natal pytest -v
 Os testes usam coordenadas fixas (Belo Horizonte) sem chamar o geocoder, para
 rodar sem rede.
 
+A suite completa exige Linux — `pyswisseph`, dependência transitiva do
+Kerykeion, não compila no Windows. `tests/test_periodos.py` é a exceção: não
+importa Kerykeion e roda em qualquer ambiente com `pytest tests/test_periodos.py`.
+
 ---
 
 ## Estrutura
 
 ```
 app/
-├── server.py           # entrypoint MCP (Starlette + SSE)
+├── server.py           # entrypoint MCP (Streamable HTTP + SSE legado)
 ├── core/
 │   ├── kerykeion.py    # wrapper do AstrologicalSubject
 │   ├── aspectos.py     # cálculo de aspectos com orbes do spec
 │   ├── sintese.py      # elementos, hemisférios, stelliums
-│   ├── formatter.py    # tradução PT-BR e formatação
+│   ├── formatter.py    # tradução PT-BR, formatação e regências
 │   ├── validators.py   # parse de data/hora/local
+│   ├── periodos.py     # lógica temporal das revoluções (sem Kerykeion)
+│   ├── revolucoes.py   # core compartilhado das revoluções
 │   └── geocoder.py     # GeoNames + Nominatim + cache
 └── tools/
     ├── mapa_natal.py
-    └── sinastria.py
-tests/
-├── test_mapa_natal.py
-└── test_sinastria.py
+    ├── sinastria.py
+    ├── transitos.py
+    ├── progressoes.py
+    ├── composto.py
+    ├── revolucao_solar.py
+    └── revolucao_lunar.py
+tests/                  # um arquivo por módulo de core/ e tools/
 ```

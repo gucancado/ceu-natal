@@ -206,10 +206,12 @@ devolvidos como `CallToolResult(isError=True)`:
 - janela de vigência solar e lunar;
 - validação de faixa de ano.
 
-**Rodam apenas em produção** (`tests/test_revolucoes.py`, marcados como o resto
-da suite que depende de kerykeion): estrutura do payload, invariância das
-longitudes planetárias ao trocar `local_revolucao` e variância correspondente do
-ASC — que é justamente a garantia astrológica que a técnica exige.
+**Rodam apenas em Linux** (`tests/test_revolucoes.py`, como o resto da suite que
+importa kerykeion): estrutura do payload, invariância das longitudes planetárias
+ao trocar `local_revolucao` e variância correspondente do ASC — que é justamente
+a garantia astrológica que a técnica exige. Como não há CI de testes nem Docker
+local, a verificação equivalente antes do merge é a chamada real às tools no
+servidor de produção, descrita na seção seguinte.
 
 ## Deploy e documentação
 

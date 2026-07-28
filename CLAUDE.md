@@ -58,6 +58,8 @@ em paralelo durante grace period. Stack:
 | `calcular_transitos` | [app/tools/transitos.py](app/tools/transitos.py) | ✅ deployada |
 | `calcular_progressoes` | [app/tools/progressoes.py](app/tools/progressoes.py) | ✅ deployada |
 | `calcular_mapa_composto` | [app/tools/composto.py](app/tools/composto.py) | ✅ deployada |
+| `calcular_revolucao_solar` | [app/tools/revolucao_solar.py](app/tools/revolucao_solar.py) | ✅ deployada |
+| `calcular_revolucao_lunar` | [app/tools/revolucao_lunar.py](app/tools/revolucao_lunar.py) | ✅ deployada |
 | `listar_aspectos_tipos` | inline em [app/server.py](app/server.py) | ✅ deployada |
 | `healthcheck` | inline em [app/server.py](app/server.py) | ✅ deployada |
 

@@ -42,6 +42,8 @@ from app.core.geocoder import GeocodingError
 from app.tools.composto import calcular_mapa_composto
 from app.tools.mapa_natal import calcular_mapa_natal
 from app.tools.progressoes import calcular_progressoes
+from app.tools.revolucao_lunar import calcular_revolucao_lunar
+from app.tools.revolucao_solar import calcular_revolucao_solar
 from app.tools.sinastria import calcular_sinastria
 from app.tools.transitos import calcular_transitos
 
@@ -294,6 +296,98 @@ TOOLS: list[Tool] = [
         },
     ),
     Tool(
+        name="calcular_revolucao_solar",
+        description=(
+            "Calcula a revolução solar (solar return) de um ano — o mapa do instante "
+            "exato em que o Sol retorna à longitude que ocupava no nascimento, técnica "
+            "de previsão anual. Rege o período até a revolução seguinte. Retorna o mapa "
+            "completo da revolução (planetas, casas, ângulos, aspectos internos), os "
+            "aspectos entre a revolução e o mapa natal, a sobreposição dos dois mapas e "
+            "destaques da leitura: ascendente da revolução e seus regentes, casa ocupada "
+            "pelo Sol e planetas angulares. Exige hora e local de nascimento. O parâmetro "
+            "local_revolucao é obrigatório e define ascendente, meio do céu e casas — as "
+            "posições planetárias são as mesmas em qualquer lugar do mundo."
+        ),
+        annotations=_ANOTACOES_CALCULO,
+        inputSchema={
+            "type": "object",
+            "required": ["natal", "ano", "local_revolucao"],
+            "properties": {
+                "natal": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string", "description": "DD/MM/YYYY."},
+                        "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "ano": {
+                    "type": "integer",
+                    "description": (
+                        "Ano da revolução (1800–2200). A revolução do ano X começa no "
+                        "aniversário desse ano e vai até o aniversário seguinte — para "
+                        "saber qual rege hoje, use o ano do último aniversário."
+                    ),
+                },
+                "local_revolucao": {
+                    "type": "string",
+                    "description": (
+                        "Cidade e UF/país onde a pessoa estará no momento do retorno "
+                        "(ex: 'Lisboa, Portugal'). Obrigatório — muda apenas os ângulos "
+                        "e as casas, nunca as posições planetárias."
+                    ),
+                },
+                "sistema_casas": {"type": ["string", "null"]},
+            },
+        },
+    ),
+    Tool(
+        name="calcular_revolucao_lunar",
+        description=(
+            "Calcula a revolução lunar (lunar return) — o mapa do instante exato em que "
+            "a Lua retorna à longitude que ocupava no nascimento, técnica de previsão "
+            "mensal com ciclo de ~27,3 dias. Retorna o primeiro retorno lunar a partir da "
+            "data de referência informada, com mapa completo, aspectos com o natal, "
+            "sobreposição dos dois mapas e destaques centrados na Lua: casa que ela ocupa, "
+            "ascendente da revolução e seus regentes, planetas angulares. Exige hora e "
+            "local de nascimento. O parâmetro local_revolucao é obrigatório."
+        ),
+        annotations=_ANOTACOES_CALCULO,
+        inputSchema={
+            "type": "object",
+            "required": ["natal", "data_referencia", "local_revolucao"],
+            "properties": {
+                "natal": {
+                    "type": "object",
+                    "required": ["data"],
+                    "properties": {
+                        "data":  {"type": "string", "description": "DD/MM/YYYY."},
+                        "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
+                        "local": {"type": ["string", "null"]},
+                        "nome":  {"type": ["string", "null"]},
+                    },
+                },
+                "data_referencia": {
+                    "type": "string",
+                    "description": (
+                        "Data DD/MM/YYYY a partir da qual buscar o retorno. Devolve o "
+                        "primeiro que ocorrer nessa data ou depois dela."
+                    ),
+                },
+                "local_revolucao": {
+                    "type": "string",
+                    "description": (
+                        "Cidade e UF/país onde a pessoa estará no momento do retorno. "
+                        "Obrigatório — muda apenas os ângulos e as casas."
+                    ),
+                },
+                "sistema_casas": {"type": ["string", "null"]},
+            },
+        },
+    ),
+    Tool(
         name="listar_aspectos_tipos",
         description=(
             "Retorna os tipos de aspectos suportados pelo servidor com seus "
@@ -384,6 +478,20 @@ def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
         return calcular_mapa_composto(
             pessoa_a=arguments["pessoa_a"],
             pessoa_b=arguments["pessoa_b"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_revolucao_solar":
+        return calcular_revolucao_solar(
+            natal=arguments["natal"],
+            ano=arguments["ano"],
+            local_revolucao=arguments["local_revolucao"],
+            sistema_casas=arguments.get("sistema_casas"),
+        )
+    elif name == "calcular_revolucao_lunar":
+        return calcular_revolucao_lunar(
+            natal=arguments["natal"],
+            data_referencia=arguments["data_referencia"],
+            local_revolucao=arguments["local_revolucao"],
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "listar_aspectos_tipos":
