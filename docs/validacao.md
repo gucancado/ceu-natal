@@ -23,6 +23,45 @@ crítico do mesmo agente.
 Testes: 30 casos em `tests/test_periodos.py` (rodam no Windows), incluindo
 `ciclo_anterior` e o gate de ano vs. nascimento.
 
+### Incidente de deploy — `mcp` 2.0.0
+
+O primeiro deploy destas correções **falhou**, e não por causa do código:
+
+```
+File "/app/app/server.py", line 456, in <module>
+    @server.list_tools()
+AttributeError: 'Server' object has no attribute 'list_tools'
+```
+
+`requirements.txt` trazia `mcp>=1.9.0` sem teto de major. O SDK 2.0.0 foi
+publicado no PyPI em **28/07/2026**, um dia depois do deploy anterior, e removeu
+a API de decorators do `Server`. Como o Coolify resolve as dependências do zero a
+cada build, o mesmo commit que funcionava passou a falhar sem nenhuma alteração
+nossa. O Coolify detectou o container unhealthy e fez rollback automático —
+produção seguiu no ar durante todo o episódio.
+
+Correção: tetos de major em todos os pacotes sem pin exato
+(`mcp>=1.28.1,<2.0.0` e afins). Verificado que `mcp` 1.28.1 e 1.29.0 mantêm
+`Server.list_tools` e `Server.call_tool`. Registrado como regra em `CLAUDE.md`.
+Migrar para `mcp` 2.x fica como tarefa própria.
+
+### Revalidação após o deploy corrigido
+
+| Item | Resultado |
+|---|---|
+| `ano: 1850` para nascido em 1989 | ✅ `isError` — "ano 1850 é anterior ao nascimento (1989)" |
+| `vigencia` com offset | ✅ `2026-07-24T10:47:31+00:00` → `2027-07-24T16:36:17+00:00` |
+| `duracao_dias` + `nota` | ✅ `365.2422` |
+| `destaques` com shape idêntico nas duas tools | ✅ mesmas 5 chaves |
+| `luminar_principal` | ✅ `"sol"` na solar, `"lua"` na lunar |
+| Aspecto `definicional` | ✅ exatamente 1 em cada, no luminar correto |
+| `ciclo_em_curso` com `data_referencia` = hoje | ✅ referência 29/07 → retorno 04/08, ciclo em curso desde 07/07 |
+| `orbe_exato` em `listar_aspectos_tipos` | ✅ `0.5` |
+| Notas acentuadas | ✅ |
+| Gate de `local` natal | ✅ `isError` |
+| **Regressão: Sol da RS × Sol natal** | ✅ 121,5745 nos dois |
+| **Regressão: Lua da RL × Lua natal** | ✅ 17,6445 nas duas |
+
 ## 2026-07-27 — Revoluções solar e lunar (`main` @ `a9376c9`)
 
 Deploy `xqpyvmxv5ec61pifmqzp4j9x` concluído em ~110s. Duas tools novas,
