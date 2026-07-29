@@ -5,7 +5,7 @@ Isolado de propósito: `pyswisseph` não compila no Windows (não há toolchain 
 e não há Docker local, então tudo que importa Kerykeion só roda em Linux. As
 bordas de calendário moram aqui, onde podem ser testadas em qualquer ambiente.
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Duração média dos ciclos, em dias.
 ANO_TROPICO_DIAS = 365.2422
@@ -22,9 +22,20 @@ ANO_MAXIMO = 2200
 # para o do ano seguinte.
 FOLGA_ANCORA_DIAS = 3
 
+NOTA_FIM_APROXIMADO = (
+    "fim_aproximado_utc = inicio + duração média do ciclo, não a revolução "
+    "seguinte calculada de fato. Erro típico de 20 a 30 minutos."
+)
 
-def validar_ano_revolucao(ano) -> int:
-    """Valida o ano pedido para a revolução solar."""
+
+def validar_ano_revolucao(ano, ano_nascimento=None) -> int:
+    """
+    Valida o ano pedido para a revolução solar.
+
+    `ano_nascimento`, quando informado, barra anos anteriores ao nascimento —
+    sem isso a tool devolveria alegremente uma "revolução" décadas antes de a
+    pessoa existir.
+    """
     if isinstance(ano, bool) or not isinstance(ano, int):
         raise ValueError(
             f"ano deve ser um número inteiro, recebi {type(ano).__name__}."
@@ -32,6 +43,11 @@ def validar_ano_revolucao(ano) -> int:
     if ano < ANO_MINIMO or ano > ANO_MAXIMO:
         raise ValueError(
             f"ano {ano} fora da faixa suportada ({ANO_MINIMO}–{ANO_MAXIMO})."
+        )
+    if ano_nascimento is not None and ano < ano_nascimento:
+        raise ValueError(
+            f"ano {ano} é anterior ao nascimento ({ano_nascimento}). A primeira "
+            f"revolução solar de uma pessoa é a de {ano_nascimento}."
         )
     return ano
 
@@ -63,18 +79,28 @@ def ancora_revolucao_solar(dia_natal: int, mes_natal: int, ano: int) -> datetime
     return aniversario_no_ano(dia_natal, mes_natal, ano) - timedelta(days=FOLGA_ANCORA_DIAS)
 
 
-def vigencia(inicio: datetime, duracao_dias: float) -> dict:
-    """Janela de vigência da revolução: do instante do retorno ao próximo.
+def _em_utc(dt: datetime) -> datetime:
+    """Anexa UTC a um datetime ingênuo; converte se já tiver fuso."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
-    O fim é aproximado — obter o exato exigiria calcular um segundo mapa
-    completo. O nome do campo na saída declara isso.
+
+def vigencia(inicio: datetime, duracao_dias: float) -> dict:
     """
-    fim = inicio + timedelta(days=duracao_dias)
+    Janela de vigência da revolução: do instante do retorno até o próximo.
+
+    Sempre em UTC e com o offset explícito na string — sem isso um consumidor
+    pode tratar como hora local e errar horas. O fim é aproximado; obter o exato
+    exigiria calcular um segundo mapa completo.
+    """
+    inicio_utc = _em_utc(inicio).replace(microsecond=0)
+    fim_utc = (_em_utc(inicio) + timedelta(days=duracao_dias)).replace(microsecond=0)
     return {
-        "inicio": inicio.replace(microsecond=0).isoformat(),
-        # Microssegundos aqui seriam ruído: a duração média do ciclo já é uma
-        # aproximação de horas.
-        "fim_aproximado": fim.replace(microsecond=0).isoformat(),
+        "inicio_utc": inicio_utc.isoformat(),
+        "fim_aproximado_utc": fim_utc.isoformat(),
+        "duracao_dias": round(duracao_dias, 4),
+        "nota": NOTA_FIM_APROXIMADO,
     }
 
 
@@ -84,3 +110,32 @@ def vigencia_solar(inicio: datetime) -> dict:
 
 def vigencia_lunar(inicio: datetime) -> dict:
     return vigencia(inicio, MES_SIDERAL_DIAS)
+
+
+def ciclo_anterior(instante_retorno: datetime, data_referencia: datetime,
+                   duracao_dias: float) -> dict | None:
+    """
+    Descreve o ciclo que já estava em curso na data de referência.
+
+    A busca devolve o *próximo* retorno a partir da data pedida, então quando o
+    retorno não cai na própria data de referência existe um ciclo anterior ainda
+    rodando — e é ele que "rege" a data pedida. Devolver isso explicitamente
+    evita a leitura silenciosamente errada de quem pergunta "como está meu mês
+    agora?" e recebe o mapa do mês que ainda não começou.
+    """
+    retorno_utc = _em_utc(instante_retorno)
+    referencia_utc = _em_utc(data_referencia)
+
+    if retorno_utc.date() <= referencia_utc.date():
+        return None
+
+    inicio_anterior = (retorno_utc - timedelta(days=duracao_dias)).replace(microsecond=0)
+    return {
+        "inicio_aproximado_utc": inicio_anterior.isoformat(),
+        "nota": (
+            "A data de referência caiu dentro do ciclo anterior, que começou por "
+            "volta desta data. O mapa retornado é do ciclo SEGUINTE, que ainda "
+            "não estava em vigor. Para analisar o ciclo em curso, chame de novo "
+            "usando esta data como data_referencia."
+        ),
+    }

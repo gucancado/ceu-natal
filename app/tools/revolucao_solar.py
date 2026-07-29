@@ -15,22 +15,21 @@ from app.core.periodos import (
 from app.core.revolucoes import (
     build_subject_natal,
     criar_factory,
-    destaques_comuns,
     executar_retorno,
     instante_utc,
+    montar_destaques,
     montar_resultado,
     resolver_local_revolucao,
-    resumo_planeta,
 )
 from app.core.validators import validar_sistema_casas
 
 NOTA_METODO = (
-    "Mapa levantado para o instante exato em que o Sol em transito retorna a "
-    "longitude ecliptica que ocupava no nascimento. O local informado nao altera "
-    "nenhuma posicao planetaria — define apenas ascendente, meio do ceu e cuspides. "
-    "Revolucao tropica, sem correcao de precessao: a variante precessionada "
-    "somaria ~50,3\"/ano a longitude alvo e deslocaria o instante em cerca de 20 "
-    "minutos por ano de idade."
+    "Mapa levantado para o instante exato em que o Sol em trânsito retorna à "
+    "longitude eclíptica que ocupava no nascimento. O local informado não altera "
+    "nenhuma posição planetária — define apenas ascendente, meio do céu e "
+    "cúspides. Revolução trópica, sem correção de precessão: a variante "
+    "precessionada somaria ~50,3\"/ano à longitude alvo e deslocaria o instante "
+    "em cerca de 20 minutos por ano de idade."
 )
 
 FONTE = "swisseph solcross_ut via kerykeion PlanetaryReturnFactory"
@@ -45,9 +44,11 @@ def calcular_revolucao_solar(
 ) -> dict:
     """Revolução solar do ano pedido, levantada no local informado."""
     sistema_id = validar_sistema_casas(sistema_casas)
-    ano = validar_ano_revolucao(ano)
+    validar_ano_revolucao(ano)  # faixa de efemérides, antes de qualquer geocoding
 
-    subject_natal, (dia_n, mes_n, _ano_n) = build_subject_natal(natal, sistema_id)
+    subject_natal, (dia_n, mes_n, ano_n) = build_subject_natal(natal, sistema_id)
+    validar_ano_revolucao(ano, ano_nascimento=ano_n)
+
     coords = resolver_local_revolucao(local_revolucao)
 
     factory = criar_factory(subject_natal, coords)
@@ -58,8 +59,6 @@ def calcular_revolucao_solar(
         )
     )
 
-    dt_utc = instante_utc(retorno)
-
     resultado = montar_resultado(
         tipo="solar",
         natal=natal,
@@ -67,15 +66,12 @@ def calcular_revolucao_solar(
         retorno=retorno,
         coords=coords,
         sistema_id=sistema_id,
-        vigencia=vigencia_solar(dt_utc),
+        vigencia=vigencia_solar(instante_utc(retorno)),
         fonte=FONTE,
         nota_metodo=NOTA_METODO,
+        luminar_definicional="sol",
     )
     resultado["ano"] = ano
-
-    destaques = destaques_comuns(resultado, retorno, subject_natal)
-    destaques["sol_na_casa"] = resultado["planetas"].get("sol", {}).get("casa")
-    destaques["lua_revolucao"] = resumo_planeta(resultado, "lua")
-    resultado["destaques"] = destaques
+    resultado["destaques"] = montar_destaques(resultado, subject_natal, "sol")
 
     return resultado
