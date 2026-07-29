@@ -319,16 +319,22 @@ TOOLS: list[Tool] = [
                     "properties": {
                         "data":  {"type": "string", "description": "DD/MM/YYYY."},
                         "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
-                        "local": {"type": ["string", "null"]},
+                        "local": {
+                            "type": ["string", "null"],
+                            "description": "Cidade e UF/país. Obrigatória na prática.",
+                        },
                         "nome":  {"type": ["string", "null"]},
                     },
                 },
                 "ano": {
                     "type": "integer",
                     "description": (
-                        "Ano da revolução (1800–2200). A revolução do ano X começa no "
-                        "aniversário desse ano e vai até o aniversário seguinte — para "
-                        "saber qual rege hoje, use o ano do último aniversário."
+                        "Ano da revolução (1800–2200, nunca anterior ao nascimento). "
+                        "É o retorno que ocorre em torno da data de nascimento nesse "
+                        "ano — pode cair um dia antes ou depois do aniversário, e para "
+                        "quem nasceu no começo de janeiro pode cair em dezembro do ano "
+                        "anterior. Vale até o retorno seguinte, então para saber qual "
+                        "rege hoje use o ano do último aniversário."
                     ),
                 },
                 "local_revolucao": {
@@ -365,7 +371,10 @@ TOOLS: list[Tool] = [
                     "properties": {
                         "data":  {"type": "string", "description": "DD/MM/YYYY."},
                         "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
-                        "local": {"type": ["string", "null"]},
+                        "local": {
+                            "type": ["string", "null"],
+                            "description": "Cidade e UF/país. Obrigatória na prática.",
+                        },
                         "nome":  {"type": ["string", "null"]},
                     },
                 },
@@ -373,7 +382,11 @@ TOOLS: list[Tool] = [
                     "type": "string",
                     "description": (
                         "Data DD/MM/YYYY a partir da qual buscar o retorno. Devolve o "
-                        "primeiro que ocorrer nessa data ou depois dela."
+                        "PRÓXIMO retorno — o primeiro que ocorra nessa data ou depois "
+                        "dela — e não o ciclo já em curso. Passar a data de hoje "
+                        "costuma devolver o mês lunar que ainda vai começar; nesse caso "
+                        "o resultado traz o bloco `ciclo_em_curso` com a data para "
+                        "obter o ciclo vigente."
                     ),
                 },
                 "local_revolucao": {
@@ -408,6 +421,7 @@ TOOLS: list[Tool] = [
                             "angulo":           {"type": "number"},
                             "orbe_padrao":      {"type": "number"},
                             "orbe_com_luminar": {"type": "number"},
+                            "orbe_exato":       {"type": "number"},
                             "natureza":         {"type": "string"},
                         },
                     },

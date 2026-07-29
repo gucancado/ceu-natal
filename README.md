@@ -92,7 +92,18 @@ dias, o retorno cai na véspera, no dia ou no dia seguinte ao aniversário.
 Retorna o mapa completo da revolução (planetas, casas, ângulos, aspectos
 internos), os aspectos revolução↔natal, a sobreposição dos dois mapas nos dois
 sentidos e destaques da leitura: ascendente da revolução com regentes moderno e
-tradicional, casa ocupada pelo Sol, planetas angulares e a Lua da revolução.
+tradicional, os dois luminares com casa da revolução e casa natal, e planetas
+angulares.
+
+A conjunção do Sol da revolução com o Sol natal vem marcada com
+`definicional: true` em `aspectos_revolucao_natal` — ela tem orbe 0 por
+construção (é a definição da técnica), então encabeça a lista ordenada por orbe
+sem ser um achado interpretativo.
+
+`revolucao.vigencia` traz `inicio_utc` e `fim_aproximado_utc` com offset
+explícito. O fim é o início somado à duração média do ciclo, não a revolução
+seguinte calculada de fato — erro típico de 20 a 30 minutos, declarado no campo
+`nota`.
 
 **Parâmetros:**
 
@@ -115,11 +126,17 @@ o que desloca o instante do retorno em até 12 horas.
 ### `calcular_revolucao_lunar`
 
 Revolução lunar (lunar return) — mesma mecânica com a Lua, ciclo de ~27,32 dias.
-Técnica de **previsão mensal**. Devolve o primeiro retorno que ocorre a partir da
-data de referência, com destaques centrados na Lua.
+Técnica de **previsão mensal**. `destaques` tem o mesmo shape da solar, com
+`luminar_principal: "lua"`.
 
 **Parâmetros:** `natal`, `data_referencia` (DD/MM/YYYY, obrigatório),
 `local_revolucao` (obrigatório), `sistema_casas`.
+
+⚠️ Devolve o **próximo** retorno a partir de `data_referencia`, não o ciclo em
+curso. Passar a data de hoje normalmente devolve o mês lunar que ainda vai
+começar. Quando isso acontece, o resultado inclui o bloco `ciclo_em_curso` com
+`inicio_aproximado_utc` — chame de novo com essa data para obter o mapa do ciclo
+vigente.
 
 ### `listar_aspectos_tipos`
 

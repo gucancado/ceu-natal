@@ -3,28 +3,34 @@ Revolução lunar — o mapa do instante em que a Lua volta à sua longitude nat
 
 Ocorre a cada ~27,32 dias (mês sideral) e rege o período até o retorno seguinte.
 Usada para leitura de ciclo mensal, com ênfase na Lua e na casa que ela ocupa.
+
+DECISÃO DE DESIGN: a busca devolve o *próximo* retorno a partir da data de
+referência, nunca o vigente. Quando a data pedida cai no meio de um ciclo que já
+estava rodando, o resultado traz `ciclo_em_curso` apontando isso e dizendo como
+obter o mapa do ciclo vigente — sem esse aviso, quem pergunta "como está meu mês
+agora?" receberia o mapa do mês que ainda não começou, e o mapa estaria correto
+para o período errado.
 """
 from datetime import datetime
 from typing import Optional
 
-from app.core.periodos import vigencia_lunar
+from app.core.periodos import MES_SIDERAL_DIAS, ciclo_anterior, vigencia_lunar
 from app.core.revolucoes import (
     build_subject_natal,
     criar_factory,
-    destaques_comuns,
     executar_retorno,
     instante_utc,
+    montar_destaques,
     montar_resultado,
     resolver_local_revolucao,
-    resumo_planeta,
 )
 from app.core.validators import parse_data, validar_sistema_casas
 
 NOTA_METODO = (
-    "Mapa levantado para o primeiro instante, a partir da data de referencia, em "
-    "que a Lua em transito retorna a longitude ecliptica que ocupava no "
-    "nascimento. O local informado nao altera nenhuma posicao planetaria — define "
-    "apenas ascendente, meio do ceu e cuspides. Ciclo de aproximadamente 27,32 dias."
+    "Mapa levantado para o primeiro instante, a partir da data de referência, em "
+    "que a Lua em trânsito retorna à longitude eclíptica que ocupava no "
+    "nascimento. O local informado não altera nenhuma posição planetária — define "
+    "apenas ascendente, meio do céu e cúspides. Ciclo de aproximadamente 27,32 dias."
 )
 
 FONTE = "swisseph mooncross_ut via kerykeion PlanetaryReturnFactory"
@@ -66,13 +72,13 @@ def calcular_revolucao_lunar(
         vigencia=vigencia_lunar(dt_utc),
         fonte=FONTE,
         nota_metodo=NOTA_METODO,
+        luminar_definicional="lua",
     )
     resultado["data_referencia"] = data_referencia
+    resultado["destaques"] = montar_destaques(resultado, subject_natal, "lua")
 
-    destaques = destaques_comuns(resultado, retorno, subject_natal)
-    destaques["lua_na_casa"] = resultado["planetas"].get("lua", {}).get("casa")
-    destaques["lua_revolucao"] = resumo_planeta(resultado, "lua")
-    destaques["sol_revolucao"] = resumo_planeta(resultado, "sol")
-    resultado["destaques"] = destaques
+    em_curso = ciclo_anterior(dt_utc, inicio_busca, MES_SIDERAL_DIAS)
+    if em_curso:
+        resultado["ciclo_em_curso"] = em_curso
 
     return resultado

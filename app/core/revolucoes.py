@@ -174,6 +174,7 @@ def montar_resultado(
     vigencia: dict,
     fonte: str,
     nota_metodo: str,
+    luminar_definicional: str,
 ) -> dict:
     """
     Payload comum às duas revoluções.
@@ -206,6 +207,15 @@ def montar_resultado(
             "aplicando": a["aplicando"],
             "exato": a["exato"],
             "natureza": a["natureza"],
+            # A conjunção do luminar com ele mesmo é a *definição* da técnica,
+            # não um achado interpretativo — e como a lista é ordenada por orbe,
+            # ela sempre ocupa a primeira posição, justamente onde um consumidor
+            # automático procura o aspecto mais significativo.
+            "definicional": (
+                a["planeta_a"] == luminar_definicional
+                and a["planeta_b"] == luminar_definicional
+                and a["tipo"] == "conjuncao"
+            ),
         }
         for a in calcular_aspectos_sinastria(
             pontos_revolucao, pontos_natais, "revolucao", "natal"
@@ -266,10 +276,12 @@ def montar_resultado(
     }
 
 
-def destaques_comuns(resultado: dict, retorno, subject_natal) -> dict:
+def montar_destaques(resultado: dict, subject_natal, luminar_principal: str) -> dict:
     """
-    Ascendente da revolução com seus regentes, planetas angulares e a casa natal
-    onde o ascendente da revolução cai — leitura básica de qualquer revolução.
+    Destaques da leitura, com o MESMO shape nas duas revoluções.
+
+    Os dois luminares vêm sempre completos e `luminar_principal` diz qual é o
+    eixo da técnica — assim um consumidor único serve as duas tools sem branch.
     """
     asc = resultado["angulos"]["ascendente"]
     cuspides_natais = [c.abs_pos for _, c in casas_iter(subject_natal)]
@@ -281,6 +293,7 @@ def destaques_comuns(resultado: dict, retorno, subject_natal) -> dict:
     ]
 
     return {
+        "luminar_principal": luminar_principal,
         "ascendente_revolucao": {
             "signo": asc["signo"],
             "grau": asc["grau"],
@@ -290,6 +303,8 @@ def destaques_comuns(resultado: dict, retorno, subject_natal) -> dict:
                 asc["posicao_absoluta"], cuspides_natais
             ),
         },
+        "sol_revolucao": resumo_planeta(resultado, "sol"),
+        "lua_revolucao": resumo_planeta(resultado, "lua"),
         "planetas_angulares": angulares,
     }
 

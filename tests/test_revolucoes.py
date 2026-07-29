@@ -65,6 +65,13 @@ class TestValidacoes:
                 natal=GUSTAVO, ano=1500, local_revolucao="Belo Horizonte, MG"
             )
 
+    def test_ano_anterior_ao_nascimento_falha(self, geocode_fake):
+        # Dentro da faixa de efemérides, mas 139 anos antes de a pessoa existir.
+        with pytest.raises(ValueError, match="anterior ao nascimento"):
+            calcular_revolucao_solar(
+                natal=GUSTAVO, ano=1850, local_revolucao="Belo Horizonte, MG"
+            )
+
     def test_sistema_casas_invalido_falha(self, geocode_fake):
         with pytest.raises(ValueError, match="sistema_casas"):
             calcular_revolucao_solar(
@@ -125,10 +132,15 @@ class TestRevolucaoSolar:
 
         v = rs["revolucao"]["vigencia"]
         dias = (
-            datetime.fromisoformat(v["fim_aproximado"])
-            - datetime.fromisoformat(v["inicio"])
+            datetime.fromisoformat(v["fim_aproximado_utc"])
+            - datetime.fromisoformat(v["inicio_utc"])
         ).days
         assert 364 <= dias <= 366
+
+    def test_vigencia_declara_o_fuso(self, rs):
+        v = rs["revolucao"]["vigencia"]
+        assert v["inicio_utc"].endswith("+00:00")
+        assert v["fim_aproximado_utc"].endswith("+00:00")
 
     def test_destaques_trazem_ascendente_e_regentes(self, rs):
         asc = rs["destaques"]["ascendente_revolucao"]
@@ -137,8 +149,22 @@ class TestRevolucaoSolar:
         assert asc["regente_tradicional"]
         assert 1 <= asc["casa_natal_onde_cai"] <= 12
 
-    def test_sol_na_casa_e_valido(self, rs):
-        assert 1 <= rs["destaques"]["sol_na_casa"] <= 12
+    def test_luminar_principal_e_o_sol(self, rs):
+        assert rs["destaques"]["luminar_principal"] == "sol"
+
+    def test_conjuncao_definicional_esta_marcada(self, rs):
+        # sol × sol com orbe 0 é a definição da técnica, não um achado.
+        definicionais = [
+            a for a in rs["aspectos_revolucao_natal"] if a.get("definicional")
+        ]
+        assert len(definicionais) == 1
+        assert definicionais[0]["planeta_revolucao"] == "sol"
+        assert definicionais[0]["planeta_natal"] == "sol"
+        assert definicionais[0]["tipo"] == "conjuncao"
+
+    def test_nenhum_outro_aspecto_e_definicional(self, rs):
+        naos = [a for a in rs["aspectos_revolucao_natal"] if not a.get("definicional")]
+        assert len(naos) == len(rs["aspectos_revolucao_natal"]) - 1
 
     def test_sobreposicao_cobre_os_dois_sentidos(self, rs):
         s = rs["sobreposicao"]
@@ -221,16 +247,37 @@ class TestRevolucaoLunar:
 
         v = rl["revolucao"]["vigencia"]
         dias = (
-            datetime.fromisoformat(v["fim_aproximado"])
-            - datetime.fromisoformat(v["inicio"])
+            datetime.fromisoformat(v["fim_aproximado_utc"])
+            - datetime.fromisoformat(v["inicio_utc"])
         ).days
         assert dias == 27
 
     def test_destaques_centrados_na_lua(self, rl):
-        assert 1 <= rl["destaques"]["lua_na_casa"] <= 12
+        assert rl["destaques"]["luminar_principal"] == "lua"
+        assert 1 <= rl["destaques"]["lua_revolucao"]["casa_revolucao"] <= 12
         assert rl["destaques"]["lua_revolucao"]["signo"]
         assert rl["destaques"]["sol_revolucao"]["signo"]
 
     def test_metodo_declara_a_tecnica(self, rl):
         assert rl["metodo"]["tecnica"] == "revolucao_lunar"
         assert "mooncross_ut" in rl["metodo"]["fonte"]
+
+    def test_conjuncao_definicional_e_da_lua(self, rl):
+        definicionais = [
+            a for a in rl["aspectos_revolucao_natal"] if a.get("definicional")
+        ]
+        assert len(definicionais) == 1
+        assert definicionais[0]["planeta_revolucao"] == "lua"
+        assert definicionais[0]["planeta_natal"] == "lua"
+
+    def test_ciclo_em_curso_quando_referencia_cai_no_meio(self, rl):
+        # Referência 01/07/2026; o retorno vem depois, logo havia ciclo rodando.
+        assert "ciclo_em_curso" in rl
+        assert rl["ciclo_em_curso"]["inicio_aproximado_utc"] < rl["revolucao"]["instante_utc"]
+
+    def test_destaques_tem_o_mesmo_shape_da_solar(self, rl, geocode_fake):
+        rs = calcular_revolucao_solar(
+            natal=GUSTAVO, ano=2026, local_revolucao="Belo Horizonte, MG"
+        )
+        # Um consumidor único precisa servir as duas tools sem branch.
+        assert set(rl["destaques"].keys()) == set(rs["destaques"].keys())

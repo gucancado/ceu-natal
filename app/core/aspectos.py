@@ -18,6 +18,9 @@ ASPECTOS_DEF = [
 
 LUMINARES = {"sol", "lua"}
 
+# Abaixo deste orbe o aspecto é marcado como `exato` na saída.
+ORBE_EXATO = 0.5
+
 
 def orbe_para(tipo: str, p1_nome: str, p2_nome: str) -> float:
     """
@@ -86,7 +89,7 @@ def calcular_aspectos(pontos: list[dict]) -> list[dict]:
                             p2["abs_pos"], p2.get("speed"),
                             angulo,
                         ),
-                        "exato": orbe < 0.5,
+                        "exato": orbe < ORBE_EXATO,
                         "natureza": natureza,
                     })
                     break  # um par só forma um tipo de aspecto
@@ -118,7 +121,7 @@ def calcular_aspectos_sinastria(pontos_a: list[dict], pontos_b: list[dict],
                             p2["abs_pos"], p2.get("speed"),
                             angulo,
                         ),
-                        "exato": orbe < 0.5,
+                        "exato": orbe < ORBE_EXATO,
                         "natureza": natureza,
                     })
                     break
@@ -134,6 +137,7 @@ def listar_tipos_aspectos() -> list[dict]:
             "angulo": angulo,
             "orbe_padrao": orbe_para(tipo, "outro", "outro"),
             "orbe_com_luminar": orbe_para(tipo, "sol", "outro"),
+            "orbe_exato": ORBE_EXATO,
             "natureza": natureza,
         })
     return saida

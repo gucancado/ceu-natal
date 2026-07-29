@@ -1,5 +1,28 @@
 # Relatório de validação — ceu-natal
 
+## 2026-07-29 — Correções pós-teste das revoluções
+
+Bateria de 17 checagens executada por um agente contra produção: **17/17 verdes
+no cálculo**, zero erro astronômico. As correções abaixo saíram do relatório
+crítico do mesmo agente.
+
+| Achado | Veredito | Ação |
+|---|---|---|
+| `ano` anterior ao nascimento era aceito | **bug confirmado** — nascido em 1989 + `ano: 1850` devolvia mapa de 1850 sem erro | `validar_ano_revolucao` agora recebe `ano_nascimento` e barra |
+| Lunar devolve o próximo ciclo, não o vigente | procedente — semântica oposta à da solar, e "como está meu mês?" com a data de hoje devolvia o mês que ainda não começou | bloco `ciclo_em_curso` no resultado + descrição da tool reescrita. A semântica de busca foi mantida (decisão de design) |
+| `vigencia` sem timezone | procedente — datetime naive podia ser lido como hora local | renomeado para `inicio_utc` / `fim_aproximado_utc`, com `+00:00` explícito |
+| Método do `fim_aproximado` não documentado | procedente | campos `duracao_dias` e `nota` explicando que é o início + duração média do ciclo (erro de 20–30 min) |
+| `destaques` com shape diferente nas duas tools | procedente — `lua_na_casa` duplicava `lua_revolucao.casa_revolucao`, e a solar não trazia `sol_revolucao` | `montar_destaques` unificado: os dois luminares sempre presentes + `luminar_principal` |
+| Conjunção definicional encabeçava a lista de aspectos | procedente — sol×sol orbe 0 é a definição da técnica, não um achado, e a lista é ordenada por orbe | campo `definicional: true` no aspecto |
+| Descrição de `ano` não cobria bordas | procedente | reescrita cobrindo 29/02 e nascidos no começo de janeiro |
+| Limiar de `exato` não exposto | procedente | `ORBE_EXATO` extraído e publicado em `listar_aspectos_tipos` |
+| Acentuação inconsistente nas `nota` | procedente | notas de método acentuadas |
+| **`local` natal cairia em Greenwich silenciosamente** | **refutado** | o gate existe e funciona: natal com `hora` e sem `local` retorna `isError` com "Revoluções exigem o local de nascimento". O teste que gerou a suspeita omitiu só a `hora` |
+| `sintese.hemisferio_horizontal` desempata em silêncio (`leste >= oeste` → "Leste") | procedente, **fora de escopo** | código preexistente em `app/core/sintese.py`, afeta as 6 tools que devolvem síntese. Mudar quebraria contrato — decidir separadamente |
+
+Testes: 30 casos em `tests/test_periodos.py` (rodam no Windows), incluindo
+`ciclo_anterior` e o gate de ano vs. nascimento.
+
 ## 2026-07-27 — Revoluções solar e lunar (`main` @ `a9376c9`)
 
 Deploy `xqpyvmxv5ec61pifmqzp4j9x` concluído em ~110s. Duas tools novas,
