@@ -46,6 +46,12 @@ em paralelo durante grace period. Stack:
 - ❌ **Não reimplementar tools que já existem** (ver lista abaixo).
 - ❌ **Não atualizar versões de Kerykeion ou Python sem discussão.**
   Pyswisseph (dependência transitiva) é frágil em build de wheels.
+- ❌ **Não remover os tetos de major do `requirements.txt`.** O build do
+  Coolify resolve as versões do zero a cada deploy, então uma major nova no
+  PyPI quebra o deploy sem nenhuma mudança de código. Em 2026-07-29 o
+  `mcp>=1.9.0` puxou a 2.0.0 (publicada no dia anterior), que removeu
+  `Server.list_tools` — o container subiu com `AttributeError` e o Coolify
+  fez rollback. Para migrar pra `mcp` 2.x, tratar como tarefa própria.
 
 ---
 
