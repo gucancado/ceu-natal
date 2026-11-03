@@ -17,11 +17,11 @@ Variáveis de ambiente opcionais:
                       separados por vírgula. Vazio = sem validação de host.
 """
 import contextlib
+import functools
 import json
 import logging
 import math
 import os
-import functools
 import time
 from collections.abc import AsyncIterator
 from pathlib import Path
@@ -641,6 +641,9 @@ _security = (
 session_manager = StreamableHTTPSessionManager(
     app=server,
     security_settings=_security,
+    # Sessão sem requisições por 30 min é encerrada (recomendação do SDK);
+    # sem isso o dicionário de sessões do SDK só cresce.
+    session_idle_timeout=1800,
 )
 
 
