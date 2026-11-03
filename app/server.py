@@ -48,7 +48,7 @@ from app.core.geocoder import GeocodingError
 from app.core.ratelimit import LimitadorTaxa
 
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
-SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
+SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.1.0")
 API_KEY = os.getenv("MCP_API_KEY", "").strip()
 # Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
 # Vazio = sem validação (modo dev / proxy reverso confiável).

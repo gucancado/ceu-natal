@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.gucancado/ceu-natal",
+  "title": "Céu Natal",
+  "description": "Mapa natal, sinastria, trânsitos, progressões e revoluções com efemérides suíças, em português.",
+  "repository": {
+    "url": "https://github.com/gucancado/ceu-natal",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/gucancado/ceu-natal",
+  "version": "2.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/"
+    },
+    {
+      "type": "sse",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/sse"
+    }
+  ]
+}
