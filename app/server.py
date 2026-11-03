@@ -17,6 +17,7 @@ Variáveis de ambiente opcionais:
 import contextlib
 import json
 import logging
+import math
 import os
 import functools
 import time
@@ -41,6 +42,7 @@ from starlette.routing import Mount, Route
 
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.geocoder import GeocodingError
+from app.core.ratelimit import LimitadorTaxa
 
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
 SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
@@ -48,6 +50,10 @@ API_KEY = os.getenv("MCP_API_KEY", "").strip()
 # Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
 # Vazio = sem validação (modo dev / proxy reverso confiável).
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
+# Limite de taxa (chamadas de tool por minuto); 0 desliga a camada.
+RATE_LIMIT_SESSION_PER_MIN = int(os.getenv("RATE_LIMIT_SESSION_PER_MIN", "30"))
+RATE_LIMIT_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_GLOBAL_PER_MIN", "600"))
+LIMITADOR = LimitadorTaxa(RATE_LIMIT_SESSION_PER_MIN, RATE_LIMIT_GLOBAL_PER_MIN)
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -543,12 +549,29 @@ def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
         raise ValueError(f"Tool desconhecida: {name}")
 
 
+def _chave_sessao() -> str | None:
+    """Id da sessão MCP (header mcp-session-id) ou None fora de request/SSE legado."""
+    try:
+        request = server.request_context.request
+    except LookupError:
+        return None
+    if request is None:
+        return None
+    return request.headers.get("mcp-session-id")
+
+
 @server.call_tool()
 async def _call_tool(name: str, arguments: dict[str, Any]):
     """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
     inicio = time.monotonic()
     status = "ok"
     try:
+        permitido, espera = LIMITADOR.tentar(_chave_sessao())
+        if not permitido:
+            status = "rate_limited"
+            return _resultado_erro(
+                f"Limite de chamadas atingido. Aguarde {math.ceil(espera)} segundos e tente de novo."
+            )
         try:
             resultado = await anyio.to_thread.run_sync(_dispatch, name, arguments)
         except GeocodingError as exc:
@@ -637,6 +660,10 @@ async def _health(_: Request) -> JSONResponse:
         "versao": SERVER_VERSION,
         "transporte": "streamable-http+sse",
         "auth_required": bool(API_KEY),
+        "limites": {
+            "por_sessao_por_min": RATE_LIMIT_SESSION_PER_MIN,
+            "global_por_min": RATE_LIMIT_GLOBAL_PER_MIN,
+        },
     })
 
 
