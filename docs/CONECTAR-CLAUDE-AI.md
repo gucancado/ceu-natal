@@ -176,6 +176,7 @@ curl https://astrologia-mcp.gustavocancado.com.br/tools
 - O **único cache** é de coordenadas de cidade (lat/lng/timezone), pra evitar
   bater repetido nas APIs de geocoding. Não tem informação pessoal aí.
 - Logs do servidor registram apenas o nome da tool chamada, sem os argumentos.
+- Política de privacidade completa: [docs/legal/privacidade.md](legal/privacidade.md)
 
 ---
 
