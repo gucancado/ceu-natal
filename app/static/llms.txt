@@ -1,0 +1,44 @@
+# Céu Natal
+
+> Servidor MCP de astrologia em português: cálculo com efemérides suíças (Kerykeion), sem interpretação, sem armazenar dados.
+
+## Conectar
+
+- [Endpoint MCP (Streamable HTTP, recomendado)]({mcp_url}/mcp/): use a barra final; sem login no plano gratuito.
+- [Endpoint SSE (legado)]({mcp_url}/sse): handshake MCP via SSE, em descontinuação.
+- [Site]({site_url}): apresentação do projeto.
+- [Guia de conexão no Claude.ai](https://github.com/gucancado/ceu-natal/blob/main/docs/CONECTAR-CLAUDE-AI.md): passo a passo.
+
+## Tools
+
+- calcular_mapa_natal: posições, casas, ângulos, aspectos e síntese de um mapa natal.
+- calcular_sinastria: aspectos cruzados entre duas pessoas e planetas de A nas casas de B.
+- calcular_transitos: posições em uma data, aspectos com o mapa natal e destaque de trânsitos lentos.
+- calcular_progressoes: progressões secundárias (1 dia = 1 ano) para uma data alvo, com Lua e Sol progredidos.
+- calcular_mapa_composto: mapa composto por midpoints de duas pessoas.
+- calcular_revolucao_solar: revolução solar de um ano (natal com hora e local, ano, local da revolução).
+- calcular_revolucao_lunar: próxima revolução lunar a partir de uma data (natal, data de referência, local da revolução).
+- listar_aspectos_tipos: tipos de aspectos suportados, ângulos e orbes.
+- healthcheck: status do servidor.
+
+## Formato de entrada
+
+- data: DD/MM/YYYY, ex.: 12/03/1990 (obrigatória).
+- hora: HH:MM, ex.: 09:20. Sem hora, não saem casas nem ângulos.
+- local: "Cidade, UF" ou "Cidade, País", ex.: "Belo Horizonte, MG" ou "Lisboa, Portugal".
+- sistema_casas: opcional, default P (Placidus).
+
+## Limites
+
+- 30 chamadas por minuto por sessão MCP e 600 por minuto no total (defaults).
+- Ao exceder, a resposta vem com isError pedindo para aguardar e tentar de novo.
+
+## Privacidade
+
+- Nada é armazenado: os dados de nascimento só existem durante o cálculo.
+- O único cache é o de coordenadas de cidade.
+- [Política de privacidade](https://github.com/gucancado/ceu-natal/blob/main/docs/legal/privacidade.md)
+
+## Código
+
+- [Repositório](https://github.com/gucancado/ceu-natal): licença AGPL-3.0.

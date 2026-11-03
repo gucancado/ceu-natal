@@ -177,6 +177,8 @@ docker compose up --build
 
 Servidor sobe em `http://localhost:8000`:
 
+- `GET /` — redireciona (302) para `PUBLIC_SITE_URL` (público)
+- `GET /llms.txt` — descrição do servidor para LLMs (público)
 - `GET /health` — healthcheck (público)
 - `GET /tools` — lista as tools registradas em JSON (autenticado, útil pra debug)
 - `POST/GET /mcp` — endpoint MCP Streamable HTTP (recomendado)
@@ -202,6 +204,10 @@ curl http://localhost:8000/tools | jq
 | `MCP_PORT`              | `8000`                                           | porta                                                           |
 | `MCP_SERVER_NAME`       | `ceu-natal`                                      | nome retornado em `initialize`                                  |
 | `MCP_SERVER_VERSION`    | `2.0.0`                                          | versão exposta                                                  |
+| `PUBLIC_SITE_URL`       | `https://github.com/gucancado/ceu-natal`         | destino do redirect de `/` e link do site em `/llms.txt`        |
+| `PUBLIC_MCP_URL`        | `https://astrologia-mcp.gustavocancado.com.br`   | URL pública do MCP exibida em `/llms.txt`                       |
+| `RATE_LIMIT_SESSION_PER_MIN` | `30`                                        | chamadas de tool por minuto por sessão MCP (0 desliga)          |
+| `RATE_LIMIT_GLOBAL_PER_MIN`  | `600`                                       | chamadas de tool por minuto no total (0 desliga)                |
 
 ---
 

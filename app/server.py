@@ -6,6 +6,8 @@ Endpoints:
   POST /messages/  — canal de mensagens SSE
   POST /mcp        — Streamable HTTP (protocolo MCP >= 2025-03-26)
   GET  /health     — healthcheck público (sem auth)
+  GET  /llms.txt   — descrição do servidor para LLMs (público)
+  GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
 
 Autenticação: header `Authorization: Bearer <key>` ou query `?api_key=<key>`.
 Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
@@ -22,6 +24,7 @@ import os
 import functools
 import time
 from collections.abc import AsyncIterator
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -37,7 +40,7 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from starlette.routing import Mount, Route
 
 from app.core.aspectos import listar_tipos_aspectos
@@ -54,6 +57,14 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(","
 RATE_LIMIT_SESSION_PER_MIN = int(os.getenv("RATE_LIMIT_SESSION_PER_MIN", "30"))
 RATE_LIMIT_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_GLOBAL_PER_MIN", "600"))
 LIMITADOR = LimitadorTaxa(RATE_LIMIT_SESSION_PER_MIN, RATE_LIMIT_GLOBAL_PER_MIN)
+# URLs públicas (a landing troca de domínio só por env), sem barra final.
+PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://github.com/gucancado/ceu-natal").rstrip("/")
+PUBLIC_MCP_URL = os.getenv("PUBLIC_MCP_URL", "https://astrologia-mcp.gustavocancado.com.br").rstrip("/")
+# Caminhos que dispensam a chave de API.
+_PUBLICOS = ["/health", "/llms.txt", "/"]
+_LLMS_TXT = (Path(__file__).parent / "static" / "llms.txt").read_text(encoding="utf-8").format(
+    mcp_url=PUBLIC_MCP_URL, site_url=PUBLIC_SITE_URL,
+)
 
 logger = logging.getLogger("ceu-natal")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -604,8 +615,8 @@ def _extrair_key(request: Request) -> str | None:
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # /health é público
-        if request.url.path == "/health":
+        # /health, /llms.txt e / são públicos
+        if request.url.path in _PUBLICOS:
             return await call_next(request)
 
         # Sem chave configurada → libera (modo dev)
@@ -660,11 +671,20 @@ async def _health(_: Request) -> JSONResponse:
         "versao": SERVER_VERSION,
         "transporte": "streamable-http+sse",
         "auth_required": bool(API_KEY),
+        "site": PUBLIC_SITE_URL,
         "limites": {
             "por_sessao_por_min": RATE_LIMIT_SESSION_PER_MIN,
             "global_por_min": RATE_LIMIT_GLOBAL_PER_MIN,
         },
     })
+
+
+async def _llms_txt(_: Request) -> PlainTextResponse:
+    return PlainTextResponse(_LLMS_TXT, media_type="text/plain; charset=utf-8")
+
+
+async def _raiz(_: Request) -> RedirectResponse:
+    return RedirectResponse(PUBLIC_SITE_URL, status_code=302)
 
 
 async def _list_tools_http(_: Request) -> JSONResponse:
@@ -691,6 +711,8 @@ app = Starlette(
     debug=False,
     lifespan=lifespan,
     routes=[
+        Route("/", endpoint=_raiz, methods=["GET"]),
+        Route("/llms.txt", endpoint=_llms_txt, methods=["GET"]),
         Route("/health", endpoint=_health, methods=["GET"]),
         Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
         Route("/sse", endpoint=_handle_sse, methods=["GET"]),
