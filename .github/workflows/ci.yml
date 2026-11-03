@@ -27,9 +27,11 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install pip-audit
-      # Os ids abaixo só têm correção em major acima do teto do requirements.txt
-      # (starlette >=1.0, pytest >=9), e os tetos de major são regra do projeto
-      # (ver requirements.txt). Reavaliar ao subir o teto.
+      # Os ids abaixo nÃ£o tÃªm correÃ§Ã£o dentro dos tetos do requirements.txt, e os
+      # tetos de major sÃ£o regra do projeto: starlette (corrige em >=1.0) e pytest
+      # (>=9) exigem major acima do teto; cryptography (transitiva) sÃ³ corrige em
+      # versÃµes que exigem cffi>=2, e timezonefinder==6.5.2 fixa cffi<2.
+      # Reavaliar ao subir esses tetos/pins.
       - run: >
           pip-audit -r requirements.txt --strict
           --ignore-vuln PYSEC-2026-161
@@ -38,3 +40,10 @@ jobs:
           --ignore-vuln PYSEC-2026-2280
           --ignore-vuln PYSEC-2026-2281
           --ignore-vuln PYSEC-2026-1845
+          --ignore-vuln PYSEC-2026-2141
+          --ignore-vuln PYSEC-2026-35
+          --ignore-vuln PYSEC-2026-36
+          --ignore-vuln PYSEC-2026-3552
+          --ignore-vuln PYSEC-2026-3553
+          --ignore-vuln PYSEC-2026-3554
+          --ignore-vuln GHSA-537c-gmf6-5ccf
