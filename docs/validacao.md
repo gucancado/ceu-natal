@@ -1,5 +1,28 @@
 # Relatório de validação — ceu-natal
 
+## 2026-11-03 — 2.1.0: limite de taxa, llms.txt, CI
+
+Merge fast-forward de `produto/f1` em `main` (head `7f6f039`, CI verde), envs
+`PUBLIC_SITE_URL` e `PUBLIC_MCP_URL` criadas no Coolify (prod e preview),
+health check do Coolify ligado (`/health`, porta 8000; confirmado via API:
+`True /health`) e deploy com `scripts/deploy.py`: deployment
+`ppm7hrluy4m9owskwyfe6t4i`, `status: finished`, exit 0.
+
+| Checagem | Resultado observado |
+|---|---|
+| `GET /health` | `"versao":"2.1.0"`, `"site":"https://github.com/gucancado/ceu-natal"`, `"limites":{"por_sessao_por_min":30,"global_por_min":600}` |
+| `GET /` | `302` para `https://github.com/gucancado/ceu-natal` |
+| `GET /llms.txt` | primeira linha `# Céu Natal`, acento íntegro |
+| Smoke do limite, 35 chamadas seguidas de `healthcheck` numa sessão MCP | **nenhuma barrada** (ver nota) |
+| Smoke do limite, 60 chamadas | primeiro barrado na chamada **48**, com `isError` e a mensagem de espera |
+| Conector do claude.ai (`healthcheck` → `versao 2.1.0`) | a cargo do orquestrador, não executado nesta tarefa |
+
+Nota sobre o smoke: o balde da sessão é de 30 tokens e recarrega 0,5/s. Pela
+internet cada chamada leva algumas centenas de ms, então a recarga durante a
+rajada empurra o primeiro bloqueio para depois da chamada 31 (a chamada 31
+só é barrada com chamadas quase instantâneas, como nos testes locais). O
+limite está ativo e funciona; o número exato depende da latência do cliente.
+
 ## 2026-07-29 — Correções pós-teste das revoluções
 
 Bateria de 17 checagens executada por um agente contra produção: **17/17 verdes

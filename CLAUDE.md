@@ -105,6 +105,12 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
   Ou pela UI do Coolify em http://5.78.199.192:8000 → projeto
   `astrologia` → app `ceu-natal` → **Deploy**. Token e mais detalhes em
   `~/.claude/CLAUDE.md`.
+- **Versão em produção: 2.1.0** (deploy de 2026-11-03). Limite de taxa
+  ativo por padrão: 30 chamadas de tool/min por sessão MCP e 600/min global
+  (envs `RATE_LIMIT_SESSION_PER_MIN` / `RATE_LIMIT_GLOBAL_PER_MIN`; 0 desliga).
+  O **health check do Coolify está ligado** (`GET /health`, porta 8000), então
+  um container novo que não sobe saudável é revertido automaticamente.
+  Envs `PUBLIC_SITE_URL` e `PUBLIC_MCP_URL` definidas (prod e preview).
 - **Estado verificado em runtime:** confira a tabela "Status em produção"
   acima (sincronizada diariamente pelo workflow) ou rode `curl /tools`.
   Se o número de tools deployadas for diferente do número em
