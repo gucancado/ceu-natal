@@ -28,6 +28,8 @@ em paralelo durante grace period. Stack:
 | `/mcp/` | POST/GET | endpoint MCP Streamable HTTP (recomendado; use barra final — `/mcp` redireciona 307) |
 | `/sse` | GET | handshake MCP via SSE (legado — em descontinuação) |
 | `/messages/` | POST | canal de mensagens SSE (legado) |
+| `/` | GET | redireciona (302) para `PUBLIC_SITE_URL` (público) |
+| `/llms.txt` | GET | descrição do servidor para LLMs (público) |
 | `/health` | GET | healthcheck (público) |
 | `/tools` | GET | lista as tools registradas (debug, autenticado) |
 
@@ -111,6 +113,8 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
 - **Auth:** modo aberto (`MCP_API_KEY=` vazia em produção). Decisão
   consciente — Claude.ai web só aceita OAuth para conector custom, e
   ainda não implementamos OAuth no servidor.
+  `/mcp/` segue anônimo por decisão da spec do produto (seção 4.3); o
+  endpoint com conta será `/conta/mcp/`, numa fase posterior (F3).
 - **`MCP_ALLOWED_HOSTS`** (env, setada em prod): hosts permitidos no
   Streamable HTTP (anti-DNS-rebinding). Vazia = sem validação de Host.
   Redundante atrás do Traefik (que já roteia por Host), mas defensivo.

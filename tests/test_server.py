@@ -249,3 +249,27 @@ def test_health_expoe_limites(monkeypatch):
     mod = _carregar_app(monkeypatch, api_key="")
     body = TestClient(mod.app).get("/health").json()
     assert body["limites"] == {"por_sessao_por_min": 30, "global_por_min": 600}
+
+
+# ─────────────────────────────────────────────────────────────
+# /llms.txt e / (públicos)
+# ─────────────────────────────────────────────────────────────
+def test_llms_txt_publico_utf8_e_com_urls(monkeypatch):
+    monkeypatch.setenv("PUBLIC_MCP_URL", "https://mcp.exemplo.test/")
+    monkeypatch.setenv("PUBLIC_SITE_URL", "https://site.exemplo.test")
+    mod = _carregar_app(monkeypatch, api_key="segredo")
+    resp = TestClient(mod.app).get("/llms.txt")
+    assert resp.status_code == 200
+    assert resp.headers["content-type"].startswith("text/plain") and "charset=utf-8" in resp.headers["content-type"]
+    assert resp.text.startswith("# Céu Natal")
+    assert "https://mcp.exemplo.test/mcp/" in resp.text and "https://mcp.exemplo.test//" not in resp.text
+    assert "https://site.exemplo.test" in resp.text
+    assert "calcular_revolucao_lunar" in resp.text and "trânsitos" in resp.text
+
+
+def test_raiz_redireciona_para_o_site_default(monkeypatch):
+    monkeypatch.delenv("PUBLIC_SITE_URL", raising=False)
+    mod = _carregar_app(monkeypatch, api_key="segredo")
+    resp = TestClient(mod.app).get("/", follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers["location"] == "https://github.com/gucancado/ceu-natal"
