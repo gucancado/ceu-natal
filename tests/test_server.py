@@ -185,3 +185,17 @@ def test_call_tool_emite_telemetria(monkeypatch, caplog):
     assert ev["tool"] == "healthcheck"
     assert ev["status"] == "ok"
     assert isinstance(ev["duration_ms"], (int, float))
+
+
+import subprocess
+import sys
+from pathlib import Path
+
+RAIZ = Path(__file__).resolve().parent.parent
+
+
+def test_server_importa_sem_kerykeion():
+    """`sys.modules['kerykeion'] = None` faz qualquer `import kerykeion` falhar."""
+    codigo = "import sys; sys.modules['kerykeion'] = None; import app.server; print('ok')"
+    r = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, cwd=RAIZ)
+    assert r.returncode == 0 and r.stdout.strip() == "ok", r.stderr
