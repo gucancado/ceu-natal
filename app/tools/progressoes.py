@@ -186,8 +186,8 @@ def calcular_progressoes(
     dia_a, mes_a, ano_a = parse_data(data_alvo)
     dt_alvo = datetime(ano_a, mes_a, dia_a)
 
-    if dt_alvo < dt_natal:
-        raise ValueError("data_alvo deve ser posterior à data de nascimento.")
+    if dt_alvo.date() < dt_natal.date():
+        raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
 
     dt_progredido = computar_data_progredida(dt_natal, dt_alvo)
     idade_aproximada = int((dt_alvo - dt_natal).total_seconds() / SEGUNDOS_POR_ANO_TROPICO)
