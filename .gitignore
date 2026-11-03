@@ -16,3 +16,4 @@ venv/
 # — manter local, não publicar
 scripts/saida/
 scripts/dados_familia.json
+.superpowers/

@@ -256,6 +256,16 @@ importa Kerykeion e roda em qualquer ambiente com `pytest tests/test_periodos.py
 
 ---
 
+## Licença
+
+O código é AGPL-3.0 (texto completo em [`LICENSE`](LICENSE)).
+
+Por quê: Kerykeion e Swiss Ephemeris são AGPL, e a AGPL alcança uso por rede. Por isso o serviço hospedado em `astrologia-mcp.gustavocancado.com.br` roda exatamente este código público.
+
+Na prática, qualquer pessoa pode rodar a própria instância. O que se paga no serviço hospedado (quando existir) é hospedagem e dados, não o cálculo.
+
+---
+
 ## Estrutura
 
 ```

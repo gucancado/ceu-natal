@@ -1,0 +1,42 @@
+name: Sincronizar status das tools no CLAUDE.md
+
+# Mantém a tabela "Tools já implementadas em app/tools/" do CLAUDE.md
+# alinhada com o que está realmente deployado em produção.
+# Roda diariamente; se houver drift, comita a atualização direto na main
+# com [skip ci] (não retriggera workflows). Falha alta e visível se a
+# produção estiver fora do ar.
+
+on:
+  schedule:
+    # 12:00 UTC ≈ 09:00 BRT — uma vez por dia
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verificar drift e atualizar CLAUDE.md
+        run: python .github/scripts/sync_tools_status.py
+        env:
+          PROD_URL: https://astrologia-mcp.gustavocancado.com.br
+
+      - name: Commitar se houver mudanças
+        run: |
+          if git diff --quiet CLAUDE.md; then
+            echo "Sem drift — CLAUDE.md já reflete o estado de produção."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add CLAUDE.md
+          git commit -m "chore: sync status das tools deployadas [skip ci]"
+          git push
