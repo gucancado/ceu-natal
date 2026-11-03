@@ -48,18 +48,19 @@ def test_mcp_rota_registrada(monkeypatch):
 # ─────────────────────────────────────────────────────────────
 # /tools (protegido pelo middleware)
 # ─────────────────────────────────────────────────────────────
-def test_tools_lista_as_sete_tools(monkeypatch):
+def test_tools_lista_as_nove_tools(monkeypatch):
     mod = _carregar_app(monkeypatch, api_key="")
     client = TestClient(mod.app)
     resp = client.get("/tools")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["count"] == 7
+    assert body["count"] == 9
     nomes = {t["name"] for t in body["tools"]}
     assert nomes == {
         "calcular_mapa_natal", "calcular_sinastria",
         "calcular_transitos", "calcular_progressoes", "calcular_mapa_composto",
         "listar_aspectos_tipos", "healthcheck",
+        "calcular_revolucao_solar", "calcular_revolucao_lunar",
     }
 
 
