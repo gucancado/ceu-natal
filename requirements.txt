@@ -4,8 +4,6 @@
 # 2.0.0 (publicada em 28/07), que removeu `Server.list_tools`, e o container
 # subiu com AttributeError.
 mcp>=1.28.1,<2.0.0
-# Transitiva (via mcp/pyjwt); piso explícito por CVEs corrigidas só na 50.0.0.
-cryptography>=50.0.0,<51.0.0
 starlette>=0.38.6,<1.0.0
 uvicorn>=0.30.6,<1.0.0
 kerykeion==5.12.7
