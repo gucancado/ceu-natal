@@ -18,8 +18,10 @@ import contextlib
 import json
 import logging
 import os
+import functools
 import time
 from collections.abc import AsyncIterator
+from types import SimpleNamespace
 from typing import Any
 
 import anyio
@@ -39,13 +41,6 @@ from starlette.routing import Mount, Route
 
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.geocoder import GeocodingError
-from app.tools.composto import calcular_mapa_composto
-from app.tools.mapa_natal import calcular_mapa_natal
-from app.tools.progressoes import calcular_progressoes
-from app.tools.revolucao_lunar import calcular_revolucao_lunar
-from app.tools.revolucao_solar import calcular_revolucao_solar
-from app.tools.sinastria import calcular_sinastria
-from app.tools.transitos import calcular_transitos
 
 SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
 SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.0.0")
@@ -458,10 +453,36 @@ async def _list_tools() -> list[Tool]:
     return TOOLS
 
 
+@functools.lru_cache(maxsize=1)
+def _tools() -> SimpleNamespace:
+    """Importa as tools de cálculo sob demanda (puxam Kerykeion/pyswisseph).
+
+    Mantém `import app.server` leve e testável sem Kerykeion (ex.: Windows).
+    """
+    from app.tools.composto import calcular_mapa_composto
+    from app.tools.mapa_natal import calcular_mapa_natal
+    from app.tools.progressoes import calcular_progressoes
+    from app.tools.revolucao_lunar import calcular_revolucao_lunar
+    from app.tools.revolucao_solar import calcular_revolucao_solar
+    from app.tools.sinastria import calcular_sinastria
+    from app.tools.transitos import calcular_transitos
+
+    return SimpleNamespace(
+        calcular_mapa_natal=calcular_mapa_natal,
+        calcular_sinastria=calcular_sinastria,
+        calcular_transitos=calcular_transitos,
+        calcular_progressoes=calcular_progressoes,
+        calcular_mapa_composto=calcular_mapa_composto,
+        calcular_revolucao_solar=calcular_revolucao_solar,
+        calcular_revolucao_lunar=calcular_revolucao_lunar,
+    )
+
+
 def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
     """Despacho síncrono puro. Levanta ValueError/GeocodingError; sem I/O async."""
     if name == "calcular_mapa_natal":
-        return calcular_mapa_natal(
+        t = _tools()
+        return t.calcular_mapa_natal(
             data=arguments["data"],
             hora=arguments.get("hora"),
             local=arguments.get("local"),
@@ -469,13 +490,15 @@ def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_sinastria":
-        return calcular_sinastria(
+        t = _tools()
+        return t.calcular_sinastria(
             pessoa_a=arguments["pessoa_a"],
             pessoa_b=arguments["pessoa_b"],
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_transitos":
-        return calcular_transitos(
+        t = _tools()
+        return t.calcular_transitos(
             natal=arguments["natal"],
             data_transito=arguments["data_transito"],
             hora_transito=arguments.get("hora_transito"),
@@ -483,26 +506,30 @@ def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_progressoes":
-        return calcular_progressoes(
+        t = _tools()
+        return t.calcular_progressoes(
             natal=arguments["natal"],
             data_alvo=arguments["data_alvo"],
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_mapa_composto":
-        return calcular_mapa_composto(
+        t = _tools()
+        return t.calcular_mapa_composto(
             pessoa_a=arguments["pessoa_a"],
             pessoa_b=arguments["pessoa_b"],
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_revolucao_solar":
-        return calcular_revolucao_solar(
+        t = _tools()
+        return t.calcular_revolucao_solar(
             natal=arguments["natal"],
             ano=arguments["ano"],
             local_revolucao=arguments["local_revolucao"],
             sistema_casas=arguments.get("sistema_casas"),
         )
     elif name == "calcular_revolucao_lunar":
-        return calcular_revolucao_lunar(
+        t = _tools()
+        return t.calcular_revolucao_lunar(
             natal=arguments["natal"],
             data_referencia=arguments["data_referencia"],
             local_revolucao=arguments["local_revolucao"],
