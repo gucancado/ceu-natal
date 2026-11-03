@@ -95,12 +95,11 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
 - **Branch ativa:** `main`
 - **Deploy não é automático** — push pra `main` não publica em produção.
   Disparar deploy via API do Coolify (servidor `monstro-de-meleca`,
-  projeto `astrologia`, app uuid `ejbfwl0yfego72kk5n2us1gh`):
+  projeto `astrologia`, app uuid `ejbfwl0yfego72kk5n2us1gh`) com o script
+  (acompanha até `finished`; aceita `--dry-run` e `--no-wait`):
 
   ```bash
-  curl -X POST \
-    -H "Authorization: Bearer $COOLIFY_TOKEN" \
-    "http://5.78.199.192:8000/api/v1/deploy?uuid=ejbfwl0yfego72kk5n2us1gh"
+  COOLIFY_TOKEN=<bearer> python scripts/deploy.py
   ```
 
   Ou pela UI do Coolify em http://5.78.199.192:8000 → projeto
@@ -147,7 +146,10 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
   despacha via `_dispatch` (síncrono, rodado em threadpool por `_call_tool`)
 - **Testes:** padrão `pytest`, fixtures em `tests/conftest.py`. Casos
   com Kerykeion devem passar lat/lng/tz_str diretos pra evitar
-  dependência de rede
+  dependência de rede.
+  Desde a 2.1.0 `tests/test_server.py` roda no Windows (as tools são
+  importadas sob demanda); só os testes de `app/tools/*` e
+  `app/core/kerykeion.py` exigem Linux/CI.
 
 ---
 
@@ -158,7 +160,7 @@ ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
    ambiente; suite completa exige Linux + pyswisseph compilado)
 3. Commit em `main` (projeto pessoal — sem PR formal)
 4. Push para `origin/main`
-5. **Disparar deploy no Coolify** (manual — via API ou UI, ver seção "Estado atual" acima)
+5. **Disparar deploy no Coolify** (manual — `COOLIFY_TOKEN=<bearer> python scripts/deploy.py` ou UI, ver seção "Estado atual" acima)
 6. Validar com `curl /health` e `curl /tools`
 7. Atualizar `docs/validacao.md` se for mudança que afete contrato
    ou estabilidade
