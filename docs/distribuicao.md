@@ -5,7 +5,7 @@ Guia dos canais onde o servidor MCP é listado. Todos os passos abaixo são feit
 ## Bloco de texto reutilizável
 
 - **Nome:** Céu Natal
-- **Descrição curta (100 caracteres):** Mapa natal, sinastria, trânsitos, progressões e revoluções com efemérides suíças, em português.
+- **Descrição curta (até 100 caracteres):** Mapa natal, sinastria, trânsitos, progressões e revoluções com efemérides suíças, em português.
 - **Descrição longa:** O Céu Natal é um servidor MCP de astrologia que calcula mapas natais, sinastrias, mapas compostos, trânsitos, progressões e revoluções solares e lunares. Usa as efemérides suíças (Swiss Ephemeris) para posições precisas e aceita cidade, data e hora de nascimento em linguagem natural. As respostas vêm em português, prontas para o assistente interpretar.
 - **Prompts de exemplo:**
   1. "Calcule meu mapa natal: nasci em 12/03/1990 às 14h30 em Belo Horizonte."

@@ -28,11 +28,11 @@ revoluções).
 - **Cache de coordenadas.** Guardamos o nome de uma cidade e sua latitude,
   longitude e fuso horário, para não consultar de novo as bases de geocodificação.
   Isso não tem dado pessoal.
-- **Logs do servidor.** Cada chamada registra o nome da ferramenta, o status,
-  a duração e um identificador aleatório de sessão MCP, usado para limitar o
-  excesso de pedidos. Quando uma cidade precisa ser geocodificada, o log também
-  registra o nome da cidade consultada e o país. Data e hora de nascimento
-  nunca são registradas. Os logs ficam guardados por **90 dias**.
+- **Logs do servidor.** Cada chamada registra o nome da ferramenta, o status e a
+  duração. Quando a chamada traz uma cidade, o log também registra o nome da
+  cidade, o país e se a coordenada veio do cache. Data e hora de nascimento
+  nunca são registradas, e não há identificador de sessão nos logs. Os logs
+  ficam guardados por no máximo **90 dias**.
 - **Cookies.** Não usamos nenhum.
 
 ## 4. Terceiros

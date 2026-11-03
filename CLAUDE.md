@@ -83,10 +83,9 @@ A coluna "Status em produção" pode ser sincronizada com a produção rodando
 `python .github/scripts/sync_tools_status.py` — o script compara `/tools`
 com a tabela acima e reescreve as células que mudaram (não comita nada
 por conta própria). Existe também um workflow preparado em
-`.github/workflows/sync-tools-status.yml` (não habilitado por padrão)
-que roda esse script em cron diário e auto-comita quando há drift; para
-ativá-lo, o arquivo precisa ser commitado, o que exige PAT com escopo
-`workflow`.
+`.github/workflows/sync-tools-status.yml` (commitado desde 2026-11-03)
+que roda esse script em cron diário (12:00 UTC) e auto-comita em `main` com
+`[skip ci]` quando há drift.
 
 ---
 

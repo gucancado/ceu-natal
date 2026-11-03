@@ -35,8 +35,8 @@
 
 ## Privacidade
 
-- Nada é armazenado: os dados de nascimento só existem durante o cálculo.
-- O único cache é o de coordenadas de cidade.
+- Nada sobre pessoas é armazenado; o único cache é o de coordenadas de cidade.
+- Os logs guardam por até 90 dias o nome da ferramenta, status, duração e, quando há cidade, o nome da cidade e o país.
 - [Política de privacidade](https://github.com/gucancado/ceu-natal/blob/main/docs/legal/privacidade.md)
 
 ## Código

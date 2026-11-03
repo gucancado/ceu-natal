@@ -175,7 +175,7 @@ curl https://astrologia-mcp.gustavocancado.com.br/tools
   cálculo é stateless por request.
 - O **único cache** é de coordenadas de cidade (lat/lng/timezone), pra evitar
   bater repetido nas APIs de geocoding. Não tem informação pessoal aí.
-- Logs do servidor registram apenas o nome da tool chamada, sem os argumentos.
+- Logs do servidor registram tool, status e duração (e cidade/país quando há cidade), nunca data nem hora de nascimento.
 - Política de privacidade completa: [docs/legal/privacidade.md](legal/privacidade.md)
 
 ---
