@@ -1,5 +1,22 @@
 # Relatório de validação — ceu-natal
 
+## 2026-11-03 — starlette 1.x (`main` @ `3c9c5db`)
+
+Teto do starlette subido de `<1.0.0` para `>=1.3.1,<2.0.0` (decisão do Gustavo)
+e os 5 `--ignore-vuln` do starlette removidos da CI (PYSEC-2026-161/248/249/
+2280/2281; as duas primeiras envenenam `request.url.path` pelo header `Host`,
+critério de rota pública do `APIKeyMiddleware`). CI verde (`testes` +
+`auditoria` sem os ignores). Deploy `uuaw052vpmh5qima393ls02e`, `finished`.
+
+| Checagem | Resultado observado |
+|---|---|
+| Suíte local (Windows, 5 arquivos) com starlette 1.10.0 | 67 passed em 21 s; 1 aviso: `TestClient` com `httpx` depreciado, usar `httpx2` |
+| Log do build no Coolify | `starlette-1.10.0`, `sse_starlette-3.6.0`, `mcp-1.30.0`, `uvicorn-0.54.0` |
+| `GET /health` | `"versao":"2.1.0"`, `"auth_required":false`, limites 30/600 |
+| `GET /` e `GET /llms.txt` (rotas públicas do middleware) | `302` para o GitHub; `# Céu Natal` |
+| `POST /mcp/` sem sessão | `400` do protocolo (não `401` do middleware) |
+| Conector do claude.ai (`healthcheck`) | `versao 2.1.0`, `streamable-http+sse` |
+
 ## 2026-11-03 — 2.1.0: limite de taxa, llms.txt, CI
 
 Merge fast-forward de `produto/f1` em `main` (head `7f6f039`, CI verde), envs
