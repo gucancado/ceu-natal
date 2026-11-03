@@ -216,6 +216,8 @@ curl http://localhost:8000/tools | jq
 Guia passo-a-passo pra usuário final em
 [docs/CONECTAR-CLAUDE-AI.md](docs/CONECTAR-CLAUDE-AI.md). Resumo abaixo.
 
+Política de privacidade: [docs/legal/privacidade.md](docs/legal/privacidade.md)
+
 ### Claude Desktop
 
 Em `claude_desktop_config.json`:
