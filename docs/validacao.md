@@ -15,7 +15,7 @@ health check do Coolify ligado (`/health`, porta 8000; confirmado via API:
 | `GET /llms.txt` | primeira linha `# Céu Natal`, acento íntegro |
 | Smoke do limite, 35 chamadas seguidas de `healthcheck` numa sessão MCP | **nenhuma barrada** (ver nota) |
 | Smoke do limite, 60 chamadas | primeiro barrado na chamada **48**, com `isError` e a mensagem de espera |
-| Conector do claude.ai (`healthcheck` → `versao 2.1.0`) | a cargo do orquestrador, não executado nesta tarefa |
+| Conector do claude.ai (`healthcheck` → `versao 2.1.0`) | executado pelo orquestrador após o deploy: `versao 2.1.0` (clientes já configurados não quebraram) |
 
 Nota sobre o smoke: o balde da sessão é de 30 tokens e recarrega 0,5/s. Pela
 internet cada chamada leva algumas centenas de ms, então a recarga durante a

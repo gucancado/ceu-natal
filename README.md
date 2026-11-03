@@ -203,7 +203,7 @@ curl http://localhost:8000/tools | jq
 | `MCP_HOST`              | `0.0.0.0`                                        | bind                                                            |
 | `MCP_PORT`              | `8000`                                           | porta                                                           |
 | `MCP_SERVER_NAME`       | `ceu-natal`                                      | nome retornado em `initialize`                                  |
-| `MCP_SERVER_VERSION`    | `2.0.0`                                          | versão exposta                                                  |
+| `MCP_SERVER_VERSION`    | `2.1.0`                                          | versão exposta                                                  |
 | `PUBLIC_SITE_URL`       | `https://github.com/gucancado/ceu-natal`         | destino do redirect de `/` e link do site em `/llms.txt`        |
 | `PUBLIC_MCP_URL`        | `https://astrologia-mcp.gustavocancado.com.br`   | URL pública do MCP exibida em `/llms.txt`                       |
 | `RATE_LIMIT_SESSION_PER_MIN` | `30`                                        | chamadas de tool por minuto por sessão MCP (0 desliga)          |
@@ -258,9 +258,11 @@ docker compose run --rm ceu-natal pytest -v
 Os testes usam coordenadas fixas (Belo Horizonte) sem chamar o geocoder, para
 rodar sem rede.
 
-A suite completa exige Linux — `pyswisseph`, dependência transitiva do
-Kerykeion, não compila no Windows. `tests/test_periodos.py` é a exceção: não
-importa Kerykeion e roda em qualquer ambiente com `pytest tests/test_periodos.py`.
+Desde a 2.1.0 `tests/test_server.py`, `tests/test_ratelimit.py`,
+`tests/test_server_json.py`, `tests/test_deploy_script.py` e
+`tests/test_periodos.py` rodam em qualquer ambiente (as tools são importadas
+sob demanda); só os testes de `app/tools/*` e do geocoder exigem Linux/CI
+(`pyswisseph`, dependência transitiva do Kerykeion, não compila no Windows).
 
 ---
 
