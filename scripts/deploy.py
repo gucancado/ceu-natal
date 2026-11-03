@@ -54,6 +54,10 @@ def _requisitar(url: str, token: str, metodo: str) -> tuple[int, dict | None]:
             codigo, texto = resp.status, resp.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         codigo, texto = e.code, e.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, TimeoutError, OSError):
+        # Sem resposta (rede, DNS, recusa, timeout): status 0. A API do Coolify
+        # fica fora ~2 min durante o build Docker, então o chamador tolera isso.
+        return 0, None
     try:
         corpo = json.loads(texto)
     except ValueError:
@@ -93,6 +97,9 @@ def main(argv: list[str]) -> int:
 
     print(f"-> disparando deploy: {url}")
     codigo, corpo = _post_json(url, token)
+    if codigo == 0:
+        print(f"FAIL: sem resposta do Coolify em {url} (rede/timeout)", file=sys.stderr)
+        return 1
     if not 200 <= codigo < 300:
         print(f"FALHA: deploy retornou HTTP {codigo}: {corpo}", file=sys.stderr)
         return 1
@@ -113,7 +120,10 @@ def main(argv: list[str]) -> int:
         time.sleep(INTERVALO_S)
         codigo, dados = _get_json(f"{api}/deployments/{deployment_uuid}", token)
         if not 200 <= codigo < 300:
-            print(f"  (status HTTP {codigo}, tentando de novo)")
+            aviso = "(sem resposta, tentando de novo)" if codigo == 0 else f"(status HTTP {codigo}, tentando de novo)"
+            if aviso != ultimo:
+                print(f"  {aviso}")
+                ultimo = aviso
             continue
         status = (dados or {}).get("status") or (dados or {}).get("deployment_status") or "unknown"
         if status != ultimo:

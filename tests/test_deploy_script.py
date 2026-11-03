@@ -48,3 +48,20 @@ def test_http_erro_sai_um(monkeypatch):
     monkeypatch.setenv("COOLIFY_TOKEN", "t")
     monkeypatch.setattr(d, "_post_json", lambda url, token: (401, {"message": "Unauthenticated."}))
     assert d.main([]) == 1
+
+
+def test_post_sem_resposta_sai_um(monkeypatch):
+    d = _carregar()
+    monkeypatch.setenv("COOLIFY_TOKEN", "t")
+    monkeypatch.setattr(d, "_post_json", lambda url, token: (0, None))
+    assert d.main([]) == 1
+
+
+def test_poll_sem_resposta_continua_ate_finished(monkeypatch):
+    d = _carregar()
+    monkeypatch.setenv("COOLIFY_TOKEN", "t")
+    monkeypatch.setattr(d, "_post_json", lambda url, token: (200, {"deployments": [{"deployment_uuid": "d1"}]}))
+    respostas = iter([(0, None), (200, {"status": "finished"})])
+    monkeypatch.setattr(d, "_get_json", lambda url, token: next(respostas))
+    monkeypatch.setattr(d.time, "sleep", lambda s: None)
+    assert d.main([]) == 0
