@@ -2,7 +2,9 @@
 Testes do app Starlette: rotas HTTP públicas e middleware de auth.
 Não exercita o handshake MCP (SSE) — isso requer cliente MCP de verdade.
 """
+import asyncio
 import importlib
+import json as _json
 
 import pytest
 from starlette.testclient import TestClient
@@ -199,3 +201,51 @@ def test_server_importa_sem_kerykeion():
     codigo = "import sys; sys.modules['kerykeion'] = None; import app.server; print('ok')"
     r = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True, cwd=RAIZ)
     assert r.returncode == 0 and r.stdout.strip() == "ok", r.stderr
+
+
+# ─────────────────────────────────────────────────────────────
+# Limite de taxa no _call_tool
+# ─────────────────────────────────────────────────────────────
+def test_chave_sessao_fora_de_request_eh_none(monkeypatch):
+    mod = _carregar_app(monkeypatch, api_key="")
+    assert mod._chave_sessao() is None
+
+
+def test_call_tool_barra_pela_sessao_com_iserror(monkeypatch, caplog):
+    monkeypatch.setenv("RATE_LIMIT_SESSION_PER_MIN", "2")
+    monkeypatch.setenv("RATE_LIMIT_GLOBAL_PER_MIN", "0")
+    mod = _carregar_app(monkeypatch, api_key="")
+    monkeypatch.setattr(mod, "_chave_sessao", lambda: "sessao-1")
+    with caplog.at_level("INFO", logger="ceu-natal"):
+        asyncio.run(mod._call_tool("healthcheck", {}))
+        asyncio.run(mod._call_tool("healthcheck", {}))
+        terceiro = asyncio.run(mod._call_tool("healthcheck", {}))
+    assert terceiro.isError is True
+    assert _json.loads(terceiro.content[0].text)["erro"].startswith("Limite de chamadas atingido. Aguarde ")
+    ultimo = [_json.loads(r.getMessage()) for r in caplog.records if r.getMessage().startswith("{")][-1]
+    assert ultimo["status"] == "rate_limited"
+
+
+def test_sem_sessao_conta_so_no_global(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_SESSION_PER_MIN", "1")
+    monkeypatch.setenv("RATE_LIMIT_GLOBAL_PER_MIN", "3")
+    mod = _carregar_app(monkeypatch, api_key="")
+    resultados = [asyncio.run(mod._call_tool("healthcheck", {})) for _ in range(4)]
+    assert [isinstance(r, tuple) for r in resultados] == [True, True, True, False]
+
+
+def test_reload_recria_o_limitador(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_SESSION_PER_MIN", "0")
+    monkeypatch.setenv("RATE_LIMIT_GLOBAL_PER_MIN", "1")
+    mod = _carregar_app(monkeypatch, api_key="")
+    asyncio.run(mod._call_tool("healthcheck", {}))
+    mod = _carregar_app(monkeypatch, api_key="")
+    assert isinstance(asyncio.run(mod._call_tool("healthcheck", {})), tuple)
+
+
+def test_health_expoe_limites(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_SESSION_PER_MIN", "30")
+    monkeypatch.setenv("RATE_LIMIT_GLOBAL_PER_MIN", "600")
+    mod = _carregar_app(monkeypatch, api_key="")
+    body = TestClient(mod.app).get("/health").json()
+    assert body["limites"] == {"por_sessao_por_min": 30, "global_por_min": 600}
