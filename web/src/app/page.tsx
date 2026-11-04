@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Faq } from "@/components/faq";
+import { Comparacao } from "@/components/comparacao";
 import { Ferramentas } from "@/components/ferramentas";
-import { Guias, GuiasAbas } from "@/components/guias";
 import { Hero } from "@/components/hero";
 import { JsonLd } from "@/components/json-ld";
 import { Planos } from "@/components/planos";
+import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Profissionais } from "@/components/profissionais";
-import { Prompts } from "@/components/prompts";
 import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
 
@@ -22,17 +21,16 @@ export default function Home() {
       <JsonLd />
       <Hero />
       <Prova />
+      <Comparacao />
       <Secao id="conectar" titulo="Conectar">
-        {/* O fallback já é o conteúdo completo: o HTML estático traz os guias mesmo sem JavaScript. */}
-        <Suspense fallback={<GuiasAbas />}>
-          <Guias />
+        {/* Sem JavaScript, cada cartão é um link para o guia completo. */}
+        <Suspense fallback={<PlataformasGrade inicial={null} />}>
+          <Plataformas />
         </Suspense>
       </Secao>
-      <Prompts />
       <Ferramentas />
       <Planos />
       <Profissionais />
-      <Faq />
     </>
   );
 }

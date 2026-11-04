@@ -9,7 +9,6 @@ const ancoras = [
   { href: "/mapa", rotulo: "Mapa grátis" },
   { href: "/#conectar", rotulo: "Conectar" },
   { href: "/#planos", rotulo: "Planos" },
-  { href: "/#faq", rotulo: "Perguntas" },
 ];
 
 export function Cabecalho() {

@@ -1,0 +1,89 @@
+"use client";
+
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState, type MouseEvent } from "react";
+import { GuiaCorpo } from "@/components/guia";
+import { cliente, clientes } from "@/content/clientes";
+import { logos, type Logo } from "@/content/logos";
+
+const logoDe: Record<string, Logo> = {
+  "claude-ai": "claude",
+  "claude-desktop": "claude",
+  "claude-code": "claude",
+  chatgpt: "openai",
+  gemini: "gemini",
+  cursor: "cursor",
+  n8n: "n8n",
+};
+
+function IconeLogo({ slug }: { slug: string }) {
+  const l = logos[logoDe[slug] ?? "claude"];
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0 fill-current">
+      <path d={l.d} />
+    </svg>
+  );
+}
+
+// Cada cartão é um link para o guia completo; com JavaScript, abre o passo a passo aqui mesmo.
+export function PlataformasGrade({ inicial }: { inicial: string | null }) {
+  const [aberto, setAberto] = useState<string | null>(inicial);
+  const atual = aberto ? cliente(aberto) : undefined;
+
+  function alternar(e: MouseEvent<HTMLAnchorElement>, slug: string) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    e.preventDefault();
+    setAberto((s) => (s === slug ? null : slug));
+  }
+
+  return (
+    <div>
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {clientes.map((c) => {
+          const ativo = c.slug === aberto;
+          return (
+            <li key={c.slug}>
+              <a
+                href={`/conectar/${c.slug}`}
+                onClick={(e) => alternar(e, c.slug)}
+                aria-expanded={ativo}
+                aria-controls="passo-a-passo"
+                className={`flex h-full items-center gap-3 rounded-md border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  ativo ? "border-honey bg-card text-fg" : "border-border text-fg hover:border-fg/40"
+                }`}
+              >
+                <IconeLogo slug={c.slug} />
+                <span className="font-display text-lg font-medium leading-tight">{c.nome}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+      <div id="passo-a-passo" aria-live="polite" className="mt-10">
+        {atual ? (
+          <div className="rounded-md border border-border p-6 md:p-8">
+            <h3 className="flex items-center gap-3 font-display text-2xl font-medium">
+              <IconeLogo slug={atual.slug} />
+              {atual.nome}
+            </h3>
+            <div className="mt-6">
+              <GuiaCorpo c={atual} Titulo="h3" />
+            </div>
+            <Link href={`/conectar/${atual.slug}`} className="mt-8 inline-block text-honey underline underline-offset-4">
+              Guia completo
+            </Link>
+          </div>
+        ) : (
+          <p className="text-muted-fg">Escolha a sua plataforma para ver o passo a passo.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Lê ?cliente=<slug>; precisa de <Suspense> em volta (a página é estática).
+export function Plataformas() {
+  const slug = useSearchParams().get("cliente") ?? "";
+  return <PlataformasGrade key={slug} inicial={cliente(slug)?.slug ?? null} />;
+}
