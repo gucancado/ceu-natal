@@ -13,7 +13,7 @@ Guia dos canais onde o servidor MCP é listado. Todos os passos abaixo são feit
   3. "Faça a sinastria entre mim (12/03/1990, 14h30, Belo Horizonte) e minha parceira (25/07/1992, 9h15, São Paulo)."
 - **URL do repositório:** https://github.com/gucancado/ceu-natal
 - **URL do servidor:** https://astrologia-mcp.gustavocancado.com.br/mcp/
-- **URL da política de privacidade:** https://github.com/gucancado/ceu-natal/blob/main/docs/legal/privacidade.md
+- **URL da política de privacidade:** https://mistico.gustavocancado.com.br/privacidade
 
 ## MCP Registry (oficial)
 
