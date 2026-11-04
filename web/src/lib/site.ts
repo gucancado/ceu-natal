@@ -17,3 +17,6 @@ export const site = {
   contato: "gustavo.azvd@gmail.com",
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
 } as const;
+
+// Descrição padrão do site (metadata e schema.org).
+export const descricaoSite = "Mapa astral calculado com efemérides suíças dentro do seu assistente de IA.";

@@ -3,13 +3,24 @@ import { ThemeProvider } from "@beeads/ui";
 import { Cabecalho } from "@/components/cabecalho";
 import { Rodape } from "@/components/rodape";
 import { newsreader, plexMono } from "@/lib/fontes";
-import { site } from "@/lib/site";
+import { descricaoSite, site } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
-  title: site.nome,
-  description: "Mapa astral calculado com efemérides suíças dentro do seu assistente de IA.",
+  title: { default: site.nome, template: "%s · Céu Natal" },
+  description: descricaoSite,
+  // Canonical relativo: resolve para a rota atual via metadataBase.
+  alternates: { canonical: "./" },
+  // og:image/twitter:image vêm do app/opengraph-image.tsx (convenção de arquivo).
+  // Sem title/description aqui: o Next herda os de cada página (senão toda página teria og:title da home).
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: site.nome,
+    url: "./",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

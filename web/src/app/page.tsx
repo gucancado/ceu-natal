@@ -3,6 +3,7 @@ import { Faq } from "@/components/faq";
 import { Ferramentas } from "@/components/ferramentas";
 import { Guias, GuiasAbas } from "@/components/guias";
 import { Hero } from "@/components/hero";
+import { JsonLd } from "@/components/json-ld";
 import { Passos } from "@/components/passos";
 import { Planos } from "@/components/planos";
 import { Profissionais } from "@/components/profissionais";
@@ -13,6 +14,7 @@ import { Secao } from "@/components/secao";
 export default function Home() {
   return (
     <>
+      <JsonLd />
       <Hero />
       <Prova />
       <Passos />

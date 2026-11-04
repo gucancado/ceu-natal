@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/privacidade": ["./src/content/legal/**/*"],
     "/termos": ["./src/content/legal/**/*"],
+    "/llms-full.txt": ["./src/content/legal/**/*"],
   },
 };
 
