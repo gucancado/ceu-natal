@@ -15,7 +15,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const c = cliente((await params).cliente);
   if (!c) return {};
-  return { title: `Como conectar o Céu Natal no ${c.nome}`, description: c.resumo };
+  return { title: `Como conectar no ${c.nome}`, description: c.resumo };
 }
 
 export default async function PaginaCliente({ params }: Props) {
