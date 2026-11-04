@@ -9,7 +9,12 @@ export function Planos() {
   return (
     <Secao id="planos" titulo="Planos">
       {/* relative: os sr-only (position absolute) da tabela ficam presos ao invólucro e não alargam a página */}
-      <div className="relative overflow-x-auto">
+      <div
+        className="relative overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label="Comparação de planos"
+      >
         <table className="tabular w-full min-w-[44rem] border-collapse text-left">
           <caption className="sr-only">O que cada plano inclui</caption>
           <thead>
@@ -65,7 +70,7 @@ export function Planos() {
       </p>
       <div className="mt-6">
         <Button asChild size="lg">
-          <a href="/#conectar">Conectar agora</a>
+          <a href="#conectar">Conectar agora</a>
         </Button>
       </div>
     </Secao>

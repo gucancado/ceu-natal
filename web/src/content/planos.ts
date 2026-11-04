@@ -31,7 +31,7 @@ export const planos: Plano[] = [
     nome: "Grátis",
     paraQuem: "Para quem usa Claude, ChatGPT, Cursor ou n8n.",
     inclui: [
-      "As 9 ferramentas de cálculo no endpoint aberto",
+      "As 9 ferramentas no endpoint aberto",
       "Sem conta e sem login",
       "Limite por sessão MCP e teto global do endpoint",
     ],
