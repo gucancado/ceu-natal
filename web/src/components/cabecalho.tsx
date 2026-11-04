@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@beeads/ui";
 import { site } from "@/lib/site";
 
 const foco = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -35,7 +34,6 @@ export function Cabecalho() {
               </li>
             </ul>
           </nav>
-          <ThemeToggle />
         </div>
       </div>
     </header>
