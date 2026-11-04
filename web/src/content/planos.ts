@@ -5,6 +5,8 @@ export type Plano = {
   paraQuem: string;
   inclui: string[];
   disponivel: boolean;
+  /** Plano cujos itens este também inclui (ex.: Profissional herda tudo do Pessoal). */
+  herdaDe?: Plano["id"];
   preco?: { mensal: number; anual: number };
 };
 
@@ -14,6 +16,13 @@ export function rotuloPreco(p: Plano): string {
   if (p.id === "gratis") return "Grátis";
   if (!p.preco) return "Em breve";
   return `${brl.format(p.preco.mensal)}/mês ou ${brl.format(p.preco.anual)}/ano`;
+}
+
+/** O plano inclui o item, diretamente ou pela cadeia de herdaDe. */
+export function planoInclui(plano: Plano, item: string, todos: Plano[] = planos): boolean {
+  if (plano.inclui.includes(item)) return true;
+  const pai = plano.herdaDe ? todos.find((p) => p.id === plano.herdaDe) : undefined;
+  return pai ? planoInclui(pai, item, todos) : false;
 }
 
 export const planos: Plano[] = [
@@ -46,8 +55,8 @@ export const planos: Plano[] = [
     id: "profissional",
     nome: "Profissional",
     paraQuem: "Para astrólogos que atendem.",
+    herdaDe: "pessoal",
     inclui: [
-      "Tudo do Pessoal",
       "Clientes ilimitados, com consentimento LGPD registrado",
       "Notas por cliente",
       "preparar_sessao: natal, trânsitos, progressões e revolução solar vigente numa chamada",

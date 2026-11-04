@@ -1,6 +1,6 @@
 import { Badge, Button } from "@beeads/ui";
 import { Secao } from "@/components/secao";
-import { planos, rotuloPreco } from "@/content/planos";
+import { planoInclui, planos, rotuloPreco } from "@/content/planos";
 
 // Linhas = união dos itens de inclusão, na ordem em que aparecem de Grátis a Profissional.
 const linhas = [...new Set(planos.flatMap((p) => p.inclui))];
@@ -14,7 +14,9 @@ export function Planos() {
           <caption className="sr-only">O que cada plano inclui</caption>
           <thead>
             <tr className="border-b border-border align-bottom">
-              <td className="w-[40%] py-4 pr-6" />
+              <th scope="col" className="w-[40%] py-4 pr-6">
+                <span className="sr-only">Item</span>
+              </th>
               {planos.map((p) => (
                 <th key={p.id} scope="col" className="px-4 py-4 font-normal">
                   <span className="flex flex-wrap items-center gap-2 font-display text-xl font-medium">
@@ -26,7 +28,9 @@ export function Planos() {
                     ) : null}
                   </span>
                   <span className="mt-1 block text-sm text-muted-fg">{p.paraQuem}</span>
-                  <span className="mt-2 block font-mono text-sm">{rotuloPreco(p)}</span>
+                  {p.disponivel || p.preco ? (
+                    <span className="mt-2 block font-mono text-sm">{rotuloPreco(p)}</span>
+                  ) : null}
                 </th>
               ))}
             </tr>
@@ -39,7 +43,7 @@ export function Planos() {
                 </th>
                 {planos.map((p) => (
                   <td key={p.id} className="px-4 py-3">
-                    {p.inclui.includes(item) ? (
+                    {planoInclui(p, item) ? (
                       <>
                         <span aria-hidden="true" className="text-honey">
                           ✓
