@@ -61,6 +61,18 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* Revelação das linhas da tabela do hero; desligada pelo bloco prefers-reduced-motion abaixo. */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
