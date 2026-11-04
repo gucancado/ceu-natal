@@ -11,11 +11,15 @@ Uso:
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py            # dispara e acompanha
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py --dry-run  # só mostra o que faria
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py --no-wait  # dispara e sai
+    COOLIFY_TOKEN=<bearer> python scripts/deploy.py --app web  # deploy do site (web/)
+
+`--app server` (padrão) publica o servidor MCP; `--app web` publica o site.
 
 Envs (com defaults sãos; só o token é obrigatório fora do --dry-run):
     COOLIFY_TOKEN     (obrigatório) Bearer token do Coolify, NUNCA commitar
     COOLIFY_API       default http://5.78.199.192:8000/api/v1
-    COOLIFY_APP_UUID  default ejbfwl0yfego72kk5n2us1gh (ceu-natal)
+    COOLIFY_APP_UUID  default ejbfwl0yfego72kk5n2us1gh (ceu-natal); só vale p/ --app server
+    COOLIFY_WEB_UUID  default atbazr01ybzciaqfmvnyfdvg (ceu-natal-web); só vale p/ --app web
 
 Saídas: 0 ok; 1 falha HTTP, deploy falhou/cancelado ou timeout de 10 min;
 2 sem COOLIFY_TOKEN.
@@ -30,6 +34,7 @@ import urllib.request
 
 API_PADRAO = "http://5.78.199.192:8000/api/v1"
 UUID_PADRAO = "ejbfwl0yfego72kk5n2us1gh"
+WEB_UUID_PADRAO = "atbazr01ybzciaqfmvnyfdvg"
 INTERVALO_S = 5
 TIMEOUT_S = 10 * 60
 
@@ -75,7 +80,17 @@ def _get_json(url: str, token: str) -> tuple[int, dict | None]:
 
 def main(argv: list[str]) -> int:
     api = os.environ.get("COOLIFY_API", API_PADRAO)
-    uuid = os.environ.get("COOLIFY_APP_UUID", UUID_PADRAO)
+    app = "server"
+    if "--app" in argv:
+        i = argv.index("--app")
+        app = argv[i + 1] if i + 1 < len(argv) else ""
+    if app not in ("server", "web"):
+        print("--app deve ser 'server' ou 'web'", file=sys.stderr)
+        return 2
+    if app == "web":
+        uuid = os.environ.get("COOLIFY_WEB_UUID", WEB_UUID_PADRAO)
+    else:
+        uuid = os.environ.get("COOLIFY_APP_UUID", UUID_PADRAO)
     token = os.environ.get("COOLIFY_TOKEN")
     dry_run = "--dry-run" in argv
     sem_espera = "--no-wait" in argv
