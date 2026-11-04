@@ -24,13 +24,14 @@ ENV PORT=3000
 WORKDIR /app
 # O healthcheck do Coolify precisa de curl/wget dentro da imagem (node:24-slim não traz).
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -fsS http://localhost:3000/ > /dev/null || exit 1
 
+USER node
 CMD ["node", "server.js"]

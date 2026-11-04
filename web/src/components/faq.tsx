@@ -33,7 +33,7 @@ export function Faq() {
             <AccordionTrigger className="text-left font-display text-lg font-medium">
               {f.pergunta}
             </AccordionTrigger>
-            <AccordionContent className="max-w-[36rem] text-base leading-[1.6] text-muted-fg">
+            <AccordionContent keepMounted className="max-w-[36rem] text-base leading-[1.6] text-muted-fg">
               <Resposta texto={f.resposta} />
             </AccordionContent>
           </AccordionItem>

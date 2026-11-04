@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cliente, clientes } from "../src/content/clientes";
 import { site } from "../src/lib/site";
+import { partesTextoGuia } from "../src/lib/texto-guia";
 
 test("7 clientes com slugs únicos, passos e pelo menos 1 fonte", () => {
   assert.deepEqual(
@@ -55,4 +56,17 @@ test("host do servidor MCP só entra via site.*, nunca literal", () => {
       const resto = s.split(site.mcpEndpoint).join("").split(site.sseEndpoint).join("");
       assert.ok(!resto.includes(host), `${c.slug}: ${s}`);
     }
+});
+
+test("partesTextoGuia: `código` vira código, **menu** vira menu, o resto é texto", () => {
+  assert.deepEqual(partesTextoGuia("Abra **Configurações › Conectores** e cole `https://x.y/mcp/`."), [
+    { tipo: "texto", texto: "Abra " },
+    { tipo: "menu", texto: "Configurações › Conectores" },
+    { tipo: "texto", texto: " e cole " },
+    { tipo: "codigo", texto: "https://x.y/mcp/" },
+    { tipo: "texto", texto: "." },
+  ]);
+  assert.deepEqual(partesTextoGuia("sem marcação * nem ` solto"), [
+    { tipo: "texto", texto: "sem marcação * nem ` solto" },
+  ]);
 });

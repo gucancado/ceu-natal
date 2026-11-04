@@ -16,7 +16,11 @@ export function GuiasAbas({ inicial = padrao }: { inicial?: string }) {
         className="h-auto max-w-full justify-start overflow-x-auto"
       >
         {clientes.map((c) => (
-          <TabsTrigger key={c.slug} value={c.slug} className="shrink-0 whitespace-nowrap">
+          <TabsTrigger
+            key={c.slug}
+            value={c.slug}
+            className="shrink-0 whitespace-nowrap data-[selected]:shadow-none"
+          >
             {c.nome}
           </TabsTrigger>
         ))}

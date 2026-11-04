@@ -1,6 +1,6 @@
 const fatos = [
   "Efemérides suíças (NASA JPL)",
-  "9 técnicas",
+  "9 ferramentas",
   "Em português",
   "Cidade brasileira geocodificada",
   "Código aberto, AGPL",

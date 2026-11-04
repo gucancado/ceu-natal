@@ -1,4 +1,5 @@
 import { Copiar } from "@/components/copiar";
+import { partesTextoGuia } from "@/lib/texto-guia";
 
 export function BlocoCodigo({ codigo }: { codigo: string }) {
   return (
@@ -15,23 +16,22 @@ export function BlocoCodigo({ codigo }: { codigo: string }) {
 
 // Texto dos guias: `código` vira font-mono, **menu** vira peso médio. Nada mais é interpretado.
 export function TextoGuia({ texto }: { texto: string }) {
-  const partes = texto.split(/(`[^`]+`|\*\*[^*]+\*\*)/);
   return (
     <>
-      {partes.map((p, i) => {
-        if (p.startsWith("`") && p.endsWith("`") && p.length > 1)
+      {partesTextoGuia(texto).map((p, i) => {
+        if (p.tipo === "codigo")
           return (
             <code key={i} className="font-mono text-[0.9em] [overflow-wrap:anywhere]">
-              {p.slice(1, -1)}
+              {p.texto}
             </code>
           );
-        if (p.startsWith("**") && p.endsWith("**") && p.length > 3)
+        if (p.tipo === "menu")
           return (
             <strong key={i} className="font-medium">
-              {p.slice(2, -2)}
+              {p.texto}
             </strong>
           );
-        return <span key={i}>{p}</span>;
+        return <span key={i}>{p.texto}</span>;
       })}
     </>
   );

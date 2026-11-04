@@ -18,7 +18,7 @@ export default async function Status() {
       <div className="mt-8 max-w-[36rem]">
         {s.ok ? (
           <p className="font-display text-2xl">
-            <span className="text-honey">No ar</span> · versão <span className="font-mono">{s.versao}</span> · limites{" "}
+            <span>No ar</span> · versão <span className="font-mono">{s.versao}</span> · limites{" "}
             <span className="font-mono">
               {s.limites.por_sessao_por_min}/{s.limites.global_por_min}
             </span>

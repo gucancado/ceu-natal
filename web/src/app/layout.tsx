@@ -28,8 +28,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" suppressHydrationWarning className={`${newsreader.variable} ${plexMono.variable}`}>
       <body className="text-base leading-[1.6]">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <a
+            href="#conteudo"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-bg focus:px-3 focus:py-2 focus:outline-2 focus:outline-honey"
+          >
+            Pular para o conteúdo
+          </a>
           <Cabecalho />
-          <main>{children}</main>
+          <main id="conteudo">{children}</main>
           <Rodape />
         </ThemeProvider>
       </body>

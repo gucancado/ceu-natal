@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Faq } from "@/components/faq";
 import { Ferramentas } from "@/components/ferramentas";
@@ -10,6 +11,11 @@ import { Profissionais } from "@/components/profissionais";
 import { Prompts } from "@/components/prompts";
 import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
+
+// A descrição continua a do layout.
+export const metadata: Metadata = {
+  title: { absolute: "Céu Natal: mapa astral calculado dentro do seu chat" },
+};
 
 export default function Home() {
   return (
