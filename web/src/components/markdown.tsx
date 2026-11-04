@@ -1,6 +1,8 @@
 import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-// Texto jurídico em Markdown, sem HTML cru. Estilo próprio, sem plugin typography.
+// Texto jurídico em Markdown, sem HTML cru. GFM transforma URLs e e-mails soltos em links.
+// Estilo próprio, sem plugin typography.
 const componentes: Components = {
   h1: ({ children }) => (
     <h1 className="font-display text-4xl font-medium leading-[1.15] tracking-tight md:text-5xl">{children}</h1>
@@ -22,7 +24,7 @@ const componentes: Components = {
 export function Markdown({ texto }: { texto: string }) {
   return (
     <div className="max-w-[68ch] [overflow-wrap:anywhere]">
-      <ReactMarkdown components={componentes}>{texto}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={componentes}>{texto}</ReactMarkdown>
     </div>
   );
 }

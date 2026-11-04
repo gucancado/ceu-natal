@@ -24,3 +24,22 @@ test("lerSaude 5xx", async () => {
   const r = await lerSaude("https://m", async () => new Response("x", { status: 503 }));
   assert.equal(r.ok, false);
 });
+
+test("lerSaude timeout", async () => {
+  const r = await lerSaude("https://m", async () => {
+    const e = new Error("tempo");
+    e.name = "TimeoutError";
+    throw e;
+  });
+  assert.deepEqual(r, { ok: false, motivo: "o servidor não respondeu em 5 segundos" });
+});
+
+test("lerSaude 200 com corpo que não é JSON", async () => {
+  const r = await lerSaude("https://m", async () => new Response("não é json", { status: 200 }));
+  assert.deepEqual(r, { ok: false, motivo: "não foi possível falar com o servidor" });
+});
+
+test("lerSaude 200 sem versao/limites", async () => {
+  const r = await lerSaude("https://m", async () => new Response(JSON.stringify({ status: "ok" })));
+  assert.deepEqual(r, { ok: false, motivo: "resposta inesperada do servidor" });
+});
