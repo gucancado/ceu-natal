@@ -1,0 +1,69 @@
+import { Badge, Button } from "@beeads/ui";
+import { Secao } from "@/components/secao";
+import { planos, rotuloPreco } from "@/content/planos";
+
+// Linhas = união dos itens de inclusão, na ordem em que aparecem de Grátis a Profissional.
+const linhas = [...new Set(planos.flatMap((p) => p.inclui))];
+
+export function Planos() {
+  return (
+    <Secao id="planos" titulo="Planos">
+      {/* relative: os sr-only (position absolute) da tabela ficam presos ao invólucro e não alargam a página */}
+      <div className="relative overflow-x-auto">
+        <table className="tabular w-full min-w-[44rem] border-collapse text-left">
+          <caption className="sr-only">O que cada plano inclui</caption>
+          <thead>
+            <tr className="border-b border-border align-bottom">
+              <td className="w-[40%] py-4 pr-6" />
+              {planos.map((p) => (
+                <th key={p.id} scope="col" className="px-4 py-4 font-normal">
+                  <span className="flex flex-wrap items-center gap-2 font-display text-xl font-medium">
+                    {p.nome}
+                    {!p.disponivel ? (
+                      <Badge variant="outline" className="border-border font-normal text-muted-fg">
+                        Em breve
+                      </Badge>
+                    ) : null}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted-fg">{p.paraQuem}</span>
+                  <span className="mt-2 block font-mono text-sm">{rotuloPreco(p)}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((item) => (
+              <tr key={item} className="border-b border-border">
+                <th scope="row" className="py-3 pr-6 font-normal">
+                  {item}
+                </th>
+                {planos.map((p) => (
+                  <td key={p.id} className="px-4 py-3">
+                    {p.inclui.includes(item) ? (
+                      <>
+                        <span aria-hidden="true" className="text-honey">
+                          ✓
+                        </span>
+                        <span className="sr-only">incluído</span>
+                      </>
+                    ) : (
+                      <span className="sr-only">não incluído</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-8 max-w-[36rem] text-muted-fg">
+        Os planos com conta chegam depois do grátis. Preços serão publicados aqui.
+      </p>
+      <div className="mt-6">
+        <Button asChild size="lg">
+          <a href="/#conectar">Conectar agora</a>
+        </Button>
+      </div>
+    </Secao>
+  );
+}

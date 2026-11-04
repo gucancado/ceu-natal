@@ -1,5 +1,10 @@
+import { Faq } from "@/components/faq";
+import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
 import { Passos } from "@/components/passos";
+import { Planos } from "@/components/planos";
+import { Profissionais } from "@/components/profissionais";
+import { Prompts } from "@/components/prompts";
 import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
 
@@ -12,21 +17,11 @@ export default function Home() {
       <Secao id="conectar" titulo="Conectar">
         <p />
       </Secao>
-      <Secao id="ferramentas" titulo="Nove ferramentas">
-        <p />
-      </Secao>
-      <Secao id="exemplos" titulo="Três pedidos para começar">
-        <p />
-      </Secao>
-      <Secao id="planos" titulo="Planos">
-        <p />
-      </Secao>
-      <Secao id="profissionais" titulo="Para quem atende">
-        <p />
-      </Secao>
-      <Secao id="faq" titulo="Perguntas frequentes">
-        <p />
-      </Secao>
+      <Ferramentas />
+      <Prompts />
+      <Planos />
+      <Profissionais />
+      <Faq />
     </>
   );
 }
