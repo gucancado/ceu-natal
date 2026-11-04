@@ -1,6 +1,6 @@
 # Política de privacidade — Céu Natal
 
-Versão 1 — 2026-11-03 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 2 — 2026-11-04 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o servidor MCP do Céu Natal
 faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
@@ -22,6 +22,12 @@ revoluções).
 - Eles **não são armazenados**. Cada pedido é calculado e esquecido.
 - O serviço não tem conta, login nem cadastro. Não pedimos nome, e-mail nem
   telefone.
+
+O formulário "mapa natal sem cadastro" do site envia os mesmos dados (data,
+hora e cidade) direto do seu navegador para o servidor, com o mesmo
+tratamento: o cálculo é feito, o resultado volta para a sua tela e nada é
+guardado. Para limitar abusos, o servidor conta os pedidos por endereço IP
+só na memória, por alguns minutos; o IP não vai para os logs.
 
 ## 3. O que fica guardado
 
