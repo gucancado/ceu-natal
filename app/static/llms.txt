@@ -7,7 +7,7 @@
 - [Endpoint MCP (Streamable HTTP, recomendado)]({mcp_url}/mcp/): use a barra final; sem login no plano gratuito.
 - [Endpoint SSE (legado)]({mcp_url}/sse): handshake MCP via SSE, em descontinuação.
 - [Site]({site_url}): apresentação do projeto.
-- [Guia de conexão no Claude.ai](https://github.com/gucancado/ceu-natal/blob/main/docs/CONECTAR-CLAUDE-AI.md): passo a passo.
+- [Guia de conexão no Claude.ai](https://mistico.gustavocancado.com.br/conectar/claude-ai): passo a passo.
 
 ## Tools
 
@@ -37,7 +37,7 @@
 
 - Nada sobre pessoas é armazenado; o único cache é o de coordenadas de cidade.
 - Os logs guardam por até 90 dias o nome da ferramenta, status, duração e, quando há cidade, o nome da cidade e o país.
-- [Política de privacidade](https://github.com/gucancado/ceu-natal/blob/main/docs/legal/privacidade.md)
+- [Política de privacidade](https://mistico.gustavocancado.com.br/privacidade)
 
 ## Código
 
