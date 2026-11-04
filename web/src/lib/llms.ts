@@ -43,7 +43,9 @@ export function gerarLlmsTxt(): string {
 }
 
 export function gerarLlmsFull(): string {
-  const politica = fs.readFileSync(path.join(process.cwd(), "src/content/legal/privacidade.md"), "utf8");
+  const bruta = fs.readFileSync(path.join(process.cwd(), "src/content/legal/privacidade.md"), "utf8").trim();
+  // O H1 do arquivo sai: a seção "## Política de privacidade" já faz de título.
+  const politica = bruta.replace(/^# .*(\r?\n|$)/, "").trim();
   const partes = [gerarLlmsTxt(), "## Guias de conexão", ""];
   for (const c of clientes) {
     partes.push(`### ${c.nome}`, "", ...c.passos.map((p, i) => `${i + 1}. ${p}`), "");
@@ -53,6 +55,6 @@ export function gerarLlmsFull(): string {
   }
   partes.push("## Perguntas frequentes", "");
   for (const item of faq) partes.push(`**${item.pergunta}**`, "", item.resposta, "");
-  partes.push("## Política de privacidade", "", politica.trim(), "");
+  partes.push("## Política de privacidade", "", politica, "");
   return partes.join("\n");
 }

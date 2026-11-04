@@ -3,7 +3,7 @@ import Link from "next/link";
 import { clientes } from "@/content/clientes";
 
 export const metadata: Metadata = {
-  title: "Como conectar o Céu Natal",
+  title: "Como conectar",
   description: "Guias passo a passo para conectar o Céu Natal no Claude, no ChatGPT, no Gemini, no Cursor e no n8n.",
 };
 
