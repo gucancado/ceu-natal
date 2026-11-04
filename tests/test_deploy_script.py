@@ -81,3 +81,18 @@ def test_app_web_respeita_env_coolify_web_uuid(monkeypatch):
     r = subprocess.run([sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
     assert r.returncode == 0
     assert "deploy?uuid=abc123" in r.stdout
+
+
+def test_app_invalido_sai_dois(monkeypatch):
+    monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
+    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "x", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    assert r.returncode == 2
+    assert "--app" in r.stderr
+
+
+def test_app_igual_web_funciona(monkeypatch):
+    monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
+    monkeypatch.delenv("COOLIFY_WEB_UUID", raising=False)
+    r = subprocess.run([sys.executable, str(SCRIPT), "--app=web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    assert r.returncode == 0
+    assert "deploy?uuid=atbazr01ybzciaqfmvnyfdvg" in r.stdout
