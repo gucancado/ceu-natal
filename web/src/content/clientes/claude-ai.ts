@@ -20,7 +20,7 @@ export const claudeAi: Cliente = {
   limitacoes: [
     "O conector se liga por conversa, pelo **+** > **Connectors**.",
     "Para mudar o conector, remova e adicione de novo.",
-    `Com o Claude em português, os menus aparecem traduzidos ${confira}.`,
+    `Com o Claude em português, os menus podem aparecer traduzidos ${confira}.`,
   ],
   fontes: [
     {

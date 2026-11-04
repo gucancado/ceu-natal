@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { cliente, clientes } from "../src/content/clientes";
 import { site } from "../src/lib/site";
 
@@ -39,4 +42,17 @@ test("ChatGPT e Gemini levam o aviso de confiança; ChatGPT com a linha de plano
     cliente("chatgpt")?.planoMinimo,
     "Disponível nos planos Business, Enterprise e Edu; no Pro, só ferramentas de leitura (as do Céu Natal são todas de leitura); no Plus, confira na sua conta.",
   );
+});
+
+test("host do servidor MCP só entra via site.*, nunca literal", () => {
+  const host = "astrologia-mcp.gustavocancado.com.br";
+  // Fonte: nenhum módulo de cliente escreve o host à mão.
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "../src/content/clientes");
+  for (const f of readdirSync(dir)) assert.ok(!readFileSync(join(dir, f), "utf8").includes(host), f);
+  // Texto renderizado: fora das interpolações de site.mcpEndpoint/sseEndpoint, o host não aparece.
+  for (const c of clientes)
+    for (const s of [c.resumo, ...c.passos, ...c.limitacoes]) {
+      const resto = s.split(site.mcpEndpoint).join("").split(site.sseEndpoint).join("");
+      assert.ok(!resto.includes(host), `${c.slug}: ${s}`);
+    }
 });

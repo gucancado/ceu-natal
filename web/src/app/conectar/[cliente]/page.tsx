@@ -36,7 +36,8 @@ export default async function PaginaCliente({ params }: Props) {
             <li key={f.url}>
               <a
                 href={f.url}
-                rel="noopener"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-honey underline underline-offset-4 [overflow-wrap:anywhere]"
               >
                 {f.titulo}

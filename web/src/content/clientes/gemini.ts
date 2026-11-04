@@ -14,7 +14,7 @@ export const gemini: Cliente = {
   confianca: "media",
   passos: [
     "Abra o Antigravity (app, IDE ou o CLI `agy`). Ele substituiu o Gemini CLI, que parou de atender contas individuais em junho de 2026.",
-    "Abra o arquivo de configuração global `~/.gemini/config/mcp_config.json`. No app: **Settings** > **Customizations** > **Installed MCP Servers**. No IDE: menu **…** do painel do Agent > **MCP Servers** > **Manage MCP Servers** > **View raw config**.",
+    "Abra o arquivo de configuração global `~/.gemini/config/mcp_config.json`. No IDE, o caminho até ele é o menu **…** do painel do Agent > **MCP Servers** > **Manage MCP Servers** > **View raw config**. No app, **Settings** > **Customizations** > **Installed MCP Servers** mostra os servidores instalados; para um servidor próprio, edite o arquivo de configuração direto.",
     "Cole o bloco abaixo e salve. O campo da URL é `serverUrl`.",
     "No CLI, `/mcp` abre o MCP Manager, que mostra o status e recarrega os servidores.",
   ],
