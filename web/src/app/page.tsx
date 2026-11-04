@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { Faq } from "@/components/faq";
 import { Ferramentas } from "@/components/ferramentas";
+import { Guias, GuiasAbas } from "@/components/guias";
 import { Hero } from "@/components/hero";
 import { Passos } from "@/components/passos";
 import { Planos } from "@/components/planos";
@@ -15,7 +17,10 @@ export default function Home() {
       <Prova />
       <Passos />
       <Secao id="conectar" titulo="Conectar">
-        <p />
+        {/* O fallback já é o conteúdo completo: o HTML estático traz os guias mesmo sem JavaScript. */}
+        <Suspense fallback={<GuiasAbas />}>
+          <Guias />
+        </Suspense>
       </Secao>
       <Ferramentas />
       <Prompts />
