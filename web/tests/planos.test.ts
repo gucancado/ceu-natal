@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planos, rotuloPreco } from "../src/content/planos";
+import { planoInclui, planos, rotuloPreco } from "../src/content/planos";
 
 test("rotuloPreco", () => {
   assert.equal(rotuloPreco(planos.find((p) => p.id === "gratis")!), "Grátis");
@@ -28,4 +28,14 @@ test("três planos na ordem grátis, pessoal, profissional; só o grátis dispon
   assert.deepEqual(planos.map((p) => p.id), ["gratis", "pessoal", "profissional"]);
   assert.deepEqual(planos.map((p) => p.disponivel), [true, false, false]);
   assert.ok(planos.every((p) => p.inclui.length > 0 && p.paraQuem.length > 0));
+});
+
+test("planoInclui segue a herança: Profissional inclui o Pessoal", () => {
+  const [gratis, , profissional] = planos;
+  assert.equal(profissional.herdaDe, "pessoal");
+  assert.ok(!profissional.inclui.includes("Tudo do Pessoal"));
+  assert.ok(planoInclui(profissional, "Login"));
+  assert.ok(planoInclui(profissional, "Notas por cliente"));
+  assert.ok(!planoInclui(gratis, "Login"));
+  assert.ok(!planoInclui(profissional, "Sem conta e sem login"));
 });

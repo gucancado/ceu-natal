@@ -16,8 +16,8 @@ export function Profissionais() {
           junta natal, trânsitos, progressões e revolução solar vigente numa chamada só.
         </p>
         <p>
-          Você entrega ao cliente a roda do mapa em SVG ou PDF e um link de relatório, com o
-          consentimento LGPD de cada cliente registrado.
+          Você entrega ao cliente a roda do mapa em SVG ou PDF e um link de relatório, cada cliente
+          com o consentimento LGPD registrado.
         </p>
         <p>
           <a
