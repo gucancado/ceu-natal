@@ -4,6 +4,8 @@ Guia rápido pra usar o servidor MCP de astrologia (mapas natais, sinastria,
 trânsitos, progressões, composto) direto do chat do Claude.ai. Tempo total
 estimado: 3 minutos.
 
+Guia público (versão web deste passo a passo): https://mistico.gustavocancado.com.br/conectar/claude-ai
+
 ---
 
 ## Pré-requisitos
@@ -62,9 +64,10 @@ No chat, mande:
 Você consegue usar o MCP ceu-natal? Liste as tools disponíveis.
 ```
 
-Esperado: o Claude responde listando as 7 tools (`calcular_mapa_natal`,
+Esperado: o Claude responde listando as 9 tools (`calcular_mapa_natal`,
 `calcular_sinastria`, `calcular_transitos`, `calcular_progressoes`,
-`calcular_mapa_composto`, `listar_aspectos_tipos`, `healthcheck`).
+`calcular_mapa_composto`, `calcular_revolucao_solar`, `calcular_revolucao_lunar`,
+`listar_aspectos_tipos`, `healthcheck`).
 
 ---
 
@@ -165,7 +168,7 @@ curl https://astrologia-mcp.gustavocancado.com.br/health
 curl https://astrologia-mcp.gustavocancado.com.br/tools
 ```
 
-`/health` é público; `/tools` lista os schemas das 7 ferramentas.
+`/health` é público; `/tools` lista os schemas das 9 ferramentas.
 
 ---
 

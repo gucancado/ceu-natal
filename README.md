@@ -277,7 +277,7 @@ pnpm test && pnpm typecheck && pnpm build
 
 Variáveis de ambiente (ver `web/.env.example`; `NEXT_PUBLIC_*` são embutidas no build): `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MCP_URL`, `NEXT_PUBLIC_REPO_URL`. Todas as URLs passam por `web/src/lib/site.ts`.
 
-Deploy: imagem própria (`web/Dockerfile`, saída `standalone`), fora da imagem Python (`.dockerignore` da raiz exclui `web/`). Passo a passo no Coolify na Task 8 do plano.
+Deploy: imagem própria (`web/Dockerfile`, saída `standalone`), fora da imagem Python (`.dockerignore` da raiz exclui `web/`). Roda no Coolify como app `ceu-natal-web` (uuid `atbazr01ybzciaqfmvnyfdvg`, base directory `/web`, porta 3000, domínio `https://mistico.gustavocancado.com.br`). Deploy manual: `COOLIFY_TOKEN=<bearer> python scripts/deploy.py --app web`. As três envs `NEXT_PUBLIC_*` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MCP_URL`, `NEXT_PUBLIC_REPO_URL`) ficam no Coolify (prod e preview). A imagem carrega `curl` porque o healthcheck do Coolify precisa dele.
 
 ---
 

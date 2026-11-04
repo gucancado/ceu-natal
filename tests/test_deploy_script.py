@@ -65,3 +65,19 @@ def test_poll_sem_resposta_continua_ate_finished(monkeypatch):
     monkeypatch.setattr(d, "_get_json", lambda url, token: next(respostas))
     monkeypatch.setattr(d.time, "sleep", lambda s: None)
     assert d.main([]) == 0
+
+
+def test_app_web_dry_run_usa_uuid_do_site(monkeypatch):
+    monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
+    monkeypatch.delenv("COOLIFY_WEB_UUID", raising=False)
+    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    assert r.returncode == 0
+    assert "deploy?uuid=atbazr01ybzciaqfmvnyfdvg" in r.stdout
+
+
+def test_app_web_respeita_env_coolify_web_uuid(monkeypatch):
+    monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
+    monkeypatch.setenv("COOLIFY_WEB_UUID", "abc123")
+    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    assert r.returncode == 0
+    assert "deploy?uuid=abc123" in r.stdout
