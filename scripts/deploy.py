@@ -22,9 +22,10 @@ Envs (com defaults sãos; só o token é obrigatório fora do --dry-run):
     COOLIFY_WEB_UUID  default atbazr01ybzciaqfmvnyfdvg (ceu-natal-web); só vale p/ --app web
 
 Saídas: 0 ok; 1 falha HTTP, deploy falhou/cancelado ou timeout de 10 min;
-2 sem COOLIFY_TOKEN.
+2 sem COOLIFY_TOKEN ou argumento inválido (erro do argparse).
 """
 
+import argparse
 import json
 import os
 import sys
@@ -79,21 +80,23 @@ def _get_json(url: str, token: str) -> tuple[int, dict | None]:
 
 
 def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Deploy manual do ceu-natal via API do Coolify.")
+    parser.add_argument("--app", choices=("server", "web"), default="server", help="o que publicar (padrão: server)")
+    parser.add_argument("--dry-run", action="store_true", help="só mostra o que faria")
+    parser.add_argument("--no-wait", action="store_true", help="dispara e sai, sem acompanhar")
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as e:  # argumento inválido: o argparse já imprimiu o erro
+        return e.code if isinstance(e.code, int) else 2
     api = os.environ.get("COOLIFY_API", API_PADRAO)
-    app = "server"
-    if "--app" in argv:
-        i = argv.index("--app")
-        app = argv[i + 1] if i + 1 < len(argv) else ""
-    if app not in ("server", "web"):
-        print("--app deve ser 'server' ou 'web'", file=sys.stderr)
-        return 2
+    app = args.app
     if app == "web":
         uuid = os.environ.get("COOLIFY_WEB_UUID", WEB_UUID_PADRAO)
     else:
         uuid = os.environ.get("COOLIFY_APP_UUID", UUID_PADRAO)
     token = os.environ.get("COOLIFY_TOKEN")
-    dry_run = "--dry-run" in argv
-    sem_espera = "--no-wait" in argv
+    dry_run = args.dry_run
+    sem_espera = args.no_wait
 
     if not token and not dry_run:
         print(
