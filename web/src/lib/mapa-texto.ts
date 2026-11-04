@@ -78,11 +78,13 @@ export function textoMapa(m: MapaRapido): string {
       ...Object.entries(m.casas!).map(([k, p]) => `- Casa ${k.replace("casa_", "")}: ${p.grau} ${signo(p.signo)}`),
     );
   }
-  if (m.aspectos && m.aspectos.length > 0) {
+  // Nodo Norte e Nodo Sul estão sempre em oposição exata: não informa nada.
+  const aspectos = (m.aspectos ?? []).filter((a) => !(a.planeta_a.startsWith("nodo_") && a.planeta_b.startsWith("nodo_")));
+  if (aspectos.length > 0) {
     linhas.push(
       "",
       "Aspectos",
-      ...m.aspectos.map(
+      ...aspectos.map(
         (a) => `- ${nome(a.planeta_a)} ${aspecto(a.tipo)} ${nome(a.planeta_b)} (orbe ${grauMinuto(a.orbe)})`,
       ),
     );

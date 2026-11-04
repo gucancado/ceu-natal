@@ -15,7 +15,10 @@ const completo: MapaRapido = {
   pontos_sensiveis: { chiron: { signo: "Cancer", grau: "13°14'", casa: 10 } },
   angulos: { ascendente: { signo: "Libra", grau: "2°15'" } },
   casas: { casa_1: { signo: "Libra", grau: "2°15'" }, casa_10: { signo: "Cancer", grau: "1°36'" } },
-  aspectos: [{ planeta_a: "venus", planeta_b: "chiron", tipo: "quadratura", orbe: 0.151 }],
+  aspectos: [
+    { planeta_a: "nodo_norte_verdadeiro", planeta_b: "nodo_sul_verdadeiro", tipo: "oposicao", orbe: 0 },
+    { planeta_a: "venus", planeta_b: "chiron", tipo: "quadratura", orbe: 0.151 },
+  ],
 };
 
 test("grauMinuto", () => {
@@ -37,6 +40,7 @@ test("texto do mapa: prompt de integração, acentos, casas e aspectos", () => {
   assert.ok(t.includes("- Ascendente: 2°15' Libra"));
   assert.ok(t.includes("- Casa 10: 1°36' Câncer"));
   assert.ok(t.includes("- Vênus quadratura Quíron (orbe 0°09')"));
+  assert.ok(!t.includes("Nodo Norte oposição Nodo Sul"));
 });
 
 test("texto do mapa sem hora: sem casas nem ângulos", () => {
