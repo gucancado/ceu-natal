@@ -18,7 +18,7 @@ export const claudeDesktop: Cliente = {
   planoMinimo:
     "Conector: todos os planos, com limite de 1 conector personalizado no Free. Ponte mcp-remote: qualquer plano, com o Node.js instalado.",
   semLogin: true,
-  confianca: "alta",
+  confianca: "media",
   passos: [
     "Abra as configurações do app: `Ctrl+,` no Windows, ou **File** > **Settings**. Na versão nova, a área se chama **Customize** > **Connectors**.",
     "Em **Connectors**, clique em **+ Add** e depois em **Add custom connector**.",
@@ -29,7 +29,7 @@ export const claudeDesktop: Cliente = {
   ],
   snippet: { linguagem: "json", codigo: JSON.stringify(config, null, 2) },
   limitacoes: [
-    "O arquivo de configuração não aceita só a URL do servidor. Por isso o bloco usa a ponte `mcp-remote`.",
+    "Pelos relatos de 2026, o arquivo de configuração não aceita só a URL do servidor. Por isso o bloco usa a ponte `mcp-remote`.",
     "Para mudar o conector, remova e adicione de novo.",
     "No Windows, o log da conexão fica em `C:\\Users\\<usuário>\\AppData\\Local\\Claude\\Logs\\mcp.log`.",
   ],
