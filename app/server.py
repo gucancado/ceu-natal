@@ -8,6 +8,8 @@ Endpoints:
   GET  /health     — healthcheck público (sem auth)
   GET  /llms.txt   — descrição do servidor para LLMs (público)
   GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
+  POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
+                      para PUBLIC_SITE_URL, limite por IP)
 
 Autenticação: header `Authorization: Bearer <key>` ou query `?api_key=<key>`.
 Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
@@ -60,8 +62,19 @@ LIMITADOR = LimitadorTaxa(RATE_LIMIT_SESSION_PER_MIN, RATE_LIMIT_GLOBAL_PER_MIN)
 # URLs públicas (a landing troca de domínio só por env), sem barra final.
 PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://github.com/gucancado/ceu-natal").rstrip("/")
 PUBLIC_MCP_URL = os.getenv("PUBLIC_MCP_URL", "https://astrologia-mcp.gustavocancado.com.br").rstrip("/")
+# Mapa rápido do site: limite por IP (o formulário roda no navegador da pessoa,
+# então o IP é dela; os IPs compartilhados de Anthropic/OpenAI não passam aqui).
+RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN", "6"))
+RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN", "120"))
+LIMITADOR_MAPA_RAPIDO = LimitadorTaxa(RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN, RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN)
+# Origens aceitas pelo CORS do /mapa-rapido (vírgula). Padrão: só o site.
+CORS_ORIGINS = [
+    o.strip().rstrip("/")
+    for o in os.getenv("CORS_ORIGINS", "").split(",")
+    if o.strip()
+] or [PUBLIC_SITE_URL]
 # Caminhos que dispensam a chave de API.
-_PUBLICOS = ["/health", "/llms.txt", "/"]
+_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido"]
 _LLMS_TXT = (Path(__file__).parent / "static" / "llms.txt").read_text(encoding="utf-8").format(
     mcp_url=PUBLIC_MCP_URL, site_url=PUBLIC_SITE_URL,
 )
@@ -690,6 +703,80 @@ async def _raiz(_: Request) -> RedirectResponse:
     return RedirectResponse(PUBLIC_SITE_URL, status_code=302)
 
 
+def _ip_cliente(request: Request) -> str | None:
+    """Primeiro IP do X-Forwarded-For (Traefik) ou o IP da conexão."""
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff.strip():
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
+def _cabecalhos_cors(request: Request) -> dict[str, str]:
+    origem = request.headers.get("origin", "").rstrip("/")
+    if origem and origem in CORS_ORIGINS:
+        return {
+            "Access-Control-Allow-Origin": origem,
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "600",
+            "Vary": "Origin",
+        }
+    return {"Vary": "Origin"}
+
+
+_CAMPOS_MAPA_RAPIDO = ("data", "hora", "local")
+
+
+async def _mapa_rapido(request: Request) -> Response:
+    """Mapa natal para o formulário do site: data, hora e local; nada é guardado."""
+    cors = _cabecalhos_cors(request)
+    if request.method == "OPTIONS":
+        return Response(status_code=204, headers=cors)
+
+    inicio = time.monotonic()
+    status = "ok"
+    try:
+        permitido, espera = LIMITADOR_MAPA_RAPIDO.tentar(_ip_cliente(request))
+        if not permitido:
+            status = "rate_limited"
+            cors_429 = {**cors, "Retry-After": str(math.ceil(espera))}
+            return JSONResponse(
+                {"erro": f"Muitos pedidos. Aguarde {math.ceil(espera)} segundos e tente de novo."},
+                status_code=429, headers=cors_429,
+            )
+        try:
+            corpo = await request.json()
+        except ValueError:
+            corpo = None
+        if not isinstance(corpo, dict) or not isinstance(corpo.get("data"), str):
+            status = "value_error"
+            return JSONResponse({"erro": "Envie um JSON com data (DD/MM/YYYY)."}, status_code=400, headers=cors)
+        argumentos: dict[str, Any] = {}
+        for campo in _CAMPOS_MAPA_RAPIDO:
+            valor = corpo.get(campo)
+            if valor is None or (isinstance(valor, str) and not valor.strip()):
+                continue
+            if not isinstance(valor, str) or len(valor) > 120:
+                status = "value_error"
+                return JSONResponse({"erro": f"Campo inválido: {campo}."}, status_code=400, headers=cors)
+            argumentos[campo] = valor.strip()
+        try:
+            resultado = await anyio.to_thread.run_sync(_dispatch, "calcular_mapa_natal", argumentos)
+        except GeocodingError as exc:
+            status = "geocoding_error"
+            return JSONResponse({"erro": str(exc)}, status_code=422, headers=cors)
+        except ValueError as exc:
+            status = "value_error"
+            return JSONResponse({"erro": str(exc)}, status_code=400, headers=cors)
+        except Exception:  # noqa: BLE001
+            status = "internal_error"
+            logger.exception("erro inesperado em mapa_rapido")
+            return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
+        return JSONResponse(resultado, headers=cors)
+    finally:
+        _log_tool_call("mapa_rapido", status, round((time.monotonic() - inicio) * 1000, 1))
+
+
 async def _list_tools_http(_: Request) -> JSONResponse:
     """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
     payload_tools = []
@@ -718,6 +805,7 @@ app = Starlette(
         Route("/llms.txt", endpoint=_llms_txt, methods=["GET"]),
         Route("/health", endpoint=_health, methods=["GET"]),
         Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
+        Route("/mapa-rapido", endpoint=_mapa_rapido, methods=["POST", "OPTIONS"]),
         Route("/sse", endpoint=_handle_sse, methods=["GET"]),
         Mount("/messages/", app=sse_transport.handle_post_message),
         Mount("/mcp", app=session_manager.handle_request),
