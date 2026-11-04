@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@beeads/tokens/theme.css";
+@import "@beeads/ui/styles.css";
+
+/* Tailwind v4 não escaneia node_modules; sem isto as classes dos componentes do @beeads/ui não são geradas. */
+@source "../../node_modules/@beeads/ui/dist/classlist.txt";
+
+/* Breakpoint com valor literal: o do @beeads/tokens gera media query inválida. */
+@theme {
+  --breakpoint-3xl: 1700px;
+}
+
+/* Camada de tokens da marca: sobrescreve por completo a paleta honey/ink da BeeAds. */
+:root {
+  --color-honey: #B5121B;
+  --color-honey-soft: #F7DADB;
+  --color-honey-deep: #8E0E15;
+  --color-ink: #1D2342;
+  --color-paper: #F3F6FA;
+  --color-paper-2: #E8EDF5;
+  --color-border: #D5DBE7;
+  --color-muted-fg: #5B6079;
+  --color-card: #FFFFFF;
+  --color-accent: var(--color-honey);
+  --color-accent-fg: #FFFFFF;
+  --color-ring: var(--color-honey);
+  --color-info: #1D2342;
+  --radius: 0.25rem;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+.dark {
+  --color-bg: #12162B;
+  --color-fg: #E9ECF5;
+  --color-card: #1A1F38;
+  --color-card-fg: #E9ECF5;
+  --color-muted: #222848;
+  --color-muted-fg: #A3A9C4;
+  --color-border: #2F3659;
+  --color-input: #2F3659;
+  --color-primary: #E9ECF5;
+  --color-primary-fg: #12162B;
+  --color-secondary: #222848;
+  --color-secondary-fg: #E9ECF5;
+  --color-honey: #E04B55;
+  --color-honey-soft: #3A1A20;
+  --color-accent: #E04B55;
+  --color-accent-fg: #12162B;
+  --color-ring: #E04B55;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-fg);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

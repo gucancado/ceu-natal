@@ -266,6 +266,21 @@ sob demanda); só os testes de `app/tools/*` e do geocoder exigem Linux/CI
 
 ---
 
+## Site (`web/`)
+
+Landing em Next.js 16 (`@beeads/ui`, tokens da marca em `web/src/app/globals.css`), independente do servidor Python.
+
+```bash
+cd web && pnpm install && pnpm dev   # http://localhost:3000
+pnpm test && pnpm typecheck && pnpm build
+```
+
+Variáveis de ambiente (ver `web/.env.example`; `NEXT_PUBLIC_*` são embutidas no build): `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MCP_URL`, `NEXT_PUBLIC_REPO_URL`. Todas as URLs passam por `web/src/lib/site.ts`.
+
+Deploy: imagem própria (`web/Dockerfile`, saída `standalone`), fora da imagem Python (`.dockerignore` da raiz exclui `web/`). Passo a passo no Coolify na Task 8 do plano.
+
+---
+
 ## Licença
 
 O código é AGPL-3.0 (texto completo em [`LICENSE`](LICENSE)).
