@@ -49,11 +49,11 @@ export function Comparacao() {
             <div key={l.tema} className="grid gap-3 py-5 md:grid-cols-[12rem_1fr_1fr] md:gap-8">
               <dt className="font-display text-lg font-medium">{l.tema}</dt>
               <dd className="text-muted-fg">
-                <span className="font-mono text-xs uppercase tracking-wide md:sr-only">Só o assistente: </span>
+                <span className="font-mono text-xs md:sr-only">Só o assistente: </span>
                 {l.sem}
               </dd>
               <dd>
-                <span className="font-mono text-xs uppercase tracking-wide text-honey md:sr-only">Com o Céu Natal: </span>
+                <span className="font-mono text-xs text-honey md:sr-only">Com o Céu Natal: </span>
                 {l.com}
               </dd>
             </div>

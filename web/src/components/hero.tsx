@@ -13,11 +13,11 @@ export function Hero() {
             id="hero-titulo"
             className="font-display text-[40px] font-medium leading-[1.1] tracking-tight md:text-[48px]"
           >
-            Mapa astral calculado, não inventado, no seu assistente de IA.
+            conecte sua IA favorita e faça análises astrológicas muito mais precisas.
           </h1>
           <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
-            Copie o prompt e cole no Claude, no ChatGPT, no Gemini ou no Cursor. O próprio assistente guia a conexão.
-            Grátis, sem cadastro.
+            Grátis e sem cadastro. Copie o prompt, cole no Claude, no ChatGPT, no Gemini ou no Cursor e o próprio
+            assistente guia a conexão.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole no seu assistente" variant="default" size="lg" />
