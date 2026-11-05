@@ -20,7 +20,9 @@ certifi==2026.10.23
     # via
     #   httpcore
     #   httpx
+    #   libephemeris
     #   requests
+    #   skyfield
 cffi==2.1.1
     # via
     #   cryptography
@@ -28,9 +30,13 @@ cffi==2.1.1
 charset-normalizer==3.5.2
     # via requests
 click==8.5.0
-    # via uvicorn
+    # via
+    #   libephemeris
+    #   uvicorn
 cryptography==50.0.2
     # via pyjwt
+defusedxml==0.7.1
+    # via svg-polish
 flatbuffers==25.12.19
     # via timezonefinder
 geographiclib==2.1
@@ -55,16 +61,24 @@ idna==3.20
     #   httpx
     #   requests
     #   url-normalize
+jplephem==2.24
+    # via skyfield
 jsonschema==4.26.0
     # via mcp
 jsonschema-specifications==2025.9.1
     # via jsonschema
-kerykeion==5.12.7
+kerykeion==6.0.5
     # via -r requirements.in
+libephemeris==3.2.2
+    # via kerykeion
 mcp==1.30.0
     # via -r requirements.in
 numpy==2.4.6
-    # via timezonefinder
+    # via
+    #   jplephem
+    #   pyerfa
+    #   skyfield
+    #   timezonefinder
 platformdirs==4.14.5
     # via requests-cache
 pycparser==3.12
@@ -78,18 +92,16 @@ pydantic-core==2.50.4
     # via pydantic
 pydantic-settings==2.16.2
     # via mcp
-pyjwt==2.15.1
+pyerfa==2.0.1.5
+    # via libephemeris
+pyjwt[crypto]==2.15.1
     # via mcp
-pyswisseph==2.10.3.2
-    # via kerykeion
 python-dotenv==1.2.2
     # via
     #   -r requirements.in
     #   pydantic-settings
 python-multipart==0.0.33
     # via mcp
-pytz==2026.6
-    # via kerykeion
 referencing==0.37.0
     # via
     #   jsonschema
@@ -104,12 +116,14 @@ rpds-py==2026.9.1
     # via
     #   jsonschema
     #   referencing
-scour==0.38.2
-    # via kerykeion
+sgp4==2.27
+    # via skyfield
 simple-ascii-tables==1.0.1
     # via kerykeion
-six==1.17.0
-    # via scour
+skyfield==1.55
+    # via libephemeris
+skyfield-data==7.0.0
+    # via libephemeris
 sse-starlette==3.6.0
     # via mcp
 starlette==1.10.0
@@ -117,27 +131,28 @@ starlette==1.10.0
     #   -r requirements.in
     #   mcp
     #   sse-starlette
+svg-polish==1.0.0
+    # via kerykeion
 timezonefinder==8.3.0
     # via -r requirements.in
 timezonefinder-data==1.2026.3
     # via timezonefinder
 typing-extensions==4.16.0
     # via
-    #   anyio
     #   cattrs
     #   kerykeion
     #   mcp
     #   pydantic
     #   pydantic-core
     #   pydantic-settings
-    #   referencing
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.5
     # via
     #   mcp
     #   pydantic
     #   pydantic-settings
+tzdata==2026.6
+    # via kerykeion
 url-normalize==3.1.0
     # via requests-cache
 urllib3==2.8.0
@@ -148,3 +163,5 @@ uvicorn==0.54.0
     # via
     #   -r requirements.in
     #   mcp
+zstandard==0.25.0
+    # via libephemeris
