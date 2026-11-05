@@ -187,19 +187,22 @@ def _save_cache() -> None:
                        CACHE_PATH, exc)
 
 
-def _evictar() -> None:
+def _evictar(preservar: str) -> None:
     """Traz o cache para CACHE_MAX: falhas expiradas, depois falhas vigentes e
-    por último coordenadas, sempre da mais antiga. Chamada já com o lock."""
+    por último coordenadas, sempre da mais antiga. Nunca descarta `preservar`
+    (a entrada recém-gravada). Chamada já com o lock."""
     if len(_cache) <= CACHE_MAX:
         return
     agora = time.time()
-    for chave in [k for k, v in _cache.items() if _entrada_falha(v) and _falha_expirada(v, agora)]:
+    candidatas = [k for k in _cache if k != preservar]
+    for chave in [k for k in candidatas if _entrada_falha(_cache[k]) and _falha_expirada(_cache[k], agora)]:
         del _cache[chave]
-    falhas = [k for k, v in _cache.items() if _entrada_falha(v)]
+    falhas = [k for k in candidatas if k in _cache and _entrada_falha(_cache[k])]
     while len(_cache) > CACHE_MAX and falhas:
         del _cache[falhas.pop(0)]
-    while len(_cache) > CACHE_MAX:
-        del _cache[next(iter(_cache))]
+    resto = [k for k in candidatas if k in _cache]
+    while len(_cache) > CACHE_MAX and resto:
+        del _cache[resto.pop(0)]
 
 
 def _guardar(cache_key: str, valor: dict) -> None:
@@ -207,7 +210,7 @@ def _guardar(cache_key: str, valor: dict) -> None:
     with _cache_lock:
         _cache.pop(cache_key, None)
         _cache[cache_key] = valor
-        _evictar()
+        _evictar(preservar=cache_key)
         _save_cache()
 
 

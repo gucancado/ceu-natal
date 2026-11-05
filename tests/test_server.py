@@ -219,6 +219,28 @@ def test_registro_cobre_todas_as_tools():
     assert set(ceu.registro) == {t.name for t in TOOLS}
 
 
+def test_schemas_de_pessoa_nao_sao_compartilhados_entre_tools():
+    """Mutar o schema de uma tool não pode vazar para outra."""
+    por_nome = {t.name: t for t in TOOLS}
+    pares = [
+        (por_nome["calcular_sinastria"].inputSchema["properties"]["pessoa_a"],
+         por_nome["calcular_mapa_composto"].inputSchema["properties"]["pessoa_a"]),
+        (por_nome["calcular_sinastria"].inputSchema["properties"]["pessoa_a"],
+         por_nome["calcular_sinastria"].inputSchema["properties"]["pessoa_b"]),
+        (por_nome["calcular_transitos"].inputSchema["properties"]["natal"],
+         por_nome["calcular_progressoes"].inputSchema["properties"]["natal"]),
+        (por_nome["calcular_revolucao_solar"].inputSchema["properties"]["natal"],
+         por_nome["calcular_revolucao_lunar"].inputSchema["properties"]["natal"]),
+    ]
+    for um, outro in pares:
+        assert um == outro
+        um["properties"]["data"]["x-teste"] = True
+        try:
+            assert "x-teste" not in outro["properties"]["data"]
+        finally:
+            del um["properties"]["data"]["x-teste"]
+
+
 def test_dispatch_listar_aspectos_tipos():
     resultado = _dispatch("listar_aspectos_tipos", {})
     assert {a["tipo"] for a in resultado["aspectos"]} >= {"conjuncao", "oposicao"}

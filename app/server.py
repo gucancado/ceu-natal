@@ -113,6 +113,7 @@ _DESCRICAO_IS_DST = (
 )
 
 # Objeto pessoa/natal das tools (lido por `EntradaNascimento.de_dict`).
+# Modelo: cada uso passa por `_schema_pessoa()`, que devolve uma cópia própria.
 _SCHEMA_PESSOA: dict = {
     "type": "object",
     "required": ["data"],
@@ -134,12 +135,13 @@ def _schema_pessoa(**descricoes: str) -> dict:
     return schema
 
 
-# Revoluções exigem hora e local: o schema diz isso nos campos.
-_SCHEMA_NATAL_REVOLUCAO = _schema_pessoa(
-    data="DD/MM/YYYY.",
-    hora="HH:MM. Obrigatória na prática.",
-    local="Cidade e UF/país. Obrigatória na prática.",
-)
+def _schema_natal_revolucao() -> dict:
+    """Revoluções exigem hora e local: o schema diz isso nos campos."""
+    return _schema_pessoa(
+        data="DD/MM/YYYY.",
+        hora="HH:MM. Obrigatória na prática.",
+        local="Cidade e UF/país. Obrigatória na prática.",
+    )
 
 TOOLS: list[Tool] = [
     Tool(
@@ -200,8 +202,8 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
             "properties": {
-                "pessoa_a": _SCHEMA_PESSOA,
-                "pessoa_b": _SCHEMA_PESSOA,
+                "pessoa_a": _schema_pessoa(),
+                "pessoa_b": _schema_pessoa(),
                 "sistema_casas": {
                     "type": ["string", "null"],
                     "description": (
@@ -227,7 +229,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_transito"],
             "properties": {
-                "natal": _SCHEMA_PESSOA,
+                "natal": _schema_pessoa(),
                 "data_transito": {
                     "type": "string",
                     "description": "Data do trânsito no formato DD/MM/YYYY.",
@@ -259,7 +261,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_alvo"],
             "properties": {
-                "natal": _SCHEMA_PESSOA,
+                "natal": _schema_pessoa(),
                 "data_alvo": {
                     "type": "string",
                     "description": "Data alvo (presente/futuro) no formato DD/MM/YYYY.",
@@ -284,8 +286,8 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
             "properties": {
-                "pessoa_a": _SCHEMA_PESSOA,
-                "pessoa_b": _SCHEMA_PESSOA,
+                "pessoa_a": _schema_pessoa(),
+                "pessoa_b": _schema_pessoa(),
                 "sistema_casas": {"type": ["string", "null"]},
             },
         },
@@ -308,7 +310,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "ano", "local_revolucao"],
             "properties": {
-                "natal": _SCHEMA_NATAL_REVOLUCAO,
+                "natal": _schema_natal_revolucao(),
                 "ano": {
                     "type": "integer",
                     "description": (
@@ -348,7 +350,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_referencia", "local_revolucao"],
             "properties": {
-                "natal": _SCHEMA_NATAL_REVOLUCAO,
+                "natal": _schema_natal_revolucao(),
                 "data_referencia": {
                     "type": "string",
                     "description": (
