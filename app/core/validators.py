@@ -29,14 +29,15 @@ def validar_sistema_casas(valor: Optional[str]) -> str:
     return valor_norm
 
 
-# Faixa de anos aceita nas datas de entrada (as revoluções têm faixa própria,
-# mais estreita, em `periodos`).
-ANO_MINIMO_DATA = 1000
-ANO_MAXIMO_DATA = 3000
+# Faixa de anos aceita nas datas de entrada: a efeméride de Quíron distribuída
+# com o Kerykeion cobre só 1800–2399 (as revoluções têm faixa própria, mais
+# estreita, em `periodos`).
+ANO_MINIMO_DATA = 1800
+ANO_MAXIMO_DATA = 2399
 
 
 def parse_data(data: str) -> Tuple[int, int, int]:
-    """DD/MM/YYYY -> (dia, mes, ano). Ano fora de 1000..3000 levanta ValueError."""
+    """DD/MM/YYYY -> (dia, mes, ano). Ano fora de 1800..2399 levanta ValueError."""
     try:
         dt = datetime.strptime(data.strip(), "%d/%m/%Y")
     except ValueError as exc:

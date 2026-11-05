@@ -21,8 +21,14 @@ from app.core.kerykeion import (
 from app.core.sintese import calcular_sintese
 from app.core.validators import validar_sistema_casas
 
-# Metade do movimento diário médio da Lua (~13°): erro máximo ao usar 12:00.
-MARGEM_LUA_SEM_HORA = 6.5
+
+def margem_lua_sem_hora(velocidade: float) -> float:
+    """Erro máximo da Lua calculada às 12:00: metade do movimento diário dela.
+
+    A Lua anda de ~12° a ~15° por dia, então a margem vai de ~6° a ~7,6°; usar
+    a velocidade do próprio dia evita falso negativo em `signo_pode_mudar`.
+    """
+    return abs(velocidade) / 2.0
 
 
 def calcular_mapa_natal(
@@ -72,13 +78,15 @@ def calcular_mapa_natal(
     aspectos = calcular_aspectos(coletar_pontos(subject))
 
     if not tem_hora:
-        # Sem hora o cálculo usa 12:00; a Lua anda ~13°/dia, então pode estar
-        # até ~6,5° antes ou depois da posição calculada.
+        # Sem hora o cálculo usa 12:00; a Lua pode estar até metade do seu
+        # movimento diário antes ou depois da posição calculada.
+        margem_lua = margem_lua_sem_hora(subject.moon.speed)
         lua = planetas_dict["lua"]
         lua["posicao_incerta"] = True
+        lua["margem_graus"] = round(margem_lua, 2)
         lua["signo_pode_mudar"] = (
-            lua["grau_decimal"] < MARGEM_LUA_SEM_HORA
-            or lua["grau_decimal"] > 30.0 - MARGEM_LUA_SEM_HORA
+            lua["grau_decimal"] < margem_lua
+            or lua["grau_decimal"] > 30.0 - margem_lua
         )
         for asp in aspectos:
             if "lua" in (asp["planeta_a"], asp["planeta_b"]):
@@ -126,8 +134,9 @@ def calcular_mapa_natal(
             avisos.append(MOTIVO_LATITUDE_SEM_CASAS)
         aviso = f"Casas e ângulos omitidos: {' e '.join(avisos)}."
         if not tem_hora:
+            margem_txt = f"{margem_lua:.1f}".replace(".", ",")
             aviso += (
-                " Posição da Lua incerta: sem a hora, a Lua pode variar até 6,5° "
+                f" Posição da Lua incerta: sem a hora, a Lua pode variar até {margem_txt}° "
                 "para cada lado, e os aspectos dela vêm marcados como incertos."
             )
         resultado["aviso"] = aviso

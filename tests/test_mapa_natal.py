@@ -164,20 +164,41 @@ def test_latitude_suporta_casas_no_limite():
 
 
 # ─────────────────────────────────────────────────────────────
-# Sem hora: a Lua anda ~13°/dia, então ao meio-dia ela pode estar até 6,5° fora
+# Sem hora: ao meio-dia a Lua pode estar até metade do movimento diário dela fora
+# (a velocidade vai de ~12° a ~15°/dia, então a margem vai de ~6° a ~7,6°)
 # ─────────────────────────────────────────────────────────────
 def test_sem_hora_lua_perto_da_borda_pode_mudar_de_signo():
     # Data escolhida por cálculo: em 07/03/1990 ao meio-dia (sem local → UTC)
-    # a Lua está a 29,7753° de Câncer, dentro dos 6,5° finais do signo.
+    # a Lua está a 29,7753° de Câncer, velocidade 13,2443°/dia → margem 6,62°.
     mapa = calcular_mapa_natal(data="07/03/1990")
     lua = mapa["planetas"]["lua"]
     assert lua["posicao_incerta"] is True
     assert lua["signo_pode_mudar"] is True
-    assert "sem a hora, a Lua pode variar até 6,5°" in mapa["aviso"]
+    assert lua["margem_graus"] == 6.62
+    assert "sem a hora, a Lua pode variar até 6,6°" in mapa["aviso"]
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        # Datas escolhidas por cálculo (sem local → 12:00 UTC). Nas três o signo da
+        # Lua muda dentro do mesmo dia, mas ela fica entre 6,5° e metade do seu
+        # movimento diário da borda (a margem fixa de 6,5° dava falso negativo).
+        "27/02/1990",  # Áries 7,0978°, 14,549°/dia → margem 7,27°; 00:00 em Peixes
+        "01/05/1990",  # Leão 6,6199°, 13,292°/dia → margem 6,65°; 00:00 em Câncer
+        "15/07/1990",  # Áries 23,2569°, 14,040°/dia → margem 7,02°; 23:59 em Touro
+    ],
+)
+def test_sem_hora_margem_da_lua_usa_a_velocidade_do_dia(data):
+    lua = calcular_mapa_natal(data=data)["planetas"]["lua"]
+    assert lua["margem_graus"] == round(abs(lua["velocidade"]) / 2, 2)
+    assert lua["margem_graus"] > 6.5
+    assert lua["signo_pode_mudar"] is True
 
 
 def test_sem_hora_lua_no_meio_do_signo_nao_muda():
-    # Data escolhida por cálculo: em 13/03/1990 ao meio-dia a Lua está a 15,7275° de Libra.
+    # Data escolhida por cálculo: em 13/03/1990 ao meio-dia a Lua está a 15,7275° de
+    # Libra (margem 6,07°); de 00:00 a 23:59 UTC ela vai de 9,64° a 21,77° de Libra.
     mapa = calcular_mapa_natal(data="13/03/1990")
     lua = mapa["planetas"]["lua"]
     assert lua["posicao_incerta"] is True
@@ -197,6 +218,7 @@ def test_com_hora_lua_sem_marcas_de_incerteza():
     mapa = _ana()
     assert "posicao_incerta" not in mapa["planetas"]["lua"]
     assert "signo_pode_mudar" not in mapa["planetas"]["lua"]
+    assert "margem_graus" not in mapa["planetas"]["lua"]
     assert all("incerto" not in a for a in mapa["aspectos"])
 
 
@@ -210,3 +232,43 @@ def test_local_resolvido_presente_com_local():
 def test_local_resolvido_ausente_sem_local():
     mapa = calcular_mapa_natal(data="12/03/1990", hora="14:30")
     assert "local_resolvido" not in mapa
+
+
+# ─────────────────────────────────────────────────────────────
+# Ponto sem efeméride (Quíron fora de 1800–2399 em tempo universal)
+# ─────────────────────────────────────────────────────────────
+def _ponto_falso(nome: str, abs_pos: float):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(name=nome, abs_pos=abs_pos, speed=1.0)
+
+
+def test_iteradores_pulam_ponto_none():
+    from types import SimpleNamespace
+
+    from app.core.kerykeion import PLANETAS_PRINCIPAIS, coletar_pontos, pontos_sensiveis_iter
+
+    planetas = {attr: _ponto_falso(attr.capitalize(), 10.0 * i)
+                for i, attr in enumerate(PLANETAS_PRINCIPAIS)}
+    subject = SimpleNamespace(
+        **planetas,
+        true_north_lunar_node=_ponto_falso("True_North_Lunar_Node", 200.0),
+        true_south_lunar_node=_ponto_falso("True_South_Lunar_Node", 20.0),
+        chiron=None,
+    )
+    nomes_sensiveis = [nome for nome, _ in pontos_sensiveis_iter(subject)]
+    assert nomes_sensiveis == ["nodo_norte_verdadeiro", "nodo_sul_verdadeiro"]
+    nomes = [p["nome"] for p in coletar_pontos(subject)]
+    assert len(nomes) == 12
+    assert "chiron" not in nomes
+
+
+def test_mapa_no_limite_da_efemeride_omite_quiron():
+    # 01/01/1800 00:30 em Tóquio ainda é 31/12/1799 em UT: sem efeméride de Quíron.
+    mapa = calcular_mapa_natal(
+        data="01/01/1800", hora="00:30", local="Tóquio, Japão",
+        lat=35.6895, lng=139.6917, tz_str="Asia/Tokyo",
+    )
+    assert "chiron" not in mapa["pontos_sensiveis"]
+    assert "nodo_norte_verdadeiro" in mapa["pontos_sensiveis"]
+    assert all("chiron" not in (a["planeta_a"], a["planeta_b"]) for a in mapa["aspectos"])

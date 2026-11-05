@@ -67,16 +67,16 @@ class TestParseData:
             parse_data("1990-03-12")
 
     def test_ano_abaixo_da_faixa_levanta_erro(self):
-        with pytest.raises(ValueError, match=r"Ano 999 fora da faixa suportada \(1000 a 3000\)\."):
-            parse_data("01/01/0999")
+        with pytest.raises(ValueError, match=r"Ano 1799 fora da faixa suportada \(1800 a 2399\)\."):
+            parse_data("31/12/1799")
 
     def test_ano_acima_da_faixa_levanta_erro(self):
         with pytest.raises(ValueError, match="fora da faixa suportada"):
-            parse_data("01/01/3001")
+            parse_data("01/01/2400")
 
     def test_limites_da_faixa_aceitos(self):
-        assert parse_data("01/01/1000") == (1, 1, 1000)
-        assert parse_data("31/12/3000") == (31, 12, 3000)
+        assert parse_data("01/01/1800") == (1, 1, 1800)
+        assert parse_data("31/12/2399") == (31, 12, 2399)
 
 
 # ─────────────────────────────────────────────────────────────
