@@ -15,6 +15,13 @@ updates:
       # fixa cffi<2. Reavaliar junto com o timezonefinder.
       - dependency-name: cryptography
       - dependency-name: cffi
+      # Majors de mcp, starlette e uvicorn só entram à mão, com revisão.
+      - dependency-name: mcp
+        update-types: ["version-update:semver-major"]
+      - dependency-name: starlette
+        update-types: ["version-update:semver-major"]
+      - dependency-name: uvicorn
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
     directory: /web
