@@ -11,16 +11,15 @@ updates:
       python-minor-patch:
         update-types: [minor, patch]
     ignore:
-      # Subir cryptography/cffi isolados quebra o lock: timezonefinder==6.5.2
-      # fixa cffi<2. Reavaliar junto com o timezonefinder.
-      - dependency-name: cryptography
-      - dependency-name: cffi
       # Majors de mcp, starlette e uvicorn só entram à mão, com revisão.
       - dependency-name: mcp
         update-types: ["version-update:semver-major"]
       - dependency-name: starlette
         update-types: ["version-update:semver-major"]
       - dependency-name: uvicorn
+        update-types: ["version-update:semver-major"]
+      # timezonefinder 9.x exige Python 3.12.
+      - dependency-name: timezonefinder
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: npm
