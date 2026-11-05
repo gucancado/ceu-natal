@@ -3,7 +3,6 @@ Testes do geocoder. Mocka os helpers privados `_try_geonames` e
 `_try_nominatim` (em vez de mockar urllib/requests/httpx) — assim os
 testes ficam independentes da biblioteca HTTP usada.
 """
-import importlib
 import json
 import os
 
@@ -11,18 +10,17 @@ import pytest
 
 
 @pytest.fixture
-def geocoder(tmp_path, monkeypatch):
+def geocoder(tmp_path):
     """
-    Recarrega o módulo do geocoder com cache apontando para um arquivo
-    temporário do pytest. Garante isolamento entre testes.
+    Geocoder com estado zerado e cache apontando para um arquivo temporário do
+    pytest (`configurar`, sem recarregar o módulo). Restaura o caminho no fim.
     """
-    cache_path = tmp_path / "geocode-cache.json"
-    monkeypatch.setenv("GEOCODER_CACHE_PATH", str(cache_path))
     from app.core import geocoder as mod
-    importlib.reload(mod)
+    original = (mod.CACHE_PATH, mod.GEOCODER_MAX_CONCORRENTES, mod.GEOCODER_ESPERA_MAX_S)
+    mod.configurar(cache_path=str(tmp_path / "geocode-cache.json"))
     yield mod
-    # Cleanup do estado global do módulo após o teste
-    importlib.reload(mod)
+    caminho, maximo, espera = original
+    mod.configurar(cache_path=caminho, max_concorrentes=maximo, espera_max_s=espera)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -36,9 +34,9 @@ def test_cidade_nao_encontrada_em_nenhum_provedor(geocoder, monkeypatch):
 
 
 def test_todos_provedores_indisponiveis(geocoder, monkeypatch):
-    """Simula timeout/erro de rede: helpers retornam None silenciosamente."""
+    """Simula timeout/erro de rede: helpers levantam ProvedorIndisponivel."""
     def boom(c, n):
-        return None
+        raise geocoder.ProvedorIndisponivel("timeout")
     monkeypatch.setattr(geocoder, "_try_geonames", boom)
     monkeypatch.setattr(geocoder, "_try_nominatim", boom)
     with pytest.raises(geocoder.GeocodingError):
@@ -373,3 +371,139 @@ def test_resolve_timezone_cai_para_terra(geocoder, monkeypatch):
 
     monkeypatch.setattr(geocoder, "_timezone_finder", lambda: FinderFalso())
     assert geocoder._resolve_timezone(38.7, -9.1) == "Europe/Lisbon"
+
+
+# ─────────────────────────────────────────────────────────────
+# "Não encontrado" x "provedor indisponível"
+# ─────────────────────────────────────────────────────────────
+def _fora_do_ar(c, n):
+    from app.core.geocoder import ProvedorIndisponivel
+    raise ProvedorIndisponivel("timeout")
+
+
+def _contar(chamadas, chave, resultado):
+    def fake(c, n):
+        chamadas[chave] += 1
+        if callable(resultado):
+            return resultado(c, n)
+        return resultado
+    return fake
+
+
+def test_nao_encontrado_fica_ttl_falha(geocoder, monkeypatch):
+    chamadas = {"geonames": 0, "nominatim": 0}
+    monkeypatch.setattr(geocoder, "_try_geonames", _contar(chamadas, "geonames", None))
+    monkeypatch.setattr(geocoder, "_try_nominatim", _contar(chamadas, "nominatim", None))
+    relogio = {"t": 1_000_000.0}
+    monkeypatch.setattr(geocoder.time, "time", lambda: relogio["t"])
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    assert geocoder._load_cache()["cidade inexistente|br"]["indisponivel"] is False
+    relogio["t"] += geocoder.TTL_INDISPONIVEL_S + 1
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    assert chamadas["geonames"] == 1  # ainda no cache: vale TTL_FALHA_S
+    relogio["t"] += geocoder.TTL_FALHA_S
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    assert chamadas["geonames"] == 2
+
+
+def test_provedor_indisponivel_fica_no_maximo_ttl_indisponivel(geocoder, monkeypatch):
+    assert geocoder.TTL_INDISPONIVEL_S == 300
+    chamadas = {"geonames": 0, "nominatim": 0}
+    monkeypatch.setattr(geocoder, "_try_geonames", _contar(chamadas, "geonames", _fora_do_ar))
+    monkeypatch.setattr(geocoder, "_try_nominatim", _contar(chamadas, "nominatim", _fora_do_ar))
+    relogio = {"t": 1_000_000.0}
+    monkeypatch.setattr(geocoder.time, "time", lambda: relogio["t"])
+    with pytest.raises(geocoder.GeocodingError, match="Não foi possível geocodificar"):
+        geocoder.geocode("Belo Horizonte", "MG")
+    assert geocoder._load_cache()["belo horizonte|mg"]["indisponivel"] is True
+    relogio["t"] += geocoder.TTL_INDISPONIVEL_S - 1
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Belo Horizonte", "MG")
+    assert chamadas == {"geonames": 1, "nominatim": 1}  # ainda no cache
+    relogio["t"] += 2
+    monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: (-19.92, -43.94))
+    monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "America/Sao_Paulo")
+    assert geocoder.geocode("Belo Horizonte", "MG")["lat"] == -19.92
+
+
+def test_um_provedor_fora_e_outro_sem_resultado_conta_como_indisponivel(geocoder, monkeypatch):
+    monkeypatch.setattr(geocoder, "_try_geonames", _fora_do_ar)
+    monkeypatch.setattr(geocoder, "_try_nominatim", lambda c, n: None)
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Belo Horizonte", "MG")
+    assert geocoder._load_cache()["belo horizonte|mg"]["indisponivel"] is True
+
+
+def test_geonames_fora_cai_no_nominatim(geocoder, monkeypatch):
+    monkeypatch.setattr(geocoder, "_try_geonames", _fora_do_ar)
+    monkeypatch.setattr(geocoder, "_try_nominatim", lambda c, n: (38.72, -9.13))
+    monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "Europe/Lisbon")
+    assert geocoder.geocode("Lisboa", "Portugal")["tz_str"] == "Europe/Lisbon"
+
+
+def test_geonames_erro_de_rede_levanta_indisponivel(geocoder, monkeypatch):
+    def falha(url, timeout=None):
+        raise OSError("rede")
+    monkeypatch.setattr(geocoder.urllib.request, "urlopen", falha)
+    with pytest.raises(geocoder.ProvedorIndisponivel):
+        geocoder._try_geonames("Recife", "PE")
+
+
+def test_geonames_quota_levanta_indisponivel(geocoder, monkeypatch):
+    class Quota(_RespostaFalsa):
+        def read(self):
+            return b'{"status": {"message": "limite diario excedido", "value": 18}}'
+    monkeypatch.setattr(geocoder.urllib.request, "urlopen", lambda url, timeout=None: Quota())
+    with pytest.raises(geocoder.ProvedorIndisponivel, match="limite"):
+        geocoder._try_geonames("Recife", "PE")
+
+
+def test_nominatim_erro_levanta_indisponivel(geocoder, monkeypatch):
+    class Quebrado:
+        def __init__(self, *a, **k):
+            pass
+
+        def geocode(self, *a, **k):
+            raise OSError("rede")
+    monkeypatch.setattr(geocoder, "Nominatim", Quebrado)
+    monkeypatch.setattr(geocoder, "_throttle_nominatim", lambda: None)
+    with pytest.raises(geocoder.ProvedorIndisponivel):
+        geocoder._try_nominatim("Recife", "PE")
+
+
+def test_evicao_tira_falha_expirada_antes_da_mais_antiga(geocoder, monkeypatch):
+    """A falha expirada sai mesmo sendo mais nova que a falha vigente."""
+    t0 = 1_000_000.0
+    relogio = {"t": t0}
+    monkeypatch.setattr(geocoder.time, "time", lambda: relogio["t"])
+    monkeypatch.setattr(geocoder, "CACHE_MAX", 2)
+    geocoder._load_cache()
+    geocoder._guardar("vigente|br", {"erro": True, "ts": t0, "indisponivel": False})
+    geocoder._guardar("expirada|br", {"erro": True, "ts": t0 + 1, "indisponivel": True})
+    relogio["t"] = t0 + 1 + geocoder.TTL_INDISPONIVEL_S
+    geocoder._guardar("coord|br", {"lat": 3.0, "lng": 4.0, "tz_str": "UTC"})
+    assert list(geocoder._load_cache()) == ["vigente|br", "coord|br"]
+
+
+def test_evicao_tira_falha_vigente_antes_de_coordenada(geocoder, monkeypatch):
+    monkeypatch.setattr(geocoder, "CACHE_MAX", 2)
+    geocoder._load_cache()
+    geocoder._guardar("coord antiga|br", {"lat": 1.0, "lng": 2.0, "tz_str": "UTC"})
+    geocoder._guardar("falha|br", {"erro": True, "ts": geocoder.time.time(), "indisponivel": False})
+    geocoder._guardar("coord nova|br", {"lat": 3.0, "lng": 4.0, "tz_str": "UTC"})
+    assert list(geocoder._load_cache()) == ["coord antiga|br", "coord nova|br"]
+
+
+def test_configurar_zera_cache_e_semaforo(geocoder, tmp_path):
+    geocoder._load_cache()
+    geocoder._guardar("x|br", {"lat": 1.0, "lng": 2.0, "tz_str": "UTC"})
+    outro = tmp_path / "outro.json"
+    geocoder.configurar(cache_path=str(outro), max_concorrentes=1)
+    assert geocoder.CACHE_PATH == str(outro)
+    assert geocoder._load_cache() == {}
+    assert geocoder._SEMAFORO.acquire(timeout=0)
+    assert not geocoder._SEMAFORO.acquire(timeout=0)
+    geocoder._SEMAFORO.release()

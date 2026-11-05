@@ -15,20 +15,21 @@ Autenticação: header `Authorization: Bearer <key>` (a chave na query string n�
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
 libera tudo (modo dev).
 
-Variáveis de ambiente opcionais:
-  MCP_ALLOWED_HOSTS — hosts permitidos no Streamable HTTP (anti-DNS rebinding),
-                      separados por vírgula. Vazio = sem validação de host.
+Configuração: `app.config.Settings` (variáveis de ambiente lidas em
+`Settings.do_ambiente()`). `create_app(settings)` monta uma aplicação
+independente — servidor MCP, transportes e limitadores próprios —, e o módulo
+expõe `app = create_app()` para o uvicorn (`app.server:app`).
 """
 import contextlib
+import copy
 import functools
 import hmac
 import ipaddress
 import json
 import logging
 import math
-import os
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -48,44 +49,24 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse, Response
 from starlette.routing import Mount, Route
 
+from app.config import Settings
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.geocoder import GeocodingError
 from app.core.ratelimit import LimitadorTaxa
 
-SERVER_NAME = os.getenv("MCP_SERVER_NAME", "ceu-natal")
-SERVER_VERSION = os.getenv("MCP_SERVER_VERSION", "2.1.0")
-API_KEY = os.getenv("MCP_API_KEY", "").strip()
-# Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
-# Vazio = sem validação (modo dev / proxy reverso confiável).
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
-# Limite de taxa (chamadas de tool por minuto); 0 desliga a camada.
-RATE_LIMIT_SESSION_PER_MIN = int(os.getenv("RATE_LIMIT_SESSION_PER_MIN", "30"))
-RATE_LIMIT_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_GLOBAL_PER_MIN", "600"))
-LIMITADOR = LimitadorTaxa(RATE_LIMIT_SESSION_PER_MIN, RATE_LIMIT_GLOBAL_PER_MIN)
-# URLs públicas (a landing troca de domínio só por env), sem barra final.
-PUBLIC_SITE_URL = os.getenv("PUBLIC_SITE_URL", "https://github.com/gucancado/ceu-natal").rstrip("/")
-PUBLIC_MCP_URL = os.getenv("PUBLIC_MCP_URL", "https://astrologia-mcp.gustavocancado.com.br").rstrip("/")
-# Mapa rápido do site: limite por IP (o formulário roda no navegador da pessoa,
-# então o IP é dela; os IPs compartilhados de Anthropic/OpenAI não passam aqui).
-RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN", "6"))
-RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN", "120"))
-LIMITADOR_MAPA_RAPIDO = LimitadorTaxa(RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN, RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN)
 # Teto do corpo do /mapa-rapido (bytes): data, hora e local cabem com folga.
 MAPA_RAPIDO_BODY_MAX = 4096
-# Origens aceitas pelo CORS do /mapa-rapido (vírgula). Padrão: só o site.
-CORS_ORIGINS = [
-    o.strip().rstrip("/")
-    for o in os.getenv("CORS_ORIGINS", "").split(",")
-    if o.strip()
-] or [PUBLIC_SITE_URL]
 # Caminhos que dispensam a chave de API.
 _PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido"]
-_LLMS_TXT = (Path(__file__).parent / "static" / "llms.txt").read_text(encoding="utf-8").format(
-    mcp_url=PUBLIC_MCP_URL, site_url=PUBLIC_SITE_URL,
-)
+_LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
+TRANSPORTE = "streamable-http+sse"
 
 logger = logging.getLogger("ceu-natal")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+
+def configurar_logging() -> None:
+    """Formato de log do processo; sem efeito se o logging já foi configurado."""
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
 # Annotations compartilhadas:
@@ -126,6 +107,40 @@ def _resultado_erro(mensagem: str) -> CallToolResult:
 # ─────────────────────────────────────────────────────────────
 # Definição das tools (schemas em JSON Schema padrão MCP)
 # ─────────────────────────────────────────────────────────────
+_DESCRICAO_IS_DST = (
+    "Só para hora ambígua ou inexistente na transição do horário de verão: "
+    "true = horário de verão, false = horário padrão."
+)
+
+# Objeto pessoa/natal das tools (lido por `EntradaNascimento.de_dict`).
+_SCHEMA_PESSOA: dict = {
+    "type": "object",
+    "required": ["data"],
+    "properties": {
+        "data":  {"type": "string"},
+        "hora":  {"type": ["string", "null"]},
+        "local": {"type": ["string", "null"]},
+        "nome":  {"type": ["string", "null"]},
+        "is_dst": {"type": ["boolean", "null"], "description": _DESCRICAO_IS_DST},
+    },
+}
+
+
+def _schema_pessoa(**descricoes: str) -> dict:
+    """Cópia de `_SCHEMA_PESSOA` com `description` nos campos indicados."""
+    schema = copy.deepcopy(_SCHEMA_PESSOA)
+    for campo, descricao in descricoes.items():
+        schema["properties"][campo]["description"] = descricao
+    return schema
+
+
+# Revoluções exigem hora e local: o schema diz isso nos campos.
+_SCHEMA_NATAL_REVOLUCAO = _schema_pessoa(
+    data="DD/MM/YYYY.",
+    hora="HH:MM. Obrigatória na prática.",
+    local="Cidade e UF/país. Obrigatória na prática.",
+)
+
 TOOLS: list[Tool] = [
     Tool(
         name="calcular_mapa_natal",
@@ -159,10 +174,7 @@ TOOLS: list[Tool] = [
                 },
                 "is_dst": {
                     "type": ["boolean", "null"],
-                    "description": (
-                        "Só para hora ambígua ou inexistente na transição do horário "
-                        "de verão: true = horário de verão, false = horário padrão."
-                    ),
+                    "description": _DESCRICAO_IS_DST,
                 },
                 "sistema_casas": {
                     "type": ["string", "null"],
@@ -188,34 +200,8 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
             "properties": {
-                "pessoa_a": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
-                "pessoa_b": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "pessoa_a": _SCHEMA_PESSOA,
+                "pessoa_b": _SCHEMA_PESSOA,
                 "sistema_casas": {
                     "type": ["string", "null"],
                     "description": (
@@ -241,20 +227,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_transito"],
             "properties": {
-                "natal": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "natal": _SCHEMA_PESSOA,
                 "data_transito": {
                     "type": "string",
                     "description": "Data do trânsito no formato DD/MM/YYYY.",
@@ -286,20 +259,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_alvo"],
             "properties": {
-                "natal": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "natal": _SCHEMA_PESSOA,
                 "data_alvo": {
                     "type": "string",
                     "description": "Data alvo (presente/futuro) no formato DD/MM/YYYY.",
@@ -324,34 +284,8 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["pessoa_a", "pessoa_b"],
             "properties": {
-                "pessoa_a": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
-                "pessoa_b": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string"},
-                        "hora":  {"type": ["string", "null"]},
-                        "local": {"type": ["string", "null"]},
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "pessoa_a": _SCHEMA_PESSOA,
+                "pessoa_b": _SCHEMA_PESSOA,
                 "sistema_casas": {"type": ["string", "null"]},
             },
         },
@@ -374,23 +308,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "ano", "local_revolucao"],
             "properties": {
-                "natal": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string", "description": "DD/MM/YYYY."},
-                        "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
-                        "local": {
-                            "type": ["string", "null"],
-                            "description": "Cidade e UF/país. Obrigatória na prática.",
-                        },
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "natal": _SCHEMA_NATAL_REVOLUCAO,
                 "ano": {
                     "type": "integer",
                     "description": (
@@ -430,23 +348,7 @@ TOOLS: list[Tool] = [
             "type": "object",
             "required": ["natal", "data_referencia", "local_revolucao"],
             "properties": {
-                "natal": {
-                    "type": "object",
-                    "required": ["data"],
-                    "properties": {
-                        "data":  {"type": "string", "description": "DD/MM/YYYY."},
-                        "hora":  {"type": ["string", "null"], "description": "HH:MM. Obrigatória na prática."},
-                        "local": {
-                            "type": ["string", "null"],
-                            "description": "Cidade e UF/país. Obrigatória na prática.",
-                        },
-                        "nome":  {"type": ["string", "null"]},
-                        "is_dst": {
-                            "type": ["boolean", "null"],
-                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
-                        },
-                    },
-                },
+                "natal": _SCHEMA_NATAL_REVOLUCAO,
                 "data_referencia": {
                     "type": "string",
                     "description": (
@@ -517,16 +419,8 @@ TOOLS: list[Tool] = [
 
 
 # ─────────────────────────────────────────────────────────────
-# MCP server: list_tools / call_tool
+# Registro de tools: nome → função(arguments) -> dict
 # ─────────────────────────────────────────────────────────────
-server = Server(SERVER_NAME)
-
-
-@server.list_tools()
-async def _list_tools() -> list[Tool]:
-    return TOOLS
-
-
 @functools.lru_cache(maxsize=1)
 def _tools() -> SimpleNamespace:
     """Importa as tools de cálculo sob demanda (puxam Kerykeion/pyswisseph).
@@ -552,113 +446,65 @@ def _tools() -> SimpleNamespace:
     )
 
 
-def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
+# `healthcheck` depende da versão configurada e entra por aplicação
+# (`Aplicacao.registro`); as demais não dependem de configuração.
+REGISTRO: dict[str, Callable[[dict], dict]] = {
+    "calcular_mapa_natal": lambda a: _tools().calcular_mapa_natal(
+        data=a["data"],
+        hora=a.get("hora"),
+        local=a.get("local"),
+        nome=a.get("nome"),
+        sistema_casas=a.get("sistema_casas"),
+        is_dst=a.get("is_dst"),
+    ),
+    "calcular_sinastria": lambda a: _tools().calcular_sinastria(
+        pessoa_a=a["pessoa_a"],
+        pessoa_b=a["pessoa_b"],
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "calcular_transitos": lambda a: _tools().calcular_transitos(
+        natal=a["natal"],
+        data_transito=a["data_transito"],
+        hora_transito=a.get("hora_transito"),
+        local_transito=a.get("local_transito"),
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "calcular_progressoes": lambda a: _tools().calcular_progressoes(
+        natal=a["natal"],
+        data_alvo=a["data_alvo"],
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "calcular_mapa_composto": lambda a: _tools().calcular_mapa_composto(
+        pessoa_a=a["pessoa_a"],
+        pessoa_b=a["pessoa_b"],
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "calcular_revolucao_solar": lambda a: _tools().calcular_revolucao_solar(
+        natal=a["natal"],
+        ano=a["ano"],
+        local_revolucao=a["local_revolucao"],
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "calcular_revolucao_lunar": lambda a: _tools().calcular_revolucao_lunar(
+        natal=a["natal"],
+        data_referencia=a["data_referencia"],
+        local_revolucao=a["local_revolucao"],
+        sistema_casas=a.get("sistema_casas"),
+    ),
+    "listar_aspectos_tipos": lambda a: {"aspectos": listar_tipos_aspectos()},
+}
+
+
+def _dispatch(
+    name: str,
+    arguments: dict[str, Any],
+    registro: dict[str, Callable[[dict], dict]] = REGISTRO,
+) -> dict:
     """Despacho síncrono puro. Levanta ValueError/GeocodingError; sem I/O async."""
-    if name == "calcular_mapa_natal":
-        t = _tools()
-        return t.calcular_mapa_natal(
-            data=arguments["data"],
-            hora=arguments.get("hora"),
-            local=arguments.get("local"),
-            nome=arguments.get("nome"),
-            sistema_casas=arguments.get("sistema_casas"),
-            is_dst=arguments.get("is_dst"),
-        )
-    elif name == "calcular_sinastria":
-        t = _tools()
-        return t.calcular_sinastria(
-            pessoa_a=arguments["pessoa_a"],
-            pessoa_b=arguments["pessoa_b"],
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "calcular_transitos":
-        t = _tools()
-        return t.calcular_transitos(
-            natal=arguments["natal"],
-            data_transito=arguments["data_transito"],
-            hora_transito=arguments.get("hora_transito"),
-            local_transito=arguments.get("local_transito"),
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "calcular_progressoes":
-        t = _tools()
-        return t.calcular_progressoes(
-            natal=arguments["natal"],
-            data_alvo=arguments["data_alvo"],
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "calcular_mapa_composto":
-        t = _tools()
-        return t.calcular_mapa_composto(
-            pessoa_a=arguments["pessoa_a"],
-            pessoa_b=arguments["pessoa_b"],
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "calcular_revolucao_solar":
-        t = _tools()
-        return t.calcular_revolucao_solar(
-            natal=arguments["natal"],
-            ano=arguments["ano"],
-            local_revolucao=arguments["local_revolucao"],
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "calcular_revolucao_lunar":
-        t = _tools()
-        return t.calcular_revolucao_lunar(
-            natal=arguments["natal"],
-            data_referencia=arguments["data_referencia"],
-            local_revolucao=arguments["local_revolucao"],
-            sistema_casas=arguments.get("sistema_casas"),
-        )
-    elif name == "listar_aspectos_tipos":
-        return {"aspectos": listar_tipos_aspectos()}
-    elif name == "healthcheck":
-        return {"status": "ok", "versao": SERVER_VERSION, "transporte": "streamable-http+sse"}
-    else:
+    funcao = registro.get(name)
+    if funcao is None:
         raise ValueError(f"Tool desconhecida: {name}")
-
-
-def _chave_sessao() -> str | None:
-    """Id da sessão MCP (header mcp-session-id) ou None fora de request/SSE legado."""
-    try:
-        request = server.request_context.request
-    except LookupError:
-        return None
-    if request is None:
-        return None
-    return request.headers.get("mcp-session-id")
-
-
-@server.call_tool()
-async def _call_tool(name: str, arguments: dict[str, Any]):
-    """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
-    inicio = time.monotonic()
-    status = "ok"
-    try:
-        permitido, espera = LIMITADOR.tentar(_chave_sessao())
-        if not permitido:
-            status = "rate_limited"
-            return _resultado_erro(
-                f"Limite de chamadas atingido. Aguarde {math.ceil(espera)} segundos e tente de novo."
-            )
-        try:
-            resultado = await anyio.to_thread.run_sync(_dispatch, name, arguments)
-        except GeocodingError as exc:
-            status = "geocoding_error"
-            return _resultado_erro(str(exc))
-        except ValueError as exc:
-            status = "value_error"
-            return _resultado_erro(str(exc))
-        except Exception:  # noqa: BLE001
-            status = "internal_error"
-            logger.exception("erro inesperado em %s", name)
-            return _resultado_erro("Erro interno do servidor.")
-
-        conteudo = [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
-        return (conteudo, resultado)
-    finally:
-        duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
-        _log_tool_call(name, status, duracao_ms)
+    return funcao(arguments)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -673,86 +519,28 @@ def _extrair_key(request: Request) -> str | None:
 
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, api_key: str) -> None:
+        super().__init__(app)
+        self.api_key = api_key
+
     async def dispatch(self, request: Request, call_next):
-        # /health, /llms.txt e / são públicos
+        # Caminhos de _PUBLICOS dispensam a chave.
         if request.url.path in _PUBLICOS:
             return await call_next(request)
 
         # Sem chave configurada → libera (modo dev)
-        if not API_KEY:
+        if not self.api_key:
             return await call_next(request)
 
         key = _extrair_key(request)
-        if key is None or not hmac.compare_digest(key.encode(), API_KEY.encode()):
+        if key is None or not hmac.compare_digest(key.encode(), self.api_key.encode()):
             return JSONResponse({"erro": "API key inválida ou ausente."}, status_code=401)
         return await call_next(request)
 
 
 # ─────────────────────────────────────────────────────────────
-# Transporte Streamable HTTP (MCP >= 2025-03-26) + lifespan
+# IP do cliente e CORS (/mapa-rapido)
 # ─────────────────────────────────────────────────────────────
-_security = (
-    TransportSecuritySettings(allowed_hosts=ALLOWED_HOSTS)
-    if ALLOWED_HOSTS
-    else None
-)
-
-session_manager = StreamableHTTPSessionManager(
-    app=server,
-    security_settings=_security,
-    # Sessão sem requisições por 30 min é encerrada (recomendação do SDK);
-    # sem isso o dicionário de sessões do SDK só cresce.
-    session_idle_timeout=1800,
-)
-
-
-@contextlib.asynccontextmanager
-async def lifespan(_app: Any) -> AsyncIterator[None]:
-    async with session_manager.run():
-        yield
-
-
-# ─────────────────────────────────────────────────────────────
-# Transporte SSE legado + /messages
-# ─────────────────────────────────────────────────────────────
-sse_transport = SseServerTransport("/messages/")
-
-
-async def _handle_sse(request: Request) -> Response:
-    async with sse_transport.connect_sse(
-        request.scope, request.receive, request._send,  # noqa: SLF001
-    ) as (read_stream, write_stream):
-        await server.run(read_stream, write_stream, server.create_initialization_options())
-    return Response()
-
-
-async def _health(_: Request) -> JSONResponse:
-    return JSONResponse({
-        "status": "ok",
-        "service": SERVER_NAME,
-        "versao": SERVER_VERSION,
-        "transporte": "streamable-http+sse",
-        "auth_required": bool(API_KEY),
-        "site": PUBLIC_SITE_URL,
-        "limites": {
-            "por_sessao_por_min": RATE_LIMIT_SESSION_PER_MIN,
-            "global_por_min": RATE_LIMIT_GLOBAL_PER_MIN,
-        },
-        "mapa_rapido": {
-            "por_ip_por_min": RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN,
-            "global_por_min": RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN,
-        },
-    })
-
-
-async def _llms_txt(_: Request) -> PlainTextResponse:
-    return PlainTextResponse(_LLMS_TXT, media_type="text/plain; charset=utf-8")
-
-
-async def _raiz(_: Request) -> RedirectResponse:
-    return RedirectResponse(PUBLIC_SITE_URL, status_code=302)
-
-
 def _ip_global(host: str | None) -> bool:
     if not host:
         return False
@@ -766,10 +554,14 @@ def _ip_cliente(request: Request) -> str | None:
     """IP de quem chamou, sem confiar no que o cliente escreve no X-Forwarded-For.
 
     Conexão vinda de IP global → é o próprio cliente (sem proxy na frente).
-    Conexão de rede privada (Traefik na rede Docker) → o ÚLTIMO item do
-    X-Forwarded-For, que é o endereço que o proxy viu; os itens anteriores são
-    do cliente e podem ser forjados.
+    Conexão de rede privada → o ÚLTIMO item do X-Forwarded-For, que é o
+    endereço que o proxy viu; os itens anteriores são do cliente e podem ser
+    forjados.
     """
+    # A confiança é "peer privado (rede Docker)", não "peer = Traefik": qualquer
+    # conexão de endereço não global tem o último item do XFF aceito. Vale porque
+    # a porta do container não é publicada; só o proxy alcança o app por rede
+    # privada.
     host = request.client.host if request.client else None
     if _ip_global(host):
         return host
@@ -779,116 +571,263 @@ def _ip_cliente(request: Request) -> str | None:
     return host
 
 
-def _cabecalhos_cors(request: Request) -> dict[str, str]:
-    origem = request.headers.get("origin", "").rstrip("/")
-    if origem and origem in CORS_ORIGINS:
-        return {
-            "Access-Control-Allow-Origin": origem,
-            "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Max-Age": "600",
-            "Vary": "Origin",
-        }
-    return {"Vary": "Origin"}
-
-
 _CAMPOS_MAPA_RAPIDO = ("data", "hora", "local")
 
 
-async def _mapa_rapido(request: Request) -> Response:
-    """Mapa natal para o formulário do site: data, hora e local; nada é guardado."""
-    cors = _cabecalhos_cors(request)
-    if request.method == "OPTIONS":
-        return Response(status_code=204, headers=cors)
+# ─────────────────────────────────────────────────────────────
+# Aplicação: estado e handlers de uma instância (create_app)
+# ─────────────────────────────────────────────────────────────
+class Aplicacao:
+    """Servidor MCP, transportes, limitadores e handlers HTTP de um app.
 
-    inicio = time.monotonic()
-    status = "ok"
-    try:
-        permitido, espera = LIMITADOR_MAPA_RAPIDO.tentar(_ip_cliente(request))
-        if not permitido:
-            status = "rate_limited"
-            cors_429 = {**cors, "Retry-After": str(math.ceil(espera))}
-            return JSONResponse(
-                {"erro": f"Muitos pedidos. Aguarde {math.ceil(espera)} segundos e tente de novo."},
-                status_code=429, headers=cors_429,
-            )
-        grande = JSONResponse({"erro": "Corpo grande demais."}, status_code=413, headers=cors)
+    Cada `create_app` cria a sua: nada de estado montado no import do módulo.
+    """
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self.limitador = LimitadorTaxa(
+            settings.rate_limit_session_per_min, settings.rate_limit_global_per_min,
+        )
+        self.limitador_mapa_rapido = LimitadorTaxa(
+            settings.rate_limit_mapa_rapido_ip_per_min,
+            settings.rate_limit_mapa_rapido_global_per_min,
+        )
+        self.llms_txt = _LLMS_TXT_PATH.read_text(encoding="utf-8").format(
+            mcp_url=settings.public_mcp_url, site_url=settings.public_site_url,
+        )
+        self.registro: dict[str, Callable[[dict], dict]] = {
+            **REGISTRO,
+            "healthcheck": lambda a: {
+                "status": "ok", "versao": settings.server_version, "transporte": TRANSPORTE,
+            },
+        }
+
+        self.server = Server(settings.server_name)
+
+        @self.server.list_tools()
+        async def _list_tools() -> list[Tool]:
+            return TOOLS
+
+        @self.server.call_tool()
+        async def _call_tool(name: str, arguments: dict[str, Any]):
+            return await self.call_tool(name, arguments)
+
+        # Transporte Streamable HTTP (MCP >= 2025-03-26).
+        security = (
+            TransportSecuritySettings(allowed_hosts=list(settings.allowed_hosts))
+            if settings.allowed_hosts
+            else None
+        )
+        self.session_manager = StreamableHTTPSessionManager(
+            app=self.server,
+            security_settings=security,
+            # Sessão sem requisições por 30 min é encerrada (recomendação do SDK);
+            # sem isso o dicionário de sessões do SDK só cresce.
+            session_idle_timeout=1800,
+        )
+        # Transporte SSE legado + /messages.
+        self.sse_transport = SseServerTransport("/messages/")
+
+    # ── MCP ──────────────────────────────────────────────────
+    def dispatch(self, name: str, arguments: dict[str, Any]) -> dict:
+        return _dispatch(name, arguments, self.registro)
+
+    def chave_sessao(self) -> str | None:
+        """Id da sessão MCP (header mcp-session-id) ou None fora de request/SSE legado."""
         try:
-            tamanho_declarado = int(request.headers.get("content-length", "0"))
-        except ValueError:
-            tamanho_declarado = 0
-        if tamanho_declarado > MAPA_RAPIDO_BODY_MAX:
-            status = "body_too_large"
-            return grande
-        bruto = await request.body()
-        if len(bruto) > MAPA_RAPIDO_BODY_MAX:  # upload chunked não traz Content-Length
-            status = "body_too_large"
-            return grande
+            request = self.server.request_context.request
+        except LookupError:
+            return None
+        if request is None:
+            return None
+        return request.headers.get("mcp-session-id")
+
+    async def call_tool(self, name: str, arguments: dict[str, Any]):
+        """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
+        inicio = time.monotonic()
+        status = "ok"
         try:
-            corpo = json.loads(bruto)
-        except ValueError:
-            corpo = None
-        if not isinstance(corpo, dict) or not isinstance(corpo.get("data"), str):
-            status = "value_error"
-            return JSONResponse({"erro": "Envie um JSON com data (DD/MM/YYYY)."}, status_code=400, headers=cors)
-        argumentos: dict[str, Any] = {}
-        for campo in _CAMPOS_MAPA_RAPIDO:
-            valor = corpo.get(campo)
-            if valor is None or (isinstance(valor, str) and not valor.strip()):
-                continue
-            if not isinstance(valor, str) or len(valor) > 120:
+            permitido, espera = self.limitador.tentar(self.chave_sessao())
+            if not permitido:
+                status = "rate_limited"
+                return _resultado_erro(
+                    f"Limite de chamadas atingido. Aguarde {math.ceil(espera)} segundos e tente de novo."
+                )
+            try:
+                resultado = await anyio.to_thread.run_sync(self.dispatch, name, arguments)
+            except GeocodingError as exc:
+                status = "geocoding_error"
+                return _resultado_erro(str(exc))
+            except ValueError as exc:
                 status = "value_error"
-                return JSONResponse({"erro": f"Campo inválido: {campo}."}, status_code=400, headers=cors)
-            argumentos[campo] = valor.strip()
-        try:
-            resultado = await anyio.to_thread.run_sync(_dispatch, "calcular_mapa_natal", argumentos)
-        except GeocodingError as exc:
-            status = "geocoding_error"
-            return JSONResponse({"erro": str(exc)}, status_code=422, headers=cors)
-        except ValueError as exc:
-            status = "value_error"
-            return JSONResponse({"erro": str(exc)}, status_code=400, headers=cors)
-        except Exception:  # noqa: BLE001
-            status = "internal_error"
-            logger.exception("erro inesperado em mapa_rapido")
-            return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
-        return JSONResponse(resultado, headers=cors)
-    finally:
-        _log_tool_call("mapa_rapido", status, round((time.monotonic() - inicio) * 1000, 1))
+                return _resultado_erro(str(exc))
+            except Exception:  # noqa: BLE001
+                status = "internal_error"
+                logger.exception("erro inesperado em %s", name)
+                return _resultado_erro("Erro interno do servidor.")
 
+            conteudo = [TextContent(type="text", text=json.dumps(resultado, ensure_ascii=False))]
+            return (conteudo, resultado)
+        finally:
+            duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
+            _log_tool_call(name, status, duracao_ms)
 
-async def _list_tools_http(_: Request) -> JSONResponse:
-    """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
-    payload_tools = []
-    for tool in TOOLS:
-        schema = tool.inputSchema or {}
-        properties = list((schema.get("properties") or {}).keys())
-        payload_tools.append({
-            "name": tool.name,
-            "description": tool.description,
-            "required": list(schema.get("required") or []),
-            "properties": properties,
+    @contextlib.asynccontextmanager
+    async def lifespan(self, _app: Any) -> AsyncIterator[None]:
+        async with self.session_manager.run():
+            yield
+
+    async def handle_sse(self, request: Request) -> Response:
+        async with self.sse_transport.connect_sse(
+            request.scope, request.receive, request._send,  # noqa: SLF001
+        ) as (read_stream, write_stream):
+            await self.server.run(read_stream, write_stream, self.server.create_initialization_options())
+        return Response()
+
+    # ── HTTP ─────────────────────────────────────────────────
+    async def health(self, _: Request) -> JSONResponse:
+        s = self.settings
+        return JSONResponse({
+            "status": "ok",
+            "service": s.server_name,
+            "versao": s.server_version,
+            "transporte": TRANSPORTE,
+            "auth_required": bool(s.api_key),
+            "site": s.public_site_url,
+            "limites": {
+                "por_sessao_por_min": s.rate_limit_session_per_min,
+                "global_por_min": s.rate_limit_global_per_min,
+            },
+            "mapa_rapido": {
+                "por_ip_por_min": s.rate_limit_mapa_rapido_ip_per_min,
+                "global_por_min": s.rate_limit_mapa_rapido_global_per_min,
+            },
         })
-    return JSONResponse({
-        "service": SERVER_NAME,
-        "versao": SERVER_VERSION,
-        "count": len(payload_tools),
-        "tools": payload_tools,
-    })
+
+    async def llms_txt_endpoint(self, _: Request) -> PlainTextResponse:
+        return PlainTextResponse(self.llms_txt, media_type="text/plain; charset=utf-8")
+
+    async def raiz(self, _: Request) -> RedirectResponse:
+        return RedirectResponse(self.settings.public_site_url, status_code=302)
+
+    def _cabecalhos_cors(self, request: Request) -> dict[str, str]:
+        origem = request.headers.get("origin", "").rstrip("/")
+        if origem and origem in self.settings.cors_efetivos:
+            return {
+                "Access-Control-Allow-Origin": origem,
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Max-Age": "600",
+                "Vary": "Origin",
+            }
+        return {"Vary": "Origin"}
+
+    async def mapa_rapido(self, request: Request) -> Response:
+        """Mapa natal para o formulário do site: data, hora e local; nada é guardado."""
+        cors = self._cabecalhos_cors(request)
+        if request.method == "OPTIONS":
+            return Response(status_code=204, headers=cors)
+
+        inicio = time.monotonic()
+        status = "ok"
+        try:
+            permitido, espera = self.limitador_mapa_rapido.tentar(_ip_cliente(request))
+            if not permitido:
+                status = "rate_limited"
+                cors_429 = {**cors, "Retry-After": str(math.ceil(espera))}
+                return JSONResponse(
+                    {"erro": f"Muitos pedidos. Aguarde {math.ceil(espera)} segundos e tente de novo."},
+                    status_code=429, headers=cors_429,
+                )
+            grande = JSONResponse({"erro": "Corpo grande demais."}, status_code=413, headers=cors)
+            try:
+                tamanho_declarado = int(request.headers.get("content-length", "0"))
+            except ValueError:
+                tamanho_declarado = 0
+            if tamanho_declarado > MAPA_RAPIDO_BODY_MAX:
+                status = "body_too_large"
+                return grande
+            bruto = await request.body()
+            if len(bruto) > MAPA_RAPIDO_BODY_MAX:  # upload chunked não traz Content-Length
+                status = "body_too_large"
+                return grande
+            try:
+                corpo = json.loads(bruto)
+            except ValueError:
+                corpo = None
+            if not isinstance(corpo, dict) or not isinstance(corpo.get("data"), str):
+                status = "value_error"
+                return JSONResponse({"erro": "Envie um JSON com data (DD/MM/YYYY)."}, status_code=400, headers=cors)
+            argumentos: dict[str, Any] = {}
+            for campo in _CAMPOS_MAPA_RAPIDO:
+                valor = corpo.get(campo)
+                if valor is None or (isinstance(valor, str) and not valor.strip()):
+                    continue
+                if not isinstance(valor, str) or len(valor) > 120:
+                    status = "value_error"
+                    return JSONResponse({"erro": f"Campo inválido: {campo}."}, status_code=400, headers=cors)
+                argumentos[campo] = valor.strip()
+            try:
+                resultado = await anyio.to_thread.run_sync(self.dispatch, "calcular_mapa_natal", argumentos)
+            except GeocodingError as exc:
+                status = "geocoding_error"
+                return JSONResponse({"erro": str(exc)}, status_code=422, headers=cors)
+            except ValueError as exc:
+                status = "value_error"
+                return JSONResponse({"erro": str(exc)}, status_code=400, headers=cors)
+            except Exception:  # noqa: BLE001
+                status = "internal_error"
+                logger.exception("erro inesperado em mapa_rapido")
+                return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
+            return JSONResponse(resultado, headers=cors)
+        finally:
+            _log_tool_call("mapa_rapido", status, round((time.monotonic() - inicio) * 1000, 1))
+
+    async def listar_tools_http(self, _: Request) -> JSONResponse:
+        """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
+        payload_tools = []
+        for tool in TOOLS:
+            schema = tool.inputSchema or {}
+            properties = list((schema.get("properties") or {}).keys())
+            payload_tools.append({
+                "name": tool.name,
+                "description": tool.description,
+                "required": list(schema.get("required") or []),
+                "properties": properties,
+            })
+        return JSONResponse({
+            "service": self.settings.server_name,
+            "versao": self.settings.server_version,
+            "count": len(payload_tools),
+            "tools": payload_tools,
+        })
 
 
-app = Starlette(
-    debug=False,
-    lifespan=lifespan,
-    routes=[
-        Route("/", endpoint=_raiz, methods=["GET"]),
-        Route("/llms.txt", endpoint=_llms_txt, methods=["GET"]),
-        Route("/health", endpoint=_health, methods=["GET"]),
-        Route("/tools", endpoint=_list_tools_http, methods=["GET"]),
-        Route("/mapa-rapido", endpoint=_mapa_rapido, methods=["POST", "OPTIONS"]),
-        Route("/sse", endpoint=_handle_sse, methods=["GET"]),
-        Mount("/messages/", app=sse_transport.handle_post_message),
-        Mount("/mcp", app=session_manager.handle_request),
-    ],
-    middleware=[Middleware(APIKeyMiddleware)],
-)
+def create_app(settings: Settings | None = None) -> Starlette:
+    """Monta a aplicação Starlette; sem `settings`, lê o ambiente.
+
+    A `Aplicacao` fica em `app.state.ceu` (testes chamam `call_tool`/`dispatch`
+    por ali).
+    """
+    configurar_logging()
+    ceu = Aplicacao(settings or Settings.do_ambiente())
+    app = Starlette(
+        debug=False,
+        lifespan=ceu.lifespan,
+        routes=[
+            Route("/", endpoint=ceu.raiz, methods=["GET"]),
+            Route("/llms.txt", endpoint=ceu.llms_txt_endpoint, methods=["GET"]),
+            Route("/health", endpoint=ceu.health, methods=["GET"]),
+            Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
+            Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
+            Route("/sse", endpoint=ceu.handle_sse, methods=["GET"]),
+            Mount("/messages/", app=ceu.sse_transport.handle_post_message),
+            Mount("/mcp", app=ceu.session_manager.handle_request),
+        ],
+        middleware=[Middleware(APIKeyMiddleware, api_key=ceu.settings.api_key)],
+    )
+    app.state.ceu = ceu
+    return app
+
+
+app = create_app()
