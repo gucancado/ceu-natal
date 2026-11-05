@@ -99,7 +99,7 @@ export function RotadorPrompts() {
             setEmCima(false);
             setPausado((p) => !p);
           }}
-          className="mt-4 text-muted-fg"
+          className="mt-4 text-muted-fg aria-pressed:bg-muted aria-pressed:text-fg"
         >
           Pausar
         </Button>

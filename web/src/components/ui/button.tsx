@@ -1,11 +1,12 @@
 // Cópia leve do primitivo do @beeads/ui: o pacote é um barrel único "use client" e levaria ~430 KB ao navegador.
 // Voltar a importar do DS quando ele publicar entradas por componente (gucancado/beeads-ui).
-// Classes copiadas de node_modules/@beeads/ui/dist/index.mjs (v0.7.1), sem mudança visual.
+// Classes copiadas de node_modules/@beeads/ui/dist/index.mjs (v0.7.1). Sem twMerge: base e variantes
+// não podem repetir a mesma família de utilitário (text-*, px-*, h-*, rounded-*…), senão vence a ordem do CSS.
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
 const base =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0";
 
 const variantes = {
   default: "bg-primary text-primary-fg hover:bg-primary/90",
@@ -14,8 +15,9 @@ const variantes = {
 } as const;
 
 const tamanhos = {
-  sm: "h-8 px-3",
-  default: "h-9 px-4 py-2",
+  // text-sm saiu da base para cá: o lg usa text-base e, sem twMerge, as duas classes iriam juntas.
+  sm: "h-8 px-3 text-sm",
+  default: "h-9 px-4 py-2 text-sm",
   lg: "h-10 px-6 text-base",
 } as const;
 
