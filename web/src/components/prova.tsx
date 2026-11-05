@@ -1,5 +1,5 @@
 const fatos = [
-  "Efemérides suíças (NASA JPL)",
+  "Efemérides suíças (Astrodienst)",
   "9 ferramentas",
   "Em português",
   "Cidade brasileira geocodificada",

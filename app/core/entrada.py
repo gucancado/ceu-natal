@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Entrada de nascimento única: o objeto pessoa/natal que todas as tools recebem
 (`data`, `hora`, `local`, `nome`, `lat`, `lng`, `tz_str`, `is_dst`), validado

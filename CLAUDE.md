@@ -1,182 +1,84 @@
-# CLAUDE.md — Orientação para agentes LLM
+# CLAUDE.md
 
-Leia este arquivo **antes** de propor qualquer mudança no projeto. Ele
-existe pra eliminar planos baseados em premissas desatualizadas.
-
----
+Orientação para quem (pessoa ou agente) vai mexer neste repositório.
 
 ## O que é
 
-Servidor **MCP** (Model Context Protocol) de astrologia, exposto via
-**Streamable HTTP** (`/mcp/`, recomendado) com **SSE legado** (`/sse`)
-em paralelo durante grace period. Stack:
+Servidor **MCP** (Model Context Protocol) de astrologia em português: calcula
+mapas, não interpreta, não guarda dados de pessoas. Transporte Streamable HTTP
+em `/mcp/` (recomendado) e SSE legado em `/sse`. O site de apresentação mora em
+`web/` e é um app separado.
 
-- Python 3.11 + Starlette + uvicorn
-- MCP SDK (`mcp>=1.9.0`): `StreamableHTTPSessionManager` (`/mcp/`) +
-  `SseServerTransport` (`/sse`, legado)
-- Kerykeion 5.x (Swiss Ephemeris) para cálculo astrológico
-- GeoNames + Nominatim (rate-limit 1 req/s) com cache persistente para geocodificação
-- Despacho de tools em threadpool (`anyio.to_thread`) — não bloqueia o event loop
-- Telemetria: log estruturado JSON por chamada (`event:"tool_call"` / `event:"geocode"`)
+## Stack
 
-**URL produção:** https://astrologia-mcp.gustavocancado.com.br
+- Python 3.11, Starlette + uvicorn, MCP SDK 1.x (`mcp<2`)
+- Kerykeion 5.x (Swiss Ephemeris via pyswisseph) para o cálculo
+- GeoNames com Nominatim de reserva, cache persistente de coordenadas
+- Tools rodam em threadpool (`anyio.to_thread`); log JSON por chamada
+- Site: Next.js 16 + `@beeads/ui` em `web/`
 
-**Endpoints HTTP:**
+## Mapa de pastas
 
-| Path | Tipo | Descrição |
-|------|------|-----------|
-| `/mcp/` | POST/GET | endpoint MCP Streamable HTTP (recomendado; use barra final — `/mcp` redireciona 307) |
-| `/sse` | GET | handshake MCP via SSE (legado — em descontinuação) |
-| `/messages/` | POST | canal de mensagens SSE (legado) |
-| `/` | GET | redireciona (302) para `PUBLIC_SITE_URL` (público) |
-| `/llms.txt` | GET | descrição do servidor para LLMs (público) |
-| `/health` | GET | healthcheck (público) |
-| `/tools` | GET | lista as tools registradas (debug, autenticado) |
+| Pasta | Conteúdo |
+|-------|----------|
+| `app/config.py` | `Settings` imutável; todas as envs do servidor (`Settings.do_ambiente()`) |
+| `app/server.py` | `create_app(settings)`, schemas das tools (`TOOLS`), rotas HTTP, auth, limites |
+| `app/core/` | cálculo: `entrada.py` (entrada única de nascimento), `kerykeion.py`, `aspectos.py`, `sintese.py`, `geocoder.py`, `periodos.py`, `revolucoes.py`, `formatter.py`, `validators.py`, `ratelimit.py` |
+| `app/tools/` | um handler por técnica |
+| `app/static/llms.txt` | texto servido em `/llms.txt` |
+| `tests/` | pytest; fixtures fictícias em `tests/conftest.py` |
+| `scripts/` | `deploy.py` (deploy manual), `validacao_producao.py` |
+| `docs/` | guia de conexão, validação em produção, política e termos |
+| `web/` | site Next.js |
 
----
+## Tools (`app/tools/`)
 
-## O que NÃO propor
+| Tool | Arquivo |
+|------|---------|
+| `calcular_mapa_natal` | `app/tools/mapa_natal.py` |
+| `calcular_sinastria` | `app/tools/sinastria.py` |
+| `calcular_transitos` | `app/tools/transitos.py` |
+| `calcular_progressoes` | `app/tools/progressoes.py` |
+| `calcular_mapa_composto` | `app/tools/composto.py` |
+| `calcular_revolucao_solar` | `app/tools/revolucao_solar.py` |
+| `calcular_revolucao_lunar` | `app/tools/revolucao_lunar.py` |
+| `listar_aspectos_tipos` | inline em `app/server.py` |
+| `healthcheck` | inline em `app/server.py` |
 
-- ❌ **Não é mais uma API REST FastAPI.** A migração aconteceu em
-  abril/2026 (commit `574a881` — "feat: migra REST API para servidor MCP
-  via SSE"). Não recriar `POST /natal-chart`, `POST /sinastria`,
-  `POST /transitos` ou outros endpoints REST de cálculo.
-- ❌ **Não usar FastAPI.** Starlette é o framework HTTP, e só hospeda
-  o transporte MCP + endpoints utilitários (`/health`, `/tools`).
-- ❌ **Não pedir Swagger / OpenAPI.** O equivalente em MCP é o
-  `inputSchema` por Tool e o `GET /tools`.
-- ❌ **Não reimplementar tools que já existem** (ver lista abaixo).
-- ❌ **Não atualizar versões de Kerykeion ou Python sem discussão.**
-  Pyswisseph (dependência transitiva) é frágil em build de wheels.
-- ❌ **Não remover os tetos de major do `requirements.txt`.** O build do
-  Coolify resolve as versões do zero a cada deploy, então uma major nova no
-  PyPI quebra o deploy sem nenhuma mudança de código. Em 2026-07-29 o
-  `mcp>=1.9.0` puxou a 2.0.0 (publicada no dia anterior), que removeu
-  `Server.list_tools` — o container subiu com `AttributeError` e o Coolify
-  fez rollback. Para migrar pra `mcp` 2.x, tratar como tarefa própria.
+## Convenções
 
----
+- Português em comentários, docstrings, mensagens de erro e commits
+  (Conventional Commits: `fix(core): ...`, `docs: ...`).
+- Todo `.py` de `app/` e `scripts/` começa com
+  `# SPDX-License-Identifier: AGPL-3.0-or-later` e uma docstring.
+- Erro para o usuário: `ValueError`/`GeocodingError` com mensagem clara; o
+  servidor devolve `{"erro": "..."}` com `isError`. Exceção genérica vira
+  "Erro interno do servidor." sem vazar detalhe.
+- Lógica nova vai em `app/core/` ou `app/tools/`; `app/server.py` só registra
+  e despacha. Entrada de pessoa/natal passa sempre por `EntradaNascimento`.
+- Testes com Kerykeion passam `lat`/`lng`/`tz_str` direto (sem rede).
+- Dependências de runtime em `requirements.in` (com tetos de major) e lock em
+  `requirements.txt`, gerado por
+  `uv pip compile requirements.in -o requirements.txt --python-version 3.11`.
+  Dependências de desenvolvimento em `requirements-dev.txt`.
 
-## Tools já implementadas em `app/tools/`
+## Testes
 
-| Tool | Arquivo | Status em produção |
-|------|---------|---------------------|
-| `calcular_mapa_natal` | [app/tools/mapa_natal.py](app/tools/mapa_natal.py) | ✅ deployada |
-| `calcular_sinastria` | [app/tools/sinastria.py](app/tools/sinastria.py) | ✅ deployada |
-| `calcular_transitos` | [app/tools/transitos.py](app/tools/transitos.py) | ✅ deployada |
-| `calcular_progressoes` | [app/tools/progressoes.py](app/tools/progressoes.py) | ✅ deployada |
-| `calcular_mapa_composto` | [app/tools/composto.py](app/tools/composto.py) | ✅ deployada |
-| `calcular_revolucao_solar` | [app/tools/revolucao_solar.py](app/tools/revolucao_solar.py) | ✅ deployada |
-| `calcular_revolucao_lunar` | [app/tools/revolucao_lunar.py](app/tools/revolucao_lunar.py) | ✅ deployada |
-| `listar_aspectos_tipos` | inline em [app/server.py](app/server.py) | ✅ deployada |
-| `healthcheck` | inline em [app/server.py](app/server.py) | ✅ deployada |
+- **Windows:** só a parte que não importa Kerykeion (pyswisseph não compila):
+  `python -m pytest tests/test_server.py tests/test_ratelimit.py tests/test_server_json.py tests/test_deploy_script.py tests/test_periodos.py tests/test_validators.py -q`
+- **Linux, WSL ou CI:** suíte completa com
+  `pip install -r requirements-dev.txt`, depois `ruff check .`, `mypy app`
+  e `python -m pytest -q`.
+- **Site:** `cd web && pnpm install && pnpm typecheck && pnpm test && pnpm build`.
 
-**Como verificar quais tools estão deployadas agora:**
+## O que não propor
 
-```bash
-curl -s https://astrologia-mcp.gustavocancado.com.br/tools | jq '.tools[].name'
-```
-
-Ou, se um cliente MCP estiver conectado, listar as tools via protocolo.
-
----
-
-## Estado atual (verificável)
-
-- **Branch ativa:** `main`
-- **Deploy não é automático** — push pra `main` não publica em produção.
-  Disparar deploy via API do Coolify (servidor `monstro-de-meleca`,
-  projeto `astrologia`, app uuid `ejbfwl0yfego72kk5n2us1gh`) com o script
-  (acompanha até `finished`; aceita `--dry-run` e `--no-wait`):
-
-  ```bash
-  COOLIFY_TOKEN=<bearer> python scripts/deploy.py
-  ```
-
-  Ou pela UI do Coolify em http://5.78.199.192:8000 → projeto
-  `astrologia` → app `ceu-natal` → **Deploy**. Token e mais detalhes em
-  `~/.claude/CLAUDE.md`.
-- **Versão em produção: 2.1.0** (deploy de 2026-11-03). Limite de taxa
-  ativo por padrão: 30 chamadas de tool/min por sessão MCP e 600/min global
-  (envs `RATE_LIMIT_SESSION_PER_MIN` / `RATE_LIMIT_GLOBAL_PER_MIN`; 0 desliga).
-  O **health check do Coolify está ligado** (`GET /health`, porta 8000), então
-  um container novo que não sobe saudável é revertido automaticamente.
-  Envs `PUBLIC_SITE_URL` e `PUBLIC_MCP_URL` definidas (prod e preview).
-- **Estado verificado em runtime:** confira a tabela "Status em produção"
-  acima (sincronizada diariamente pelo workflow) ou rode `curl /tools`.
-  Se o número de tools deployadas for diferente do número em
-  `app/tools/`, há drift entre `main` e produção — peça redeploy.
-- **Auth:** modo aberto (`MCP_API_KEY=` vazia em produção). Decisão
-  consciente — Claude.ai web só aceita OAuth para conector custom, e
-  ainda não implementamos OAuth no servidor.
-  `/mcp/` segue anônimo por decisão da spec do produto (seção 4.3); o
-  endpoint com conta será `/conta/mcp/`, numa fase posterior (F3).
-- **`MCP_ALLOWED_HOSTS`** (env, setada em prod): hosts permitidos no
-  Streamable HTTP (anti-DNS-rebinding). Vazia = sem validação de Host.
-  Redundante atrás do Traefik (que já roteia por Host), mas defensivo.
-
----
-
-## Onde olhar pra entender mais
-
-| Quero saber... | Leia... |
-|----------------|---------|
-| Como conectar como usuário | [docs/CONECTAR-CLAUDE-AI.md](docs/CONECTAR-CLAUDE-AI.md) |
-| Visão geral / parâmetros / exemplos | [README.md](README.md) |
-| Estado real validado em produção | [docs/validacao.md](docs/validacao.md) |
-| Decisões arquiteturais e histórico | `git log --oneline` (commits são detalhados) |
-
----
-
-## Convenções de código
-
-- **Idioma:** comentários, docstrings e mensagens de erro em português
-- **Type hints:** sempre, estilo `Optional[str]`, `dict[str, Any]`
-- **Estilo:** aspas duplas, indentação 4 espaços, sem black/ruff
-  configurados — manter o que já está
-- **Erros pro usuário final:** levantar `ValueError`/`GeocodingError` com
-  mensagem PT-BR clara — `_call_tool` em [app/server.py](app/server.py)
-  captura e retorna `CallToolResult(isError=True)` com `{"erro": "..."}`.
-  Exceção genérica vira `"Erro interno do servidor."` (sem vazar detalhe).
-- **Lógica nova:** mora em `app/core/` (cálculo) ou `app/tools/`
-  (handler MCP). Não inflar `app/server.py` — ele registra schemas e
-  despacha via `_dispatch` (síncrono, rodado em threadpool por `_call_tool`)
-- **Testes:** padrão `pytest`, fixtures em `tests/conftest.py`. Casos
-  com Kerykeion devem passar lat/lng/tz_str diretos pra evitar
-  dependência de rede.
-  Desde a 2.1.0 `tests/test_server.py` roda no Windows (as tools são
-  importadas sob demanda); só os testes de `app/tools/*` e
-  `app/core/kerykeion.py` exigem Linux/CI.
-
----
-
-## Workflow padrão de mudança
-
-1. Editar código localmente
-2. Rodar `pytest -v` (subset que não exige Kerykeion roda em qualquer
-   ambiente; suite completa exige Linux + pyswisseph compilado)
-3. Commit em `main` (projeto pessoal — sem PR formal)
-4. Push para `origin/main`
-5. **Disparar deploy no Coolify** (manual — `COOLIFY_TOKEN=<bearer> python scripts/deploy.py` ou UI, ver seção "Estado atual" acima)
-6. Validar com `curl /health` e `curl /tools`
-7. Atualizar `docs/validacao.md` se for mudança que afete contrato
-   ou estabilidade
-
----
-
-## Como bootstrappar uma nova sessão de planejamento no Claude.ai
-
-Cole o snippet abaixo no início da conversa antes de pedir um plano:
-
-> Antes de propor mudanças no projeto ceu-natal, leia (via web fetch):
->
-> - https://github.com/gucancado/ceu-natal/blob/main/CLAUDE.md
-> - https://github.com/gucancado/ceu-natal/blob/main/docs/validacao.md
-> - https://github.com/gucancado/ceu-natal/blob/main/README.md
->
-> Confirme o estado atual antes de propor implementação.
-
-Sem isso, o Claude.ai opera com base em conversas antigas e pode
-propor regressões (exemplo real: pedir reimplementação de
-`calcular_transitos` como endpoint REST FastAPI, ignorando que a tool
-MCP equivalente já existe).
+- Endpoints REST de cálculo ou FastAPI: o servidor é MCP sobre Starlette.
+  Swagger/OpenAPI também não; o equivalente é o `inputSchema` de cada tool.
+- Reimplementar tools que já existem (tabela acima).
+- Tirar os tetos de major do `requirements.in`: uma major nova no PyPI já
+  derrubou o deploy sem mudança de código. Migrar para `mcp` 2.x é tarefa
+  própria.
+- Subir Kerykeion ou Python sem discussão: pyswisseph é frágil em wheels.
+- Aceitar a chave de API por query string: só `Authorization: Bearer`.
+- Deploy automático no push: publicar é decisão explícita (`scripts/deploy.py`).

@@ -7,8 +7,8 @@
     "url": "https://github.com/gucancado/ceu-natal",
     "source": "github"
   },
-  "websiteUrl": "https://github.com/gucancado/ceu-natal",
-  "version": "2.1.0",
+  "websiteUrl": "https://mistico.gustavocancado.com.br",
+  "version": "2.2.0",
   "remotes": [
     {
       "type": "streamable-http",

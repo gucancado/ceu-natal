@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Trânsitos planetários — calcula a posição atual dos planetas em relação a
 um mapa natal. Aspectos cruzados, casa natal de cada trânsito e curadoria

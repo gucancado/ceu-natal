@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Script de validação: conecta ao MCP de produção (SSE), executa as tools
 disponíveis com dados reais e mede tempos.

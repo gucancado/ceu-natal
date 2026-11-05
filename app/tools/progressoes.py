@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Progressões secundárias — técnica "um dia após o nascimento = um ano de vida".
 

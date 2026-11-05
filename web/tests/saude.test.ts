@@ -4,11 +4,11 @@ import { lerSaude } from "../src/lib/saude";
 
 test("lerSaude ok", async () => {
   const r = await lerSaude("https://m", async () =>
-    new Response(JSON.stringify({ versao: "2.1.0", limites: { por_sessao_por_min: 30, global_por_min: 600 } })),
+    new Response(JSON.stringify({ versao: "2.2.0", limites: { por_sessao_por_min: 30, global_por_min: 600 } })),
   );
   assert.equal(r.ok, true);
   if (r.ok) {
-    assert.equal(r.versao, "2.1.0");
+    assert.equal(r.versao, "2.2.0");
     assert.deepEqual(r.limites, { por_sessao_por_min: 30, global_por_min: 600 });
   }
 });

@@ -1,5 +1,8 @@
 version: 2
 updates:
+  # O requirements.txt é um lock gerado a partir do requirements.in com
+  #   uv pip compile requirements.in -o requirements.txt --python-version 3.11
+  # Um PR do Dependabot que mexa no lock deve ser refeito regenerando-o assim.
   - package-ecosystem: pip
     directory: /
     schedule:
@@ -7,6 +10,11 @@ updates:
     groups:
       python-minor-patch:
         update-types: [minor, patch]
+    ignore:
+      # Subir cryptography/cffi isolados quebra o lock: timezonefinder==6.5.2
+      # fixa cffi<2. Reavaliar junto com o timezonefinder.
+      - dependency-name: cryptography
+      - dependency-name: cffi
 
   - package-ecosystem: npm
     directory: /web

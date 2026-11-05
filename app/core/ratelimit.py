@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Limitador de taxa em memória para as chamadas de ferramentas MCP.
 
 A chave de limitação é o id da sessão MCP, nunca o IP de origem. O claude.ai e

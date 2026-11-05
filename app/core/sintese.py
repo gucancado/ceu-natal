@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Síntese do mapa: elementos, qualidades, hemisférios, planeta mais aspectado e stelliums."""
+
 from collections import Counter
 
 PLANETAS_PRINCIPAIS_PT = [

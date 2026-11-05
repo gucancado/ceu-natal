@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Tradução para PT-BR, formatação de posições e casas, e tabelas de regência."""
+
 SIGNOS_PT = {
     "Ari": "Aries", "Tau": "Touro", "Gem": "Gemeos",
     "Can": "Cancer", "Leo": "Leao", "Vir": "Virgem",

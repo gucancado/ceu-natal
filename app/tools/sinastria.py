@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Sinastria: aspectos cruzados entre duas pessoas e planetas de uma nas casas da outra."""
+
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos_cruzados, casa_de_longitude

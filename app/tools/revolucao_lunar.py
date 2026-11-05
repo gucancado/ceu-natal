@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Revolução lunar — o mapa do instante em que a Lua volta à sua longitude natal.
 

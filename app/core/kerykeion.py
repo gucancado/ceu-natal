@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Wrapper sobre Kerykeion 5.x: cria AstrologicalSubject com lat/lng/tz explícitos
 (online=False) e expõe utilitários para extrair planetas e casas.

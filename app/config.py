@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Configuração do servidor: um objeto imutável no lugar de `os.getenv` espalhado
 pelo import de `app.server`.
@@ -17,7 +18,7 @@ def _lista(valor: str) -> tuple[str, ...]:
 @dataclass(frozen=True)
 class Settings:
     server_name: str = "ceu-natal"
-    server_version: str = "2.1.0"
+    server_version: str = "2.2.0"
     # Vazio = sem autenticação (modo dev).
     api_key: str = ""
     # Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).

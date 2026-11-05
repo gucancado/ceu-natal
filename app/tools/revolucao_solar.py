@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Revolução solar — o mapa do instante em que o Sol volta à sua longitude natal.
 

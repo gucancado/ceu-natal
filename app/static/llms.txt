@@ -24,7 +24,7 @@
 ## Formato de entrada
 
 - data: DD/MM/YYYY, ex.: 12/03/1990 (obrigatória).
-- hora: HH:MM, ex.: 09:20. Sem hora, não saem casas nem ângulos.
+- hora: HH:MM, ex.: 14:30. Sem hora, o cálculo usa 12:00 no horário local, a Lua vem marcada como incerta e não saem casas nem ângulos.
 - local: "Cidade, UF" ou "Cidade, País", ex.: "Belo Horizonte, MG" ou "Lisboa, Portugal".
 - sistema_casas: opcional, default P (Placidus).
 

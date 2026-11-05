@@ -3,7 +3,7 @@
 ## 2026-11-04 — F2: site mistico.gustavocancado.com.br (`produto/f2` @ `9730000`)
 
 Landing Next.js 16.4.4 em `web/` (Tasks 1–7 do plano F2) publicada no Coolify
-como app `ceu-natal-web` (uuid `atbazr01ybzciaqfmvnyfdvg`, build pack
+como app `ceu-natal-web` (build pack
 dockerfile, base directory `/web`, porta 3000, domínio
 `https://mistico.gustavocancado.com.br`, envs `NEXT_PUBLIC_SITE_URL`/
 `NEXT_PUBLIC_MCP_URL`/`NEXT_PUBLIC_REPO_URL` em prod e preview; a API do
@@ -29,7 +29,7 @@ aponta para a branch `produto/f2` até o merge; depois do merge, trocar
 
 ## 2026-11-03 — starlette 1.x (`main` @ `3c9c5db`)
 
-Teto do starlette subido de `<1.0.0` para `>=1.3.1,<2.0.0` (decisão do Gustavo)
+Teto do starlette subido de `<1.0.0` para `>=1.3.1,<2.0.0` (decisão do mantenedor)
 e os 5 `--ignore-vuln` do starlette removidos da CI (PYSEC-2026-161/248/249/
 2280/2281; as duas primeiras envenenam `request.url.path` pelo header `Host`,
 critério de rota pública do `APIKeyMiddleware`). CI verde (`testes` +
@@ -174,7 +174,7 @@ telemetria por tool, `isError`, annotations, transporte Streamable HTTP).
 | `GET /health` | ✅ `transporte: "streamable-http+sse"`, versão 2.0.0 |
 | `GET /tools` | ✅ 7 tools |
 | `POST /mcp/` initialize | ✅ 200, `Mcp-Session-Id` presente, `serverInfo.name=ceu-natal` (SDK mcp 1.27.2) |
-| Deploy Coolify | ✅ `uuid=ejbfwl0yfego72kk5n2us1gh`, live ~105s |
+| Deploy Coolify | ✅ live ~105s |
 
 **Observações:**
 - ⚠️ `POST /mcp` (sem barra) responde **307 → `/mcp/`** com `Location: http://` (downgrade de

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Servidor MCP do céu-natal: expõe tools de astrologia via SSE sobre HTTP.
 
@@ -149,7 +150,9 @@ TOOLS: list[Tool] = [
             "planetárias, casas (Placidus por padrão; sistema configurável), ângulos, "
             "aspectos entre planetas, pontos sensíveis (nodos verdadeiros e Quíron) e "
             "síntese (elementos, qualidades, hemisférios, stelliums). Se hora ou local "
-            "forem omitidos, retorna apenas posições por signo, sem casas nem ângulos."
+            "forem omitidos, retorna apenas posições por signo, sem casas nem ângulos. "
+            "Sem hora, o cálculo usa 12:00 no horário local e a Lua vem marcada como "
+            "incerta (posicao_incerta, signo_pode_mudar)."
         ),
         annotations=_ANOTACOES_CALCULO,
         inputSchema={
@@ -162,7 +165,7 @@ TOOLS: list[Tool] = [
                 },
                 "hora": {
                     "type": ["string", "null"],
-                    "description": "Hora de nascimento no formato HH:MM. Opcional.",
+                    "description": "Hora de nascimento no formato HH:MM. Opcional; sem ela, usa 12:00 local.",
                 },
                 "local": {
                     "type": ["string", "null"],
