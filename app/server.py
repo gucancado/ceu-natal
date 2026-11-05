@@ -11,8 +11,9 @@ Endpoints:
   POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
                       para PUBLIC_SITE_URL, limite por IP)
 
-Autenticação: header `Authorization: Bearer <key>` ou query `?api_key=<key>`.
-Se MCP_API_KEY não estiver configurado, libera tudo (modo dev).
+Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
+é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
+libera tudo (modo dev).
 
 Variáveis de ambiente opcionais:
   MCP_ALLOWED_HOSTS — hosts permitidos no Streamable HTTP (anti-DNS rebinding),
@@ -20,6 +21,8 @@ Variáveis de ambiente opcionais:
 """
 import contextlib
 import functools
+import hmac
+import ipaddress
 import json
 import logging
 import math
@@ -67,6 +70,8 @@ PUBLIC_MCP_URL = os.getenv("PUBLIC_MCP_URL", "https://astrologia-mcp.gustavocanc
 RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN", "6"))
 RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN = int(os.getenv("RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN", "120"))
 LIMITADOR_MAPA_RAPIDO = LimitadorTaxa(RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN, RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN)
+# Teto do corpo do /mapa-rapido (bytes): data, hora e local cabem com folga.
+MAPA_RAPIDO_BODY_MAX = 4096
 # Origens aceitas pelo CORS do /mapa-rapido (vírgula). Padrão: só o site.
 CORS_ORIGINS = [
     o.strip().rstrip("/")
@@ -657,13 +662,14 @@ async def _call_tool(name: str, arguments: dict[str, Any]):
 
 
 # ─────────────────────────────────────────────────────────────
-# Auth middleware (header Bearer ou ?api_key=)
+# Auth middleware (só header Bearer)
 # ─────────────────────────────────────────────────────────────
 def _extrair_key(request: Request) -> str | None:
+    """Chave do header `Authorization: Bearer`; query string não é aceita."""
     auth = request.headers.get("authorization", "")
     if auth.lower().startswith("bearer "):
         return auth[7:].strip()
-    return request.query_params.get("api_key")
+    return None
 
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
@@ -677,7 +683,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         key = _extrair_key(request)
-        if key != API_KEY:
+        if key is None or not hmac.compare_digest(key.encode(), API_KEY.encode()):
             return JSONResponse({"erro": "API key inválida ou ausente."}, status_code=401)
         return await call_next(request)
 
@@ -732,6 +738,10 @@ async def _health(_: Request) -> JSONResponse:
             "por_sessao_por_min": RATE_LIMIT_SESSION_PER_MIN,
             "global_por_min": RATE_LIMIT_GLOBAL_PER_MIN,
         },
+        "mapa_rapido": {
+            "por_ip_por_min": RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN,
+            "global_por_min": RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN,
+        },
     })
 
 
@@ -743,12 +753,30 @@ async def _raiz(_: Request) -> RedirectResponse:
     return RedirectResponse(PUBLIC_SITE_URL, status_code=302)
 
 
+def _ip_global(host: str | None) -> bool:
+    if not host:
+        return False
+    try:
+        return ipaddress.ip_address(host).is_global
+    except ValueError:
+        return False
+
+
 def _ip_cliente(request: Request) -> str | None:
-    """Primeiro IP do X-Forwarded-For (Traefik) ou o IP da conexão."""
-    xff = request.headers.get("x-forwarded-for", "")
-    if xff.strip():
-        return xff.split(",")[0].strip()
-    return request.client.host if request.client else None
+    """IP de quem chamou, sem confiar no que o cliente escreve no X-Forwarded-For.
+
+    Conexão vinda de IP global → é o próprio cliente (sem proxy na frente).
+    Conexão de rede privada (Traefik na rede Docker) → o ÚLTIMO item do
+    X-Forwarded-For, que é o endereço que o proxy viu; os itens anteriores são
+    do cliente e podem ser forjados.
+    """
+    host = request.client.host if request.client else None
+    if _ip_global(host):
+        return host
+    xff = [p.strip() for p in request.headers.get("x-forwarded-for", "").split(",") if p.strip()]
+    if xff:
+        return xff[-1]
+    return host
 
 
 def _cabecalhos_cors(request: Request) -> dict[str, str]:
@@ -784,8 +812,20 @@ async def _mapa_rapido(request: Request) -> Response:
                 {"erro": f"Muitos pedidos. Aguarde {math.ceil(espera)} segundos e tente de novo."},
                 status_code=429, headers=cors_429,
             )
+        grande = JSONResponse({"erro": "Corpo grande demais."}, status_code=413, headers=cors)
         try:
-            corpo = await request.json()
+            tamanho_declarado = int(request.headers.get("content-length", "0"))
+        except ValueError:
+            tamanho_declarado = 0
+        if tamanho_declarado > MAPA_RAPIDO_BODY_MAX:
+            status = "body_too_large"
+            return grande
+        bruto = await request.body()
+        if len(bruto) > MAPA_RAPIDO_BODY_MAX:  # upload chunked não traz Content-Length
+            status = "body_too_large"
+            return grande
+        try:
+            corpo = json.loads(bruto)
         except ValueError:
             corpo = None
         if not isinstance(corpo, dict) or not isinstance(corpo.get("data"), str):

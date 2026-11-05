@@ -7,7 +7,7 @@ sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
 
 - Transporte: **SSE** sobre HTTP (servidor remoto multi-cliente)
 - Protocolo: MCP 2024-11-05
-- Autenticação: API key via header `Authorization: Bearer ...` ou query `?api_key=...`
+- Autenticação: API key via header `Authorization: Bearer ...` (query string não é aceita)
 - Produção: `https://astrologia-mcp.gustavocancado.com.br`
 
 > **Para LLMs / agentes que vão propor mudanças:** leia
@@ -180,7 +180,7 @@ Servidor sobe em `http://localhost:8000`:
 - `GET /` — redireciona (302) para `PUBLIC_SITE_URL` (público)
 - `GET /llms.txt` — descrição do servidor para LLMs (público)
 - `GET /health` — healthcheck (público)
-- `GET /tools` — lista as tools registradas em JSON (autenticado, útil pra debug)
+- `GET /tools` — lista as tools registradas em JSON; público quando `MCP_API_KEY` está vazia (padrão em produção). Útil pra debug
 - `POST/GET /mcp` — endpoint MCP Streamable HTTP (recomendado)
 - `GET /sse` — handshake MCP via SSE (legado, autenticado)
 - `POST /messages/` — canal de mensagens SSE (legado, autenticado)
@@ -199,7 +199,12 @@ curl http://localhost:8000/tools | jq
 |-------------------------|--------------------------------------------------|-----------------------------------------------------------------|
 | `GEONAMES_USERNAME`     | `gucancado`                                      | conta GeoNames para geocodificação                              |
 | `GEOCODER_CACHE_PATH`   | `/tmp/ceu-natal-geocode-cache.json`              | caminho do cache persistente. Em Docker, montar volume em `/var/cache/ceu-natal` |
-| `MCP_API_KEY`           | *(vazio)*                                        | se vazio, libera tudo (modo dev)                                |
+| `GEOCODER_MAX_CONCORRENTES` | `4`                                          | teto de chamadas simultâneas aos provedores de geocodificação   |
+| `GEOCODER_ESPERA_MAX_S` | `3.0`                                            | espera máxima (s) por uma vaga no teto acima; depois, erro      |
+| `NOMINATIM_USER_AGENT`  | `ceu-natal-mcp/2.0`                              | User-Agent enviado ao Nominatim (OSM)                           |
+| `NOMINATIM_MIN_INTERVAL_S` | `1.0`                                         | intervalo mínimo (s) entre chamadas ao Nominatim                |
+| `MCP_API_KEY`           | *(vazio)*                                        | se vazio, libera tudo (modo dev); só aceita header `Authorization: Bearer` |
+| `MCP_ALLOWED_HOSTS`     | *(vazio)*                                        | hosts aceitos no `/mcp` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
 | `MCP_HOST`              | `0.0.0.0`                                        | bind                                                            |
 | `MCP_PORT`              | `8000`                                           | porta                                                           |
 | `MCP_SERVER_NAME`       | `ceu-natal`                                      | nome retornado em `initialize`                                  |
@@ -208,6 +213,9 @@ curl http://localhost:8000/tools | jq
 | `PUBLIC_MCP_URL`        | `https://astrologia-mcp.gustavocancado.com.br`   | URL pública do MCP exibida em `/llms.txt`                       |
 | `RATE_LIMIT_SESSION_PER_MIN` | `30`                                        | chamadas de tool por minuto por sessão MCP (0 desliga)          |
 | `RATE_LIMIT_GLOBAL_PER_MIN`  | `600`                                       | chamadas de tool por minuto no total (0 desliga)                |
+| `RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN` | `6`                                  | pedidos ao `/mapa-rapido` por minuto por IP (0 desliga)         |
+| `RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN` | `120`                            | pedidos ao `/mapa-rapido` por minuto no total (0 desliga)       |
+| `CORS_ORIGINS`          | *(vazio = `PUBLIC_SITE_URL`)*                    | origens aceitas pelo CORS do `/mapa-rapido`, separadas por vírgula |
 
 ---
 
