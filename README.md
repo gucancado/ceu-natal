@@ -115,7 +115,7 @@ Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy ap
 | Variável | Default | Descrição |
 |----------|---------|-----------|
 | `MCP_SERVER_NAME` | `ceu-natal` | nome devolvido no `initialize` |
-| `MCP_SERVER_VERSION` | `2.2.0` | versão exposta |
+| `MCP_SERVER_VERSION` | `2.2.1` | versão exposta |
 | `MCP_API_KEY` | *(vazio)* | se definida, exige `Authorization: Bearer <chave>`; vazia, libera tudo |
 | `MCP_ALLOWED_HOSTS` | *(vazio)* | hosts aceitos no `/mcp/` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
 | `RATE_LIMIT_SESSION_PER_MIN` | `30` | chamadas de tool por minuto por sessão MCP (0 desliga) |

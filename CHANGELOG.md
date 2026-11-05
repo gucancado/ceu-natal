@@ -4,6 +4,12 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.1] — 2026-11-05
+
+### Segurança
+
+- `timezonefinder` 6.5.2 → 8.3.0 libera `cffi` 2 e `cryptography` 50.0.2 (transitiva via `mcp` → `pyjwt[crypto]`), fechando os 14 alertas do Dependabot da `cryptography` 46.0.0; a auditoria da CI roda sem nenhum `--ignore-vuln`.
+
 ## [2.2.0] — 2026-11-05
 
 ### Corrigido

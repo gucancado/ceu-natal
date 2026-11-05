@@ -18,7 +18,7 @@ def _lista(valor: str) -> tuple[str, ...]:
 @dataclass(frozen=True)
 class Settings:
     server_name: str = "ceu-natal"
-    server_version: str = "2.2.0"
+    server_version: str = "2.2.1"
     # Vazio = sem autenticação (modo dev).
     api_key: str = ""
     # Hosts permitidos no transporte Streamable HTTP (anti-DNS rebinding).
