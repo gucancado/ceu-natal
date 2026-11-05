@@ -271,3 +271,22 @@ class TestRevolucaoLunar:
         )
         # Um consumidor único precisa servir as duas tools sem branch.
         assert set(rl["destaques"].keys()) == set(rs["destaques"].keys())
+
+
+# ─────────────────────────────────────────────────────────────
+# Latitude polar: acima de 66° as casas natais saem erradas → recusa
+# ─────────────────────────────────────────────────────────────
+NATAL_POLAR = {"nome": "Polar", "data": "01/06/1990", "hora": "12:00",
+               "lat": 69.65, "lng": 18.96, "tz_str": "Europe/Oslo"}
+
+
+def test_revolucao_solar_recusa_latitude_polar(geocode_fake):
+    with pytest.raises(ValueError, match="66°"):
+        calcular_revolucao_solar(natal=NATAL_POLAR, ano=2026, local_revolucao="Belo Horizonte, MG")
+
+
+def test_revolucao_lunar_recusa_latitude_polar(geocode_fake):
+    with pytest.raises(ValueError, match="66°"):
+        calcular_revolucao_lunar(
+            natal=NATAL_POLAR, data_referencia="01/06/2026", local_revolucao="Belo Horizonte, MG",
+        )

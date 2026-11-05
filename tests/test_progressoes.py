@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.core.entrada import EntradaNascimento
 from app.tools.mapa_natal import calcular_mapa_natal
 from app.tools.progressoes import (
     _datetime_natal_utc,
@@ -36,7 +37,7 @@ class TestComputarDataProgredida:
 # ─────────────────────────────────────────────────────────────
 def test_datetime_natal_utc_converte_hora_local_de_bh():
     # BH em março/1990 estava fora do horário de verão: UTC−3.
-    dt = _datetime_natal_utc(ANA, "America/Sao_Paulo")
+    dt = _datetime_natal_utc(EntradaNascimento.de_dict(ANA))
     assert dt == datetime(1990, 3, 12, 17, 30, tzinfo=timezone.utc)
     assert dt.utcoffset() == timedelta(0)
 
@@ -188,3 +189,15 @@ def test_natal_sem_hora_falha():
     natal.pop("hora")
     with pytest.raises(ValueError):
         calcular_progressoes(natal=natal, data_alvo="30/04/2026")
+
+
+# ─────────────────────────────────────────────────────────────
+# Latitude polar: acima de 66° as casas natais saem erradas → recusa
+# ─────────────────────────────────────────────────────────────
+NATAL_POLAR = {"nome": "Polar", "data": "01/06/1990", "hora": "12:00",
+               "lat": 69.65, "lng": 18.96, "tz_str": "Europe/Oslo"}
+
+
+def test_latitude_polar_recusada():
+    with pytest.raises(ValueError, match="66°"):
+        calcular_progressoes(natal=NATAL_POLAR, data_alvo="01/06/2026")

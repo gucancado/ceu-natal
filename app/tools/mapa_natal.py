@@ -7,22 +7,16 @@ from app.core.formatter import (
     formatar_planeta,
     nome_sistema_casas,
 )
+from app.core.entrada import EntradaNascimento
 from app.core.kerykeion import (
     MOTIVO_LATITUDE_SEM_CASAS,
     coletar_pontos,
-    criar_subject,
     latitude_suporta_casas,
     planetas_iter,
     pontos_sensiveis_iter,
-    resolver_coordenadas,
 )
 from app.core.sintese import calcular_sintese
-from app.core.validators import (
-    parse_data,
-    parse_hora,
-    parse_local,
-    validar_sistema_casas,
-)
+from app.core.validators import validar_sistema_casas
 
 # Metade do movimento diário médio da Lua (~13°): erro máximo ao usar 12:00.
 MARGEM_LUA_SEM_HORA = 6.5
@@ -45,31 +39,21 @@ def calcular_mapa_natal(
     Coordenadas: ou via geocoder (cidade/nação extraídos de `local`),
     ou explicitamente via lat/lng/tz_str (caminho usado em testes).
     """
-    dia, mes, ano = parse_data(data)
-    h, m = parse_hora(hora)
-    cidade, nacao = parse_local(local)
+    entrada = EntradaNascimento.de_campos(
+        data=data, hora=hora, local=local, nome=nome,
+        lat=lat, lng=lng, tz_str=tz_str, is_dst=is_dst,
+    )
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    tem_hora = h is not None
-    tem_local = cidade is not None or (lat is not None and lng is not None)
-
-    hora_calc = h if tem_hora else 12
-    min_calc = m if tem_hora else 0
+    tem_hora = entrada.tem_hora
+    tem_local = entrada.tem_local
 
     # Latitude resolvida antes do subject: o Kerykeion corta |lat| > 66° e
     # sobrescreve subject.lat, então depois não dá mais para saber.
-    lat, lng, tz_str = resolver_coordenadas(cidade, nacao, lat, lng, tz_str)
-    latitude_ok = latitude_suporta_casas(lat)
+    entrada = entrada.resolvida()
+    latitude_ok = not tem_local or latitude_suporta_casas(entrada.lat)
 
-    subject = criar_subject(
-        nome=nome or "Anônimo",
-        ano=ano, mes=mes, dia=dia,
-        hora=hora_calc, minuto=min_calc,
-        cidade=cidade, nacao=nacao,
-        lat=lat, lng=lng, tz_str=tz_str,
-        sistema_casas=sistema_id,
-        is_dst=is_dst,
-    )
+    subject = entrada.subject(sistema_id)
 
     incluir_casas = tem_hora and tem_local and latitude_ok
 
@@ -124,7 +108,9 @@ def calcular_mapa_natal(
 
     if tem_local:
         # Valores resolvidos antes do subject: o Kerykeion corta |lat| > 66°.
-        resultado["local_resolvido"] = {"lat": lat, "lng": lng, "fuso": tz_str}
+        resultado["local_resolvido"] = {
+            "lat": entrada.lat, "lng": entrada.lng, "fuso": entrada.tz_str,
+        }
 
     if not incluir_casas:
         avisos = []

@@ -120,6 +120,19 @@ def test_hora_inexistente_no_horario_de_verao_vira_value_error():
         calcular_mapa_natal(data="04/11/2018", hora="00:30", local="Belo Horizonte, MG", **BH)
 
 
+def test_outra_kerykeion_exception_nao_vira_erro_de_horario_de_verao(monkeypatch):
+    """Só o erro de hora ambígua/inexistente (pytz) vira a mensagem do `is_dst`."""
+    from kerykeion import AstrologicalSubjectFactory
+    from kerykeion.schemas import KerykeionException
+
+    def falha(*args, **kwargs):
+        raise KerykeionException("x")
+
+    monkeypatch.setattr(AstrologicalSubjectFactory, "from_birth_data", falha)
+    with pytest.raises(KerykeionException, match="^x$"):
+        calcular_mapa_natal(data="12/03/1990", hora="14:30", local="Belo Horizonte, MG", **BH)
+
+
 def test_hora_ambigua_resolvida_com_is_dst():
     m = calcular_mapa_natal(data="16/02/2019", hora="23:30", local="Belo Horizonte, MG", is_dst=False, **BH)
     assert m["angulos"]["ascendente"]
@@ -129,7 +142,6 @@ def test_hora_ambigua_resolvida_com_is_dst():
 # Latitude polar: acima de 66° o Kerykeion corta a latitude das casas
 # ─────────────────────────────────────────────────────────────
 TROMSO = {"lat": 69.65, "lng": 18.96, "tz_str": "Europe/Oslo"}
-NATAL_POLAR = {"nome": "Polar", "data": "01/06/1990", "hora": "12:00", **TROMSO}
 
 
 def test_latitude_polar_omite_casas_com_aviso():
@@ -149,36 +161,6 @@ def test_latitude_suporta_casas_no_limite():
     assert latitude_suporta_casas(-66.0) is True
     assert latitude_suporta_casas(66.01) is False
     assert latitude_suporta_casas(-69.65) is False
-
-
-def _transitos_polar():
-    from app.tools.transitos import calcular_transitos
-    return calcular_transitos(natal=NATAL_POLAR, data_transito="01/06/2026")
-
-
-def _progressoes_polar():
-    from app.tools.progressoes import calcular_progressoes
-    return calcular_progressoes(natal=NATAL_POLAR, data_alvo="01/06/2026")
-
-
-def _revolucao_solar_polar():
-    from app.tools.revolucao_solar import calcular_revolucao_solar
-    return calcular_revolucao_solar(natal=NATAL_POLAR, ano=2026, local_revolucao="Belo Horizonte, MG")
-
-
-def _revolucao_lunar_polar():
-    from app.tools.revolucao_lunar import calcular_revolucao_lunar
-    return calcular_revolucao_lunar(
-        natal=NATAL_POLAR, data_referencia="01/06/2026", local_revolucao="Belo Horizonte, MG",
-    )
-
-
-@pytest.mark.parametrize("chamada", [
-    _transitos_polar, _progressoes_polar, _revolucao_solar_polar, _revolucao_lunar_polar,
-])
-def test_tools_que_exigem_casas_recusam_latitude_polar(chamada):
-    with pytest.raises(ValueError, match="66°"):
-        chamada()
 
 
 # ─────────────────────────────────────────────────────────────

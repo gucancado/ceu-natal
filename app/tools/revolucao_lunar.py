@@ -16,8 +16,8 @@ from typing import Optional
 
 from app.core.periodos import MES_SIDERAL_DIAS, ciclo_anterior, vigencia_lunar
 from app.core.revolucoes import (
-    build_subject_natal,
     criar_factory,
+    entrada_natal,
     executar_retorno,
     instante_utc,
     montar_destaques,
@@ -49,7 +49,7 @@ def calcular_revolucao_lunar(
     dia_r, mes_r, ano_r = parse_data(data_referencia)
     inicio_busca = datetime(ano_r, mes_r, dia_r)
 
-    subject_natal, _ = build_subject_natal(natal, sistema_id)
+    subject_natal = entrada_natal(natal).subject(sistema_id)
     coords = resolver_local_revolucao(local_revolucao)
 
     factory = criar_factory(subject_natal, coords)

@@ -7,10 +7,12 @@ import pytest
 from app.core.aspectos import (
     ASPECTOS_DEF,
     calcular_aspectos,
+    calcular_aspectos_cruzados,
     calcular_aspectos_sinastria,
     casa_de_longitude,
     listar_tipos_aspectos,
     orbe_para,
+    renomear,
 )
 
 
@@ -178,6 +180,28 @@ def test_sinastria_marca_pessoas_corretas():
     assert a["pessoa_b"] == "Bruno"
     assert a["tipo"] == "quadratura"
     assert a["natureza"] == "tensao"
+
+
+def test_aspectos_cruzados_e_sinastria_sao_a_mesma_funcao():
+    assert calcular_aspectos_sinastria is calcular_aspectos_cruzados
+
+
+def test_cruzados_e_internos_concordam_no_mesmo_par():
+    """Os dois caminhos usam o mesmo laço (`_aspecto_entre`)."""
+    a, b = _ponto("sol", 10.0, 1.0), _ponto("marte", 101.0, 0.5)
+    interno = calcular_aspectos([a, b])[0]
+    cruzado = calcular_aspectos_cruzados([a], [b], "A", "B")[0]
+    assert {k: v for k, v in cruzado.items() if k not in ("pessoa_a", "pessoa_b")} == interno
+
+
+def test_renomear_troca_chaves_e_tira_pessoas():
+    aspectos = calcular_aspectos_cruzados([_ponto("saturno", 9.5, 0.03)], [_ponto("lua", 100.0, 0.0)],
+                                          "transito", "natal")
+    [r] = renomear(aspectos, "planeta_transito", "planeta_natal")
+    assert r == {
+        "planeta_transito": "saturno", "planeta_natal": "lua", "tipo": "quadratura",
+        "orbe": aspectos[0]["orbe"], "aplicando": True, "exato": False, "natureza": "tensao",
+    }
 
 
 # ─────────────────────────────────────────────────────────────
