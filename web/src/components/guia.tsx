@@ -1,4 +1,4 @@
-import { Alert, AlertDescription } from "@beeads/ui";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BlocoCodigo, TextoGuia } from "@/components/bloco-codigo";
 import type { Cliente } from "@/content/clientes";
 import { verificadoEm } from "@/content/setup";

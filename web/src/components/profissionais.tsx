@@ -1,4 +1,4 @@
-import { Badge } from "@beeads/ui";
+import { Badge } from "@/components/ui/badge";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
 import { contato, site } from "@/lib/site";
@@ -9,7 +9,7 @@ export function Profissionais() {
   return (
     <Secao id="profissionais" titulo="se você é astrólogo" simbolo={planeta.sol}>
       <div className="max-w-[36rem] space-y-4 text-lg leading-[1.6]">
-        <Badge variant="outline" className="border-border font-normal text-muted-fg">
+        <Badge>
           Em breve
         </Badge>
         <p>
