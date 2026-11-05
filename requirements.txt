@@ -78,11 +78,11 @@ pydantic-core==2.50.4
     # via pydantic
 pydantic-settings==2.16.2
     # via mcp
-pyjwt==2.15.1
+pyjwt[crypto]==2.15.1
     # via mcp
 pyswisseph==2.10.3.2
     # via kerykeion
-python-dotenv==1.2.2
+python-dotenv==1.2.4
     # via
     #   -r requirements.in
     #   pydantic-settings
@@ -123,15 +123,12 @@ timezonefinder-data==1.2026.3
     # via timezonefinder
 typing-extensions==4.16.0
     # via
-    #   anyio
     #   cattrs
     #   kerykeion
     #   mcp
     #   pydantic
     #   pydantic-core
     #   pydantic-settings
-    #   referencing
-    #   starlette
     #   typing-inspection
 typing-inspection==0.4.5
     # via
