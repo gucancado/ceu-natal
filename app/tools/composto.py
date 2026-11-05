@@ -98,6 +98,7 @@ def _build_subject(pessoa: dict, sistema_id: str):
     h, m = parse_hora(pessoa.get("hora"))
     cidade, nacao = parse_local(pessoa.get("local"))
 
+    tem_hora = h is not None
     tem_local = cidade is not None or (
         pessoa.get("lat") is not None and pessoa.get("lng") is not None
     )
@@ -110,7 +111,8 @@ def _build_subject(pessoa: dict, sistema_id: str):
         cidade=cidade, nacao=nacao,
         lat=pessoa.get("lat"), lng=pessoa.get("lng"), tz_str=pessoa.get("tz_str"),
         sistema_casas=sistema_id,
-    ), tem_local
+        is_dst=pessoa.get("is_dst"),
+    ), tem_hora and tem_local
 
 
 # ─────────────────────────────────────────────────────────────
@@ -124,8 +126,8 @@ def calcular_mapa_composto(
 ) -> dict:
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    subject_a, tem_local_a = _build_subject(pessoa_a, sistema_id)
-    subject_b, tem_local_b = _build_subject(pessoa_b, sistema_id)
+    subject_a, completo_a = _build_subject(pessoa_a, sistema_id)
+    subject_b, completo_b = _build_subject(pessoa_b, sistema_id)
 
     # Coleta longitudes de A e B por nome em PT
     pos_a, pos_b = {}, {}
@@ -159,7 +161,7 @@ def calcular_mapa_composto(
 
     # Ângulos: midpoint dos ASCs e MCs (só faz sentido se ambos têm horário+local)
     angulos_compostos = {}
-    if tem_local_a and tem_local_b:
+    if completo_a and completo_b:
         asc_mid = midpoint_longitude(subject_a.first_house.abs_pos,
                                      subject_b.first_house.abs_pos)
         mc_mid = midpoint_longitude(subject_a.tenth_house.abs_pos,
@@ -172,7 +174,7 @@ def calcular_mapa_composto(
     # Aspectos internos do composto (sem velocidade → aplicando=None)
     aspectos = calcular_aspectos(pontos_aspectos)
 
-    return {
+    resultado = {
         "pessoa_a": {"nome": pessoa_a.get("nome"), "data": pessoa_a.get("data")},
         "pessoa_b": {"nome": pessoa_b.get("nome"), "data": pessoa_b.get("data")},
         "tipo_composto": "midpoint",
@@ -183,6 +185,17 @@ def calcular_mapa_composto(
         "casas": None,  # composto midpoint não tem casas
         "sintese": _sintese_composto(planetas_compostos),
     }
+    incompletos = [
+        p.get("nome") or "Anônimo"
+        for p, ok in ((pessoa_a, completo_a), (pessoa_b, completo_b))
+        if not ok
+    ]
+    if incompletos:
+        resultado["aviso"] = (
+            "Ângulos compostos omitidos: hora de nascimento ausente em "
+            f"{' e '.join(incompletos)}."
+        )
+    return resultado
 
 
 def _sintese_composto(planetas_compostos: dict) -> dict:

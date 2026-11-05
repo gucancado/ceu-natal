@@ -32,6 +32,7 @@ def calcular_mapa_natal(
     lat: Optional[float] = None,
     lng: Optional[float] = None,
     tz_str: Optional[str] = None,
+    is_dst: Optional[bool] = None,
 ) -> dict:
     """
     Calcula o mapa natal completo.
@@ -56,6 +57,7 @@ def calcular_mapa_natal(
         cidade=cidade, nacao=nacao,
         lat=lat, lng=lng, tz_str=tz_str,
         sistema_casas=sistema_id,
+        is_dst=is_dst,
     )
 
     incluir_casas = tem_hora and tem_local

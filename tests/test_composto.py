@@ -114,3 +114,10 @@ def test_sintese_distribuicao_elementos():
 def test_pessoa_sem_data_falha():
     with pytest.raises(ValueError):
         calcular_mapa_composto(pessoa_a={}, pessoa_b=BRUNO)
+
+
+def test_angulos_omitidos_quando_pessoa_sem_hora():
+    sem_hora = {"data": "25/07/1992", "nome": "Bruno", "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"]}
+    c = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=sem_hora)
+    assert c["angulos_compostos"] == {}
+    assert "aviso" in c

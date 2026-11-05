@@ -91,6 +91,7 @@ def build_subject_natal(natal: dict, sistema_id: str):
         cidade=cidade, nacao=nacao,
         lat=natal.get("lat"), lng=natal.get("lng"), tz_str=natal.get("tz_str"),
         sistema_casas=sistema_id,
+        is_dst=natal.get("is_dst"),
     )
     return subject, (dia, mes, ano)
 

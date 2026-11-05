@@ -71,7 +71,7 @@ def test_tools_traz_required_e_properties(monkeypatch):
     body = TestClient(mod.app).get("/tools").json()
     mapa_natal = next(t for t in body["tools"] if t["name"] == "calcular_mapa_natal")
     assert "data" in mapa_natal["required"]
-    assert set(mapa_natal["properties"]) == {"data", "hora", "local", "nome", "sistema_casas"}
+    assert set(mapa_natal["properties"]) == {"data", "hora", "local", "nome", "sistema_casas", "is_dst"}
 
 
 def test_tools_tem_annotations_read_only(monkeypatch):
