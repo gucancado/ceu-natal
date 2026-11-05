@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Servidor MCP do céu-natal: expõe tools de astrologia via SSE sobre HTTP.
+Servidor MCP do céu-natal: expõe tools de astrologia por Streamable HTTP (`/mcp/`,
+principal) e SSE (`/sse`, legado).
 
 Endpoints:
   GET  /sse        — abre o canal SSE (handshake MCP, legado)

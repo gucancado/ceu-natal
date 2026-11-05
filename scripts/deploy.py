@@ -9,7 +9,7 @@ explícita.
 
 Uso:
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py            # dispara e acompanha
-    COOLIFY_TOKEN=<bearer> python scripts/deploy.py --dry-run  # só mostra o que faria
+    python scripts/deploy.py --dry-run                         # só mostra o que faria (sem token)
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py --no-wait  # dispara e sai
     COOLIFY_TOKEN=<bearer> python scripts/deploy.py --app web  # deploy do site (web/)
 

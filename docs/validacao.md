@@ -3,27 +3,27 @@
 ## 2026-11-04 — F2: site mistico.gustavocancado.com.br (`produto/f2` @ `9730000`)
 
 Landing Next.js 16.4.4 em `web/` (Tasks 1–7 do plano F2) publicada no Coolify
-como app `ceu-natal-web` (build pack
+como app separado (build pack
 dockerfile, base directory `/web`, porta 3000, domínio
 `https://mistico.gustavocancado.com.br`, envs `NEXT_PUBLIC_SITE_URL`/
 `NEXT_PUBLIC_MCP_URL`/`NEXT_PUBLIC_REPO_URL` em prod e preview; a API do
 Coolify 4.6 não aceita mais `is_build_time`, as envs valem no build por
-padrão). O app provisório nginx `zthmnwj4531ajj7sodcn11ln` foi apagado. O app
+padrão). O app provisório nginx foi apagado. O app
 aponta para a branch `produto/f2` até o merge; depois do merge, trocar
 `git_branch` para `main` e redeployar.
 
 | Checagem | Resultado observado |
 |---|---|
-| Deploy `p4e4ampl3g4ucnyp6ulegnh1` (commit 73e63d6) | `failed`: build Docker ok e Next "Ready", mas o healthcheck do Coolify roda `curl`/`wget` no container e `node:24-slim` não tem nenhum → rollback |
-| Deploys `54aqpkgc53i4ebugzy3auk0n` (73e63d6) e `ppeu3w2fognolnvwetqjzz4j` (b7ca167) | `finished` com o healthcheck do Coolify desligado (validação intermediária) |
-| Deploy `x3aktsa1ym7hr2yc6bjv9ped` (9730000, `curl` na imagem, healthcheck do Coolify ligado) | `finished`; app `running:healthy` |
+| Deploy do commit 73e63d6 | `failed`: build Docker ok e Next "Ready", mas o healthcheck do Coolify roda `curl`/`wget` no container e `node:24-slim` não tem nenhum → rollback |
+| Deploys de 73e63d6 e b7ca167 | `finished` com o healthcheck do Coolify desligado (validação intermediária) |
+| Deploy de 9730000 (`curl` na imagem, healthcheck do Coolify ligado) | `finished`; app `running:healthy` |
 | `GET /`, `/conectar`, `/conectar/<7 guias>`, `/privacidade`, `/termos`, `/status` | `200 text/html`; `/status` mostra `No ar · versão 2.1.0 · limites 30/600` lendo o `/health` real |
 | `GET /llms.txt`, `/llms-full.txt` | `200 text/plain; charset=utf-8`, `cache-control: public, max-age=3600` |
 | `GET /sitemap.xml` (11 URLs, sem `/status`), `/robots.txt`, `/opengraph-image` | `200` (`application/xml`, `text/plain`, `image/png` 44 KB) |
 | `<head>` da home | `<title>Céu Natal</title>`, canonical `https://mistico.gustavocancado.com.br`, `og:title`, `og:image`, JSON-LD `SoftwareApplication`; guia: `Como conectar no Claude.ai · Céu Natal` |
 | TLS | Let's Encrypt (Traefik), válido até 2027-02-01 |
 | Layout via CDP (Chrome headless) em 360 px claro/escuro e 1280 claro | `scrollWidth == clientWidth` (sem rolagem horizontal da página; tabela de planos, abas e `<pre>` rolam dentro de si); temas `html.light`/`html.dark` aplicam |
-| Servidor MCP: env `PUBLIC_SITE_URL=https://mistico.gustavocancado.com.br` (prod e preview) + restart `xdsq9zkxw9mholctbqieuphn` | `/health` → `"site":"https://mistico.gustavocancado.com.br"` em ~85 s; `GET /` → `302` para o site |
+| Servidor MCP: env `PUBLIC_SITE_URL=https://mistico.gustavocancado.com.br` (prod e preview) + restart | `/health` → `"site":"https://mistico.gustavocancado.com.br"` em ~85 s; `GET /` → `302` para o site |
 | Conector do claude.ai (`healthcheck`) | `versao 2.1.0`, `streamable-http+sse` |
 | `app/static/llms.txt` do servidor com `{site_url}` nos links de política e guia | ainda não no ar: o servidor faz deploy de `main`; entra no deploy após o merge |
 
@@ -33,7 +33,7 @@ Teto do starlette subido de `<1.0.0` para `>=1.3.1,<2.0.0` (decisão do mantened
 e os 5 `--ignore-vuln` do starlette removidos da CI (PYSEC-2026-161/248/249/
 2280/2281; as duas primeiras envenenam `request.url.path` pelo header `Host`,
 critério de rota pública do `APIKeyMiddleware`). CI verde (`testes` +
-`auditoria` sem os ignores). Deploy `uuaw052vpmh5qima393ls02e`, `finished`.
+`auditoria` sem os ignores). Deploy `finished`.
 
 | Checagem | Resultado observado |
 |---|---|
@@ -49,8 +49,7 @@ critério de rota pública do `APIKeyMiddleware`). CI verde (`testes` +
 Merge fast-forward de `produto/f1` em `main` (head `7f6f039`, CI verde), envs
 `PUBLIC_SITE_URL` e `PUBLIC_MCP_URL` criadas no Coolify (prod e preview),
 health check do Coolify ligado (`/health`, porta 8000; confirmado via API:
-`True /health`) e deploy com `scripts/deploy.py`: deployment
-`ppm7hrluy4m9owskwyfe6t4i`, `status: finished`, exit 0.
+`True /health`) e deploy com `scripts/deploy.py`: `status: finished`, exit 0.
 
 | Checagem | Resultado observado |
 |---|---|
@@ -131,7 +130,7 @@ Migrar para `mcp` 2.x fica como tarefa própria.
 
 ## 2026-07-27 — Revoluções solar e lunar (`main` @ `a9376c9`)
 
-Deploy `xqpyvmxv5ec61pifmqzp4j9x` concluído em ~110s. Duas tools novas,
+Deploy concluído em ~110s. Duas tools novas,
 `calcular_revolucao_solar` e `calcular_revolucao_lunar`, sobre a
 `PlanetaryReturnFactory` do Kerykeion 5.12.7. Sem dependência nova.
 

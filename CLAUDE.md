@@ -28,7 +28,7 @@ em `/mcp/` (recomendado) e SSE legado em `/sse`. O site de apresentação mora e
 | `app/static/llms.txt` | texto servido em `/llms.txt` |
 | `tests/` | pytest; fixtures fictícias em `tests/conftest.py` |
 | `scripts/` | `deploy.py` (deploy manual), `validacao_producao.py` |
-| `docs/` | guia de conexão, validação em produção, política e termos |
+| `docs/` | guia de conexão, distribuição, validação em produção e política de privacidade (`docs/legal/`; os termos ficam em `web/src/content/legal/`) |
 | `web/` | site Next.js |
 
 ## Tools (`app/tools/`)
