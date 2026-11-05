@@ -148,7 +148,8 @@ def listar_tipos_aspectos() -> list[dict]:
 def casa_de_longitude(longitude_abs: float, cuspides: list[float]) -> int:
     """
     Dada a longitude absoluta (0..360) e as 12 cúspides em ordem, retorna
-    o número da casa (1..12) usando atribuição literal Placidus strict.
+    o número da casa (1..12): a casa é a da cúspide anterior à longitude.
+    Vale para qualquer sistema de casas — só depende das cúspides recebidas.
     """
     longitude_abs = longitude_abs % 360.0
     for i in range(12):

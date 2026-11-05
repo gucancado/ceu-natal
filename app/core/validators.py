@@ -27,13 +27,23 @@ def validar_sistema_casas(valor: Optional[str]) -> str:
     return valor_norm
 
 
+# Faixa de anos aceita nas datas de entrada (as revoluções têm faixa própria,
+# mais estreita, em `periodos`).
+ANO_MINIMO_DATA = 1000
+ANO_MAXIMO_DATA = 3000
+
+
 def parse_data(data: str) -> Tuple[int, int, int]:
-    """DD/MM/YYYY -> (dia, mes, ano)."""
+    """DD/MM/YYYY -> (dia, mes, ano). Ano fora de 1000..3000 levanta ValueError."""
     try:
         dt = datetime.strptime(data.strip(), "%d/%m/%Y")
-        return dt.day, dt.month, dt.year
     except ValueError as exc:
         raise ValueError(f"Data inválida: '{data}'. Use o formato DD/MM/YYYY.") from exc
+    if not ANO_MINIMO_DATA <= dt.year <= ANO_MAXIMO_DATA:
+        raise ValueError(
+            f"Ano {dt.year} fora da faixa suportada ({ANO_MINIMO_DATA} a {ANO_MAXIMO_DATA})."
+        )
+    return dt.day, dt.month, dt.year
 
 
 def parse_hora(hora: Optional[str]) -> Tuple[Optional[int], Optional[int]]:

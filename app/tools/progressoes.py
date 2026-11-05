@@ -16,12 +16,14 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos_sinastria, casa_de_longitude
-from app.core.formatter import formatar_planeta
+from app.core.formatter import SIGNOS_PT, formatar_planeta
 from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
     criar_subject,
+    exigir_latitude_com_casas,
     planetas_iter,
+    resolver_coordenadas,
 )
 from app.core.validators import (
     parse_data,
@@ -30,7 +32,11 @@ from app.core.validators import (
     validar_sistema_casas,
 )
 
-SEGUNDOS_POR_ANO_TROPICO = 365.25 * 86400.0
+SEGUNDOS_POR_ANO_JULIANO = 365.25 * 86400.0
+
+# Só os luminares progredidos trocam de signo em prazo que interesse a uma
+# leitura (Lua ~2,5 anos, Sol ~30 anos); nos demais "iminente" pode levar décadas.
+PLANETAS_MUDANCA_IMINENTE = ("sol", "lua")
 
 
 def _datetime_natal(natal: dict) -> datetime:
@@ -48,15 +54,20 @@ def _datetime_natal(natal: dict) -> datetime:
 def computar_data_progredida(data_natal: datetime, data_alvo: datetime) -> datetime:
     """Aplica a regra '1 dia = 1 ano': retorna data_natal + idade_em_anos dias."""
     delta = data_alvo - data_natal
-    anos_vividos = delta.total_seconds() / SEGUNDOS_POR_ANO_TROPICO
+    anos_vividos = delta.total_seconds() / SEGUNDOS_POR_ANO_JULIANO
     return data_natal + timedelta(days=anos_vividos)
 
 
-def _flags_signo(grau_no_signo: float) -> dict:
-    """Sinaliza ingresso recente (<1°) ou mudança iminente (>29°) num signo."""
+def _flags_signo(grau_no_signo: float, planeta: str) -> dict:
+    """Sinaliza ingresso recente (<1°) ou mudança iminente (>29°) num signo.
+
+    `mudanca_iminente` só vale para Sol e Lua; nos demais vem sempre False.
+    """
     return {
         "ingresso_recente": grau_no_signo < 1.0,
-        "mudanca_iminente": grau_no_signo > 29.0,
+        "mudanca_iminente": (
+            planeta in PLANETAS_MUDANCA_IMINENTE and grau_no_signo > 29.0
+        ),
     }
 
 
@@ -98,12 +109,17 @@ def _build_subject_natal(natal: dict, sistema_id: str):
             "casas natais não podem ser calculadas."
         )
 
+    lat, lng, tz_str = resolver_coordenadas(
+        cidade, nacao, natal.get("lat"), natal.get("lng"), natal.get("tz_str"),
+    )
+    exigir_latitude_com_casas(lat)
+
     return criar_subject(
         nome=natal.get("nome") or "Anônimo",
         ano=ano, mes=mes, dia=dia,
         hora=h, minuto=m,
         cidade=cidade, nacao=nacao,
-        lat=natal.get("lat"), lng=natal.get("lng"), tz_str=natal.get("tz_str"),
+        lat=lat, lng=lng, tz_str=tz_str,
         sistema_casas=sistema_id,
         is_dst=natal.get("is_dst"),
     )
@@ -114,7 +130,7 @@ def _formatar_progredidos(subject_p, cuspides_natais: list[float]) -> dict:
     for nome_pt, ponto in planetas_iter(subject_p):
         base = formatar_planeta(ponto, incluir_casa=False)
         base["casa_natal"] = casa_de_longitude(ponto.abs_pos, cuspides_natais)
-        base.update(_flags_signo(ponto.position))
+        base.update(_flags_signo(ponto.position, nome_pt))
         saida[nome_pt] = base
     return saida
 
@@ -139,14 +155,12 @@ _ORDEM_SIGNOS = ["Ari", "Tau", "Gem", "Can", "Leo", "Vir",
 
 
 def _destaques(planetas_progredidos: dict, subject_p) -> dict:
-    from app.core.formatter import SIGNOS_PT  # importação local p/ evitar ciclo
-
     lua = planetas_progredidos["lua"]
     sol = planetas_progredidos["sol"]
 
     mudancas = []
     for nome_pt, ponto in planetas_iter(subject_p):
-        if ponto.position > 29.0:
+        if nome_pt in PLANETAS_MUDANCA_IMINENTE and ponto.position > 29.0:
             idx = _ORDEM_SIGNOS.index(ponto.sign) if ponto.sign in _ORDEM_SIGNOS else 0
             proximo = _ORDEM_SIGNOS[(idx + 1) % 12]
             mudancas.append({
@@ -183,7 +197,7 @@ def calcular_progressoes(
         raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
 
     dt_progredido = computar_data_progredida(dt_natal, dt_alvo)
-    idade_aproximada = int((dt_alvo - dt_natal).total_seconds() / SEGUNDOS_POR_ANO_TROPICO)
+    idade_aproximada = int((dt_alvo - dt_natal).total_seconds() / SEGUNDOS_POR_ANO_JULIANO)
 
     subject_natal = _build_subject_natal(natal, sistema_id)
     subject_p = _build_subject_progredido(natal, dt_progredido, sistema_id)

@@ -129,6 +129,12 @@ class TestVigencia:
     def test_nota_explica_a_aproximacao(self):
         assert "duração média" in vigencia_solar(datetime(2026, 1, 1))["nota"]
 
+    def test_nota_lunar_tem_erro_proprio(self):
+        nota_lunar = vigencia_lunar(datetime(2026, 1, 1))["nota"]
+        assert "erro típico de algumas horas" in nota_lunar
+        assert "20 a 30 minutos" not in nota_lunar
+        assert "20 a 30 minutos" in vigencia_solar(datetime(2026, 1, 1))["nota"]
+
 
 class TestCicloAnterior:
     def test_retorno_no_mesmo_dia_nao_tem_ciclo_anterior(self):

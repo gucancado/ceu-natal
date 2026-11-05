@@ -6,6 +6,15 @@ PLANETAS_PRINCIPAIS_PT = [
 ]
 
 
+def _hemisferio(qtd_a: int, qtd_b: int, nome_a: str, nome_b: str):
+    """Hemisfério predominante; None sem casas (nada a contar), "equilibrado" no empate."""
+    if qtd_a + qtd_b == 0:
+        return None
+    if qtd_a == qtd_b:
+        return "equilibrado"
+    return nome_a if qtd_a > qtd_b else nome_b
+
+
 def calcular_sintese(planetas_dict: dict, aspectos: list[dict]) -> dict:
     elementos = Counter()
     qualidades = Counter()
@@ -24,7 +33,7 @@ def calcular_sintese(planetas_dict: dict, aspectos: list[dict]) -> dict:
         1 for nome in PLANETAS_PRINCIPAIS_PT
         if planetas_dict.get(nome, {}).get("casa") in range(7, 13)
     )
-    hemisferio_vertical = "Norte" if norte >= sul else "Sul"
+    hemisferio_vertical = _hemisferio(norte, sul, "Norte", "Sul")
 
     leste_casas = {10, 11, 12, 1, 2, 3}
     oeste_casas = {4, 5, 6, 7, 8, 9}
@@ -36,7 +45,7 @@ def calcular_sintese(planetas_dict: dict, aspectos: list[dict]) -> dict:
         1 for nome in PLANETAS_PRINCIPAIS_PT
         if planetas_dict.get(nome, {}).get("casa") in oeste_casas
     )
-    hemisferio_horizontal = "Leste" if leste >= oeste else "Oeste"
+    hemisferio_horizontal = _hemisferio(leste, oeste, "Leste", "Oeste")
 
     contagem = Counter()
     for asp in aspectos:
