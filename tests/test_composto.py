@@ -149,3 +149,14 @@ def test_aviso_nomeia_as_duas_pessoas_e_anonimo():
     assert c["aviso"] == (
         "Ângulos compostos omitidos: hora ou local de nascimento ausente em Ana e Anônimo."
     )
+
+
+def test_composto_omite_quiron_sem_efemeride():
+    # 01/01/1800 00:30 em Tóquio ainda é 31/12/1799 em UT: sem efeméride de Quíron.
+    tokyo = {
+        "nome": "Limite", "data": "01/01/1800", "hora": "00:30", "local": "Tóquio, Japão",
+        "lat": 35.6895, "lng": 139.6917, "tz_str": "Asia/Tokyo",
+    }
+    composto = calcular_mapa_composto(pessoa_a=tokyo, pessoa_b=ANA)
+    assert "chiron" not in composto["pontos_sensiveis_compostos"]
+    assert "nodo_norte_verdadeiro" in composto["pontos_sensiveis_compostos"]

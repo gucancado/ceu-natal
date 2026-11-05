@@ -117,6 +117,8 @@ def calcular_mapa_composto(
 
     pontos_sensiveis_compostos: dict = {}
     for nome_pt in nomes_pontos_sensiveis:
+        if nome_pt not in pos_a or nome_pt not in pos_b:
+            continue  # ponto sem efeméride na data (ver `pontos_sensiveis_iter`)
         mid = midpoint_longitude(pos_a[nome_pt], pos_b[nome_pt])
         pontos_sensiveis_compostos[nome_pt] = _formatar_ponto_composto(mid)
         pontos_aspectos.append({"nome": nome_pt, "abs_pos": mid, "speed": None})

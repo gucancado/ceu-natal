@@ -132,9 +132,16 @@ def planetas_iter(subject):
 
 
 def pontos_sensiveis_iter(subject):
-    """Itera (nome_pt, ponto) para nodos verdadeiros e Quíron."""
+    """Itera (nome_pt, ponto) para nodos verdadeiros e Quíron.
+
+    Ponto que o Kerykeion não calculou (`None`) fica de fora: a efeméride de
+    Quíron só cobre 1800–2399, e uma data local no limite pode cair fora dela
+    em tempo universal.
+    """
     for attr in PONTOS_SENSIVEIS_ATTRS:
-        ponto = getattr(subject, attr)
+        ponto = getattr(subject, attr, None)
+        if ponto is None:
+            continue
         nome_pt = PLANETAS_NOMES_PT.get(ponto.name, attr)
         yield nome_pt, ponto
 
