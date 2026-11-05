@@ -11,9 +11,18 @@ Usar `(data_alvo - data_natal).days` *direto* daria o mapa do dia alvo
 (trânsitos), não progressões. Por isso convertemos:
     anos_vividos = (data_alvo - data_natal).total_seconds() / (365.25 * 86400)
     data_progredida = data_natal + timedelta(days=anos_vividos)
+
+A conta inteira é feita em tempo universal: a hora natal de parede é
+localizada no fuso natal e convertida para UTC, `data_alvo` é tomada como
+meia-noite UTC e o subject progredido é criado com `tz_str="UTC"`. Somar dias
+à hora de parede e relocalizá-la no fuso natal deslocaria o UT em 1 h sempre
+que o horário de verão do natal e o do instante progredido diferissem (~15°
+no MC progredido), e o instante progredido poderia cair numa hora local
+inexistente.
 """
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from app.core.aspectos import calcular_aspectos_sinastria, casa_de_longitude
 from app.core.formatter import SIGNOS_PT, formatar_planeta
@@ -39,20 +48,42 @@ SEGUNDOS_POR_ANO_JULIANO = 365.25 * 86400.0
 PLANETAS_MUDANCA_IMINENTE = ("sol", "lua")
 
 
-def _datetime_natal(natal: dict) -> datetime:
-    """Constrói datetime do nascimento (assume hora 12:00 se omitida — só
-    afeta o ponto exato dentro do dia, não os anos vividos)."""
+def _datetime_natal_utc(natal: dict, tz_str: str) -> datetime:
+    """Instante do nascimento em UTC (aware): hora de parede localizada em `tz_str`.
+
+    Hora omitida vale 12:00 (só a validação do subject natal exige hora).
+    Na transição do horário de verão a hora de parede é ambígua (repetida) ou
+    inexistente (pulada); as duas leituras são `fold=0` e `fold=1`, e `is_dst`
+    escolhe a que tem horário de verão em vigor (`is_dst=True`) ou não
+    (`is_dst=False`), como o Kerykeion faz no subject natal. Fora da transição
+    as duas leituras coincidem e `is_dst` é ignorado; sem `is_dst` vale
+    `fold=0` (o subject natal já recusa a hora ambígua nesse caso).
+    """
     dia, mes, ano = parse_data(natal["data"])
     h, m = parse_hora(natal.get("hora"))
-    return datetime(
+    local = datetime(
         ano, mes, dia,
         h if h is not None else 12,
         m if m is not None else 0,
+        tzinfo=ZoneInfo(tz_str),
     )
+    leituras = [local.replace(fold=0), local.replace(fold=1)]
+    is_dst = natal.get("is_dst")
+    if is_dst is not None and leituras[0].utcoffset() != leituras[1].utcoffset():
+        local = next(
+            (d for d in leituras if bool(d.dst()) == bool(is_dst)), leituras[0],
+        )
+    else:
+        local = leituras[0]
+    return local.astimezone(timezone.utc)
 
 
 def computar_data_progredida(data_natal: datetime, data_alvo: datetime) -> datetime:
-    """Aplica a regra '1 dia = 1 ano': retorna data_natal + idade_em_anos dias."""
+    """Aplica a regra '1 dia = 1 ano': retorna data_natal + idade_em_anos dias.
+
+    Aritmética pura: os dois datetimes devem ser ambos naive ou ambos aware
+    (em `calcular_progressoes`, ambos em UTC).
+    """
     delta = data_alvo - data_natal
     anos_vividos = delta.total_seconds() / SEGUNDOS_POR_ANO_JULIANO
     return data_natal + timedelta(days=anos_vividos)
@@ -71,25 +102,33 @@ def _flags_signo(grau_no_signo: float, planeta: str) -> dict:
     }
 
 
-def _build_subject_progredido(natal: dict, data_progredida: datetime, sistema_id: str):
-    """Cria o subject progredido — mesmo local do natal, data deslocada."""
+def _build_subject_progredido(
+    natal: dict,
+    data_progredida_utc: datetime,
+    lat: float,
+    lng: float,
+    sistema_id: str,
+):
+    """Cria o subject progredido em UTC — mesmas lat/lng do natal, sem `is_dst`
+    (em UTC não há hora ambígua nem inexistente)."""
     cidade, nacao = parse_local(natal.get("local"))
 
     return criar_subject(
         nome=(natal.get("nome") or "Anônimo") + " (progredido)",
-        ano=data_progredida.year,
-        mes=data_progredida.month,
-        dia=data_progredida.day,
-        hora=data_progredida.hour,
-        minuto=data_progredida.minute,
+        ano=data_progredida_utc.year,
+        mes=data_progredida_utc.month,
+        dia=data_progredida_utc.day,
+        hora=data_progredida_utc.hour,
+        minuto=data_progredida_utc.minute,
         cidade=cidade, nacao=nacao,
-        lat=natal.get("lat"), lng=natal.get("lng"), tz_str=natal.get("tz_str"),
+        lat=lat, lng=lng, tz_str="UTC",
         sistema_casas=sistema_id,
-        is_dst=natal.get("is_dst"),
     )
 
 
 def _build_subject_natal(natal: dict, sistema_id: str):
+    """Subject natal e as coordenadas resolvidas `(lat, lng, tz_str)`, que o
+    subject progredido reaproveita (uma única geocodificação)."""
     data = natal.get("data")
     if not data:
         raise ValueError("Campo 'data' obrigatório no objeto natal.")
@@ -114,7 +153,7 @@ def _build_subject_natal(natal: dict, sistema_id: str):
     )
     exigir_latitude_com_casas(lat)
 
-    return criar_subject(
+    subject = criar_subject(
         nome=natal.get("nome") or "Anônimo",
         ano=ano, mes=mes, dia=dia,
         hora=h, minuto=m,
@@ -123,6 +162,7 @@ def _build_subject_natal(natal: dict, sistema_id: str):
         sistema_casas=sistema_id,
         is_dst=natal.get("is_dst"),
     )
+    return subject, (lat, lng, tz_str)
 
 
 def _formatar_progredidos(subject_p, cuspides_natais: list[float]) -> dict:
@@ -189,18 +229,22 @@ def calcular_progressoes(
     """Progressões secundárias para `data_alvo` em relação a um mapa natal."""
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    dt_natal = _datetime_natal(natal)
     dia_a, mes_a, ano_a = parse_data(data_alvo)
-    dt_alvo = datetime(ano_a, mes_a, dia_a)
+    if natal.get("data"):
+        dia_n, mes_n, ano_n = parse_data(natal["data"])
+        if date(ano_a, mes_a, dia_a) < date(ano_n, mes_n, dia_n):
+            raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
 
-    if dt_alvo.date() < dt_natal.date():
-        raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
+    # O subject natal vem antes: valida hora/local, latitude e hora local
+    # inexistente ou ambígua no horário de verão, e resolve as coordenadas.
+    subject_natal, (lat, lng, tz_str) = _build_subject_natal(natal, sistema_id)
 
+    dt_natal = _datetime_natal_utc(natal, tz_str)
+    dt_alvo = datetime(ano_a, mes_a, dia_a, tzinfo=timezone.utc)
     dt_progredido = computar_data_progredida(dt_natal, dt_alvo)
     idade_aproximada = int((dt_alvo - dt_natal).total_seconds() / SEGUNDOS_POR_ANO_JULIANO)
 
-    subject_natal = _build_subject_natal(natal, sistema_id)
-    subject_p = _build_subject_progredido(natal, dt_progredido, sistema_id)
+    subject_p = _build_subject_progredido(natal, dt_progredido, lat, lng, sistema_id)
 
     pontos_p = coletar_pontos(subject_p)
     pontos_n = coletar_pontos(subject_natal, fixo=True)
@@ -225,7 +269,9 @@ def calcular_progressoes(
             "mc": "kerykeion_recompute",
             "nota": (
                 "Mapa progredido recalculado para data_natal + idade_em_anos "
-                "dias no local natal. O MC e demais cuspides resultam da "
+                "dias no local natal, em tempo universal: hora natal convertida "
+                "para UTC, data_alvo tomada como meia-noite UTC, imune ao "
+                "horario de verao. O MC e demais cuspides resultam da "
                 "recomputacao do AstrologicalSubject pelo Kerykeion para esse "
                 "datetime — equivalente em ordem de magnitude a Naibod, mas "
                 "nao identico a Naibod nem a Solar Arc classicos. Use o campo "

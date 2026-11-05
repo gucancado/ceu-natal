@@ -1,15 +1,17 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
 import pytest
 
+from app.tools.mapa_natal import calcular_mapa_natal
 from app.tools.progressoes import (
+    _datetime_natal_utc,
     _destaques,
     _flags_signo,
     calcular_progressoes,
     computar_data_progredida,
 )
-from tests.conftest import ANA
+from tests.conftest import ANA, BH
 
 
 # ─────────────────────────────────────────────────────────────
@@ -27,6 +29,49 @@ class TestComputarDataProgredida:
         prog = computar_data_progredida(natal, alvo)
         delta_dias = (prog - natal).total_seconds() / 86400.0
         assert 35 <= delta_dias <= 37
+
+
+# ─────────────────────────────────────────────────────────────
+# Tempo universal
+# ─────────────────────────────────────────────────────────────
+def test_datetime_natal_utc_converte_hora_local_de_bh():
+    # BH em março/1990 estava fora do horário de verão: UTC−3.
+    dt = _datetime_natal_utc(ANA, "America/Sao_Paulo")
+    assert dt == datetime(1990, 3, 12, 17, 30, tzinfo=timezone.utc)
+    assert dt.utcoffset() == timedelta(0)
+
+
+def test_sol_progredido_um_ano_avanca_cerca_de_um_grau():
+    natal = calcular_progressoes(natal=ANA, data_alvo="12/03/1990")
+    um_ano = calcular_progressoes(natal=ANA, data_alvo="12/03/1991")
+    sol_0 = natal["planetas_progredidos"]["sol"]["posicao_absoluta"]
+    sol_1 = um_ano["planetas_progredidos"]["sol"]["posicao_absoluta"]
+    assert sol_1 - sol_0 == pytest.approx(1.0, abs=0.05)
+
+
+def test_horario_de_verao_entre_natal_e_progredido_nao_desloca_uma_hora():
+    """Natal em 20/12/1990 10:00 BH (horário de verão, UTC−2 → 12:00 UTC).
+    Aos 60 anos o instante progredido cai em 18/02/1991, já fora do horário
+    de verão (terminou em 17/02/1991): a conta em hora de parede deslocaria
+    o UT em 1 h."""
+    natal = {"nome": "Verao", "data": "20/12/1990", "hora": "10:00",
+             "local": "Belo Horizonte, MG", **BH}
+    res = calcular_progressoes(natal=natal, data_alvo="20/12/2050")
+
+    natal_utc = datetime(1990, 12, 20, 12, 0, tzinfo=timezone.utc)
+    alvo_utc = datetime(2050, 12, 20, tzinfo=timezone.utc)
+    anos = (alvo_utc - natal_utc).total_seconds() / (365.25 * 86400.0)
+    prog_utc = natal_utc + timedelta(days=anos)
+    assert prog_utc.date() == datetime(1991, 2, 18).date()
+
+    esperado = calcular_mapa_natal(
+        data=prog_utc.strftime("%d/%m/%Y"),
+        hora=prog_utc.strftime("%H:%M"),
+        lat=BH["lat"], lng=BH["lng"], tz_str="UTC",
+    )
+    assert res["planetas_progredidos"]["sol"]["posicao_absoluta"] == pytest.approx(
+        esperado["planetas"]["sol"]["posicao_absoluta"], abs=0.01
+    )
 
 
 def test_ano_da_regra_e_juliano():
