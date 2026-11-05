@@ -1,8 +1,10 @@
 from datetime import datetime
+from types import SimpleNamespace
 
 import pytest
 
 from app.tools.progressoes import (
+    _destaques,
     _flags_signo,
     calcular_progressoes,
     computar_data_progredida,
@@ -27,19 +29,53 @@ class TestComputarDataProgredida:
         assert 35 <= delta_dias <= 37
 
 
+def test_ano_da_regra_e_juliano():
+    from app.tools.progressoes import SEGUNDOS_POR_ANO_JULIANO
+    assert SEGUNDOS_POR_ANO_JULIANO == 365.25 * 86400.0
+
+
 class TestFlagsSigno:
     def test_grau_baixo_marca_ingresso_recente(self):
-        assert _flags_signo(0.3)["ingresso_recente"] is True
-        assert _flags_signo(0.3)["mudanca_iminente"] is False
+        assert _flags_signo(0.3, "sol")["ingresso_recente"] is True
+        assert _flags_signo(0.3, "sol")["mudanca_iminente"] is False
 
     def test_grau_alto_marca_mudanca_iminente(self):
-        assert _flags_signo(29.5)["mudanca_iminente"] is True
-        assert _flags_signo(29.5)["ingresso_recente"] is False
+        assert _flags_signo(29.5, "lua")["mudanca_iminente"] is True
+        assert _flags_signo(29.5, "sol")["mudanca_iminente"] is True
+        assert _flags_signo(29.5, "lua")["ingresso_recente"] is False
 
     def test_grau_meio_signo_sem_flags(self):
-        flags = _flags_signo(15.0)
+        flags = _flags_signo(15.0, "sol")
         assert flags["ingresso_recente"] is False
         assert flags["mudanca_iminente"] is False
+
+    def test_planeta_lento_nunca_marca_mudanca_iminente(self):
+        # Plutão progredido leva séculos para trocar de signo: "iminente" não se aplica.
+        assert _flags_signo(29.5, "plutao")["mudanca_iminente"] is False
+        assert _flags_signo(29.5, "mercurio")["mudanca_iminente"] is False
+
+
+def _ponto(nome: str, sign: str, position: float):
+    return SimpleNamespace(name=nome, sign=sign, position=position)
+
+
+def test_mudancas_iminentes_so_lista_sol_e_lua():
+    """Subject sintético: Sol, Lua e Plutão todos a 29,5° do signo."""
+    nomes = {
+        "sun": "Sun", "moon": "Moon", "mercury": "Mercury", "venus": "Venus",
+        "mars": "Mars", "jupiter": "Jupiter", "saturn": "Saturn",
+        "uranus": "Uranus", "neptune": "Neptune", "pluto": "Pluto",
+    }
+    graus = {"sun": 29.5, "moon": 29.5, "pluto": 29.5}
+    subject = SimpleNamespace(**{
+        attr: _ponto(nome, "Sco", graus.get(attr, 10.0)) for attr, nome in nomes.items()
+    })
+    planetas = {
+        "sol": {"signo": "Escorpiao", "casa_natal": 1, "ingresso_recente": False},
+        "lua": {"signo": "Escorpiao", "casa_natal": 1, "ingresso_recente": False},
+    }
+    destaques = _destaques(planetas, subject)
+    assert sorted(m["planeta"] for m in destaques["mudancas_iminentes"]) == ["lua", "sol"]
 
 
 # ─────────────────────────────────────────────────────────────

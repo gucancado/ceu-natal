@@ -27,6 +27,14 @@ NOTA_FIM_APROXIMADO = (
     "seguinte calculada de fato. Erro típico de 20 a 30 minutos."
 )
 
+# A Lua varia muito de velocidade ao longo da órbita: o mês sideral real se
+# afasta da média bem mais que o ano trópico.
+NOTA_FIM_APROXIMADO_LUNAR = (
+    "fim_aproximado_utc = inicio + duração média do ciclo, não a revolução "
+    "seguinte calculada de fato. A velocidade da Lua varia ao longo da órbita: "
+    "erro típico de algumas horas."
+)
+
 
 def validar_ano_revolucao(ano, ano_nascimento=None) -> int:
     """
@@ -86,7 +94,8 @@ def _em_utc(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
-def vigencia(inicio: datetime, duracao_dias: float) -> dict:
+def vigencia(inicio: datetime, duracao_dias: float,
+             nota: str = NOTA_FIM_APROXIMADO) -> dict:
     """
     Janela de vigência da revolução: do instante do retorno até o próximo.
 
@@ -100,7 +109,7 @@ def vigencia(inicio: datetime, duracao_dias: float) -> dict:
         "inicio_utc": inicio_utc.isoformat(),
         "fim_aproximado_utc": fim_utc.isoformat(),
         "duracao_dias": round(duracao_dias, 4),
-        "nota": NOTA_FIM_APROXIMADO,
+        "nota": nota,
     }
 
 
@@ -109,7 +118,7 @@ def vigencia_solar(inicio: datetime) -> dict:
 
 
 def vigencia_lunar(inicio: datetime) -> dict:
-    return vigencia(inicio, MES_SIDERAL_DIAS)
+    return vigencia(inicio, MES_SIDERAL_DIAS, NOTA_FIM_APROXIMADO_LUNAR)
 
 
 def ciclo_anterior(instante_retorno: datetime, data_referencia: datetime,

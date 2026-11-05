@@ -123,3 +123,96 @@ def test_hora_inexistente_no_horario_de_verao_vira_value_error():
 def test_hora_ambigua_resolvida_com_is_dst():
     m = calcular_mapa_natal(data="16/02/2019", hora="23:30", local="Belo Horizonte, MG", is_dst=False, **BH)
     assert m["angulos"]["ascendente"]
+
+
+# ─────────────────────────────────────────────────────────────
+# Latitude polar: acima de 66° o Kerykeion corta a latitude das casas
+# ─────────────────────────────────────────────────────────────
+TROMSO = {"lat": 69.65, "lng": 18.96, "tz_str": "Europe/Oslo"}
+NATAL_POLAR = {"nome": "Polar", "data": "01/06/1990", "hora": "12:00", **TROMSO}
+
+
+def test_latitude_polar_omite_casas_com_aviso():
+    mapa = calcular_mapa_natal(data="01/06/1990", hora="12:00", **TROMSO)
+    assert mapa["casas"] is None
+    assert mapa["angulos"] == {}
+    assert "casa" not in mapa["planetas"]["sol"]
+    assert "66°" in mapa["aviso"]
+    assert mapa["sintese"]["hemisferio_vertical"] is None
+
+
+def test_latitude_suporta_casas_no_limite():
+    from app.core.kerykeion import LATITUDE_MAX_CASAS, latitude_suporta_casas
+
+    assert LATITUDE_MAX_CASAS == 66.0
+    assert latitude_suporta_casas(66.0) is True
+    assert latitude_suporta_casas(-66.0) is True
+    assert latitude_suporta_casas(66.01) is False
+    assert latitude_suporta_casas(-69.65) is False
+
+
+def _transitos_polar():
+    from app.tools.transitos import calcular_transitos
+    return calcular_transitos(natal=NATAL_POLAR, data_transito="01/06/2026")
+
+
+def _progressoes_polar():
+    from app.tools.progressoes import calcular_progressoes
+    return calcular_progressoes(natal=NATAL_POLAR, data_alvo="01/06/2026")
+
+
+def _revolucao_solar_polar():
+    from app.tools.revolucao_solar import calcular_revolucao_solar
+    return calcular_revolucao_solar(natal=NATAL_POLAR, ano=2026, local_revolucao="Belo Horizonte, MG")
+
+
+def _revolucao_lunar_polar():
+    from app.tools.revolucao_lunar import calcular_revolucao_lunar
+    return calcular_revolucao_lunar(
+        natal=NATAL_POLAR, data_referencia="01/06/2026", local_revolucao="Belo Horizonte, MG",
+    )
+
+
+@pytest.mark.parametrize("chamada", [
+    _transitos_polar, _progressoes_polar, _revolucao_solar_polar, _revolucao_lunar_polar,
+])
+def test_tools_que_exigem_casas_recusam_latitude_polar(chamada):
+    with pytest.raises(ValueError, match="66°"):
+        chamada()
+
+
+# ─────────────────────────────────────────────────────────────
+# Sem hora: a Lua anda ~13°/dia, então ao meio-dia ela pode estar até 6,5° fora
+# ─────────────────────────────────────────────────────────────
+def test_sem_hora_lua_perto_da_borda_pode_mudar_de_signo():
+    # Data escolhida por cálculo: em 07/03/1990 ao meio-dia (sem local → UTC)
+    # a Lua está a 29,7753° de Câncer, dentro dos 6,5° finais do signo.
+    mapa = calcular_mapa_natal(data="07/03/1990")
+    lua = mapa["planetas"]["lua"]
+    assert lua["posicao_incerta"] is True
+    assert lua["signo_pode_mudar"] is True
+    assert "sem a hora, a Lua pode variar até 6,5°" in mapa["aviso"]
+
+
+def test_sem_hora_lua_no_meio_do_signo_nao_muda():
+    # Data escolhida por cálculo: em 13/03/1990 ao meio-dia a Lua está a 15,7275° de Libra.
+    mapa = calcular_mapa_natal(data="13/03/1990")
+    lua = mapa["planetas"]["lua"]
+    assert lua["posicao_incerta"] is True
+    assert lua["signo_pode_mudar"] is False
+
+
+def test_sem_hora_aspectos_da_lua_marcados_incertos():
+    mapa = calcular_mapa_natal(data="07/03/1990")
+    com_lua = [a for a in mapa["aspectos"] if "lua" in (a["planeta_a"], a["planeta_b"])]
+    sem_lua = [a for a in mapa["aspectos"] if "lua" not in (a["planeta_a"], a["planeta_b"])]
+    assert com_lua and sem_lua
+    assert all(a["incerto"] is True for a in com_lua)
+    assert all("incerto" not in a for a in sem_lua)
+
+
+def test_com_hora_lua_sem_marcas_de_incerteza():
+    mapa = _ana()
+    assert "posicao_incerta" not in mapa["planetas"]["lua"]
+    assert "signo_pode_mudar" not in mapa["planetas"]["lua"]
+    assert all("incerto" not in a for a in mapa["aspectos"])

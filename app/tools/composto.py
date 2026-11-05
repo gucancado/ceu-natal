@@ -37,10 +37,11 @@ def midpoint_longitude(a: float, b: float) -> float:
     """Ponto médio mais curto entre duas longitudes (0..360°).
 
     Trata wrap-around: midpoint(350°, 10°) = 0°, não 180°.
-    Pares antípodas (diferença de exatamente 180°) ficam em (a + 90) % 360.
+    Comutativo: os ângulos são ordenados antes, então a ordem dos argumentos
+    não muda o resultado. Pares antípodas (diferença de exatamente 180°) ficam
+    em (menor + 90) % 360.
     """
-    a = a % 360.0
-    b = b % 360.0
+    a, b = sorted((a % 360.0, b % 360.0))
     diff = (b - a) % 360.0
     if diff > 180.0:
         return (a + diff / 2 - 180.0) % 360.0

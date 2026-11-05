@@ -37,8 +37,10 @@ from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
     criar_subject,
+    exigir_latitude_com_casas,
     planetas_iter,
     pontos_sensiveis_iter,
+    resolver_coordenadas,
 )
 from app.core.sintese import calcular_sintese
 from app.core.validators import (
@@ -84,12 +86,17 @@ def build_subject_natal(natal: dict, sistema_id: str):
             "às casas natais."
         )
 
+    lat, lng, tz_str = resolver_coordenadas(
+        cidade, nacao, natal.get("lat"), natal.get("lng"), natal.get("tz_str"),
+    )
+    exigir_latitude_com_casas(lat)
+
     subject = criar_subject(
         nome=natal.get("nome") or "Anônimo",
         ano=ano, mes=mes, dia=dia,
         hora=h, minuto=m,
         cidade=cidade, nacao=nacao,
-        lat=natal.get("lat"), lng=natal.get("lng"), tz_str=natal.get("tz_str"),
+        lat=lat, lng=lng, tz_str=tz_str,
         sistema_casas=sistema_id,
         is_dst=natal.get("is_dst"),
     )

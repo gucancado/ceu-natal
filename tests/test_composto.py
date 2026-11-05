@@ -23,13 +23,15 @@ class TestMidpointLongitude:
 
     def test_pontos_antipodas_documentado(self):
         """Antípodas (90° e 270°) têm dois midpoints possíveis (0 ou 180);
-        nossa implementação escolhe determinísticamente um por ordem dos args:
-        midpoint(90, 270) = 180, midpoint(270, 90) = 0."""
+        a implementação ordena os argumentos e fica com (menor + 90) % 360,
+        então a ordem não importa: midpoint(90, 270) = midpoint(270, 90) = 180."""
         assert midpoint_longitude(90, 270) == pytest.approx(180.0)
-        assert midpoint_longitude(270, 90) == pytest.approx(0.0, abs=1e-6)
-        # Em ambos os casos o resultado é um dos dois antípodas (0 ou 180)
-        for r in (midpoint_longitude(90, 270), midpoint_longitude(270, 90)):
-            assert r == pytest.approx(0.0, abs=1e-6) or r == pytest.approx(180.0)
+        assert midpoint_longitude(270, 90) == pytest.approx(180.0)
+
+    def test_comutativo(self):
+        assert midpoint_longitude(10, 190) == midpoint_longitude(190, 10)
+        for a, b in ((350, 10), (0, 60), (123.4, 301.2), (720, 60)):
+            assert midpoint_longitude(a, b) == midpoint_longitude(b, a)
 
     def test_normaliza_input_acima_de_360(self):
         # 720° e 60° → equivale a 0° e 60° → 30°

@@ -20,11 +20,49 @@ PONTOS_SENSIVEIS_ATTRS = [
     "chiron",
 ]
 
+# Acima desta latitude o Kerykeion (`check_and_adjust_polar_latitude`) corta a
+# latitude para 66° antes de chamar `swe_houses`: casas, ascendente e meio do
+# céu sairiam calculados para outro lugar, em qualquer sistema de casas. O corte
+# também sobrescreve `subject.lat`, então a checagem usa a latitude resolvida
+# antes de criar o subject (`resolver_coordenadas`).
+LATITUDE_MAX_CASAS = 66.0
+
+MOTIVO_LATITUDE_SEM_CASAS = (
+    "latitude acima de 66° não é suportada pelo cálculo de casas nesta versão"
+)
+
+
+def latitude_suporta_casas(lat: float) -> bool:
+    """True quando |lat| <= 66°, faixa em que as casas saem corretas."""
+    return abs(lat) <= LATITUDE_MAX_CASAS
+
+
+def exigir_latitude_com_casas(lat: float) -> None:
+    """Para técnicas que dependem das casas natais: recusa latitude polar."""
+    if not latitude_suporta_casas(lat):
+        raise ValueError(f"Casas e ângulos indisponíveis: {MOTIVO_LATITUDE_SEM_CASAS}.")
+
 
 def _coords_from_local(cidade: Optional[str], nacao: Optional[str]) -> Optional[dict]:
     if not cidade:
         return None
     return geocode(cidade, nacao or "")
+
+
+def resolver_coordenadas(
+    cidade: Optional[str],
+    nacao: Optional[str],
+    lat: Optional[float],
+    lng: Optional[float],
+    tz_str: Optional[str],
+) -> tuple[float, float, str]:
+    """(lat, lng, tz_str) explícitos, ou via geocode(cidade, nacao), ou (0, 0, UTC)."""
+    if lat is None or lng is None or tz_str is None:
+        if cidade:
+            coords = _coords_from_local(cidade, nacao)
+            return coords["lat"], coords["lng"], coords["tz_str"]
+        return 0.0, 0.0, "UTC"
+    return lat, lng, tz_str
 
 
 def criar_subject(
@@ -54,12 +92,7 @@ def criar_subject(
     """
     from kerykeion.schemas import KerykeionException
 
-    if lat is None or lng is None or tz_str is None:
-        if cidade:
-            coords = _coords_from_local(cidade, nacao)
-            lat, lng, tz_str = coords["lat"], coords["lng"], coords["tz_str"]
-        else:
-            lat, lng, tz_str = 0.0, 0.0, "UTC"
+    lat, lng, tz_str = resolver_coordenadas(cidade, nacao, lat, lng, tz_str)
 
     try:
         return AstrologicalSubjectFactory.from_birth_data(
