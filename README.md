@@ -47,7 +47,8 @@ Entrada de pessoa: `data` (DD/MM/YYYY, obrigatória), `hora` (HH:MM), `local`
 horário local, a Lua vem marcada como incerta (`posicao_incerta`, `signo_pode_mudar`) e
 não saem casas nem ângulos. `sistema_casas` é opcional: `P` Placidus (padrão), `K` Koch,
 `W` Whole Sign, `E` Equal, `R` Regiomontanus, `C` Campanus, `O` Porphyrius, `B` Alcabitus,
-`M` Morinus, `T` Topocentric. Os schemas completos estão em `GET /tools`.
+`M` Morinus, `T` Topocentric. `GET /tools` lista as tools e os nomes dos parâmetros; o `inputSchema` completo vem do
+`tools/list` do MCP (qualquer cliente MCP mostra).
 
 ## Exemplo
 
