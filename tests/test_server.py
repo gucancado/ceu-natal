@@ -68,7 +68,7 @@ def test_settings_do_ambiente_vazio_usa_os_defaults(monkeypatch):
         monkeypatch.delenv(nome, raising=False)
     s = Settings.do_ambiente()
     assert s == Settings()
-    assert (s.server_name, s.server_version, s.api_key) == ("ceu-natal", "2.1.0", "")
+    assert (s.server_name, s.server_version, s.api_key) == ("ceu-natal", "2.2.0", "")
     assert (s.rate_limit_session_per_min, s.rate_limit_global_per_min) == (30, 600)
     assert (s.rate_limit_mapa_rapido_ip_per_min, s.rate_limit_mapa_rapido_global_per_min) == (6, 120)
     assert s.public_site_url == "https://github.com/gucancado/ceu-natal"

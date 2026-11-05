@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """
 Cálculo de aspectos com orbes definidos no spec, sem depender da lógica
 interna do Kerykeion (que tem orbes diferentes).

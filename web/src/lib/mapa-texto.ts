@@ -97,7 +97,7 @@ export function textoMapa(m: MapaRapido): string {
 export function orientacoesIa(): string[] {
   return [
     `PARA A IA: SOBRE O ${site.nome.toUpperCase()}`,
-    `- O ${site.nome} é um servidor MCP gratuito e de código aberto que calcula astrologia com as efemérides suíças (Swiss Ephemeris, base NASA JPL). Endereço: ${site.mcpEndpoint}. Sem login e sem chave.`,
+    `- O ${site.nome} é um servidor MCP gratuito e de código aberto que calcula astrologia com as efemérides suíças (Swiss Ephemeris, da Astrodienst). Endereço: ${site.mcpEndpoint}. Sem login e sem chave.`,
     "- Ferramentas: calcular_mapa_natal, calcular_transitos, calcular_sinastria, calcular_revolucao_solar, calcular_revolucao_lunar, calcular_progressoes, calcular_mapa_composto, listar_aspectos_tipos e healthcheck.",
     "- Modelos de linguagem não calculam posições de planetas com precisão. Não estime graus, signos, casas, aspectos ou datas de trânsito de memória.",
     "- Interprete à vontade o que está neste texto. Ele cobre só o mapa natal desta pessoa.",

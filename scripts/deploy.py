@@ -1,8 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Deploy manual do ceu-natal via API do Coolify.
 
 O deploy não é automático (push na branch não publica em produção); este
-script dispara o deploy e acompanha até terminar. Porte de
-`scripts/deploy.mjs` do semente-platform-worker. Mantido manual porque o
+script dispara o deploy e acompanha até terminar. Mantido manual porque o
 token do Coolify rotaciona ~mensalmente (um workflow no GitHub Actions
 quebraria em silêncio) e porque publicar em produção deve ser decisão
 explícita.
@@ -15,14 +15,16 @@ Uso:
 
 `--app server` (padrão) publica o servidor MCP; `--app web` publica o site.
 
-Envs (com defaults sãos; só o token é obrigatório fora do --dry-run):
-    COOLIFY_TOKEN     (obrigatório) Bearer token do Coolify, NUNCA commitar
-    COOLIFY_API       default http://5.78.199.192:8000/api/v1
-    COOLIFY_APP_UUID  default ejbfwl0yfego72kk5n2us1gh (ceu-natal); só vale p/ --app server
-    COOLIFY_WEB_UUID  default atbazr01ybzciaqfmvnyfdvg (ceu-natal-web); só vale p/ --app web
+Envs, todas sem default no código. Vêm do ambiente ou de `scripts/deploy.env`
+(arquivo local, fora do git; o ambiente tem precedência):
+    COOLIFY_API       URL base da API do Coolify (ex.: http://<host>:8000/api/v1)
+    COOLIFY_APP_UUID  uuid do app do servidor MCP; exigido com --app server
+    COOLIFY_WEB_UUID  uuid do app do site; exigido com --app web
+    COOLIFY_TOKEN     Bearer token do Coolify, NUNCA commitar; dispensado no --dry-run
+`CEU_NATAL_DEPLOY_ENV` troca o caminho do arquivo (usado nos testes).
 
 Saídas: 0 ok; 1 falha HTTP, deploy falhou/cancelado ou timeout de 10 min;
-2 sem COOLIFY_TOKEN ou argumento inválido (erro do argparse).
+2 variável obrigatória ausente ou argumento inválido (erro do argparse).
 """
 
 import argparse
@@ -32,10 +34,12 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
-API_PADRAO = "http://5.78.199.192:8000/api/v1"
-UUID_PADRAO = "ejbfwl0yfego72kk5n2us1gh"
-WEB_UUID_PADRAO = "atbazr01ybzciaqfmvnyfdvg"
+from dotenv import load_dotenv
+
+RAIZ = Path(__file__).resolve().parent.parent
+ARQUIVO_ENV = Path(os.environ.get("CEU_NATAL_DEPLOY_ENV") or RAIZ / "scripts" / "deploy.env")
 INTERVALO_S = 5
 TIMEOUT_S = 10 * 60
 
@@ -88,23 +92,18 @@ def main(argv: list[str]) -> int:
         args = parser.parse_args(argv)
     except SystemExit as e:  # argumento inválido: o argparse já imprimiu o erro
         return e.code if isinstance(e.code, int) else 2
-    api = os.environ.get("COOLIFY_API", API_PADRAO)
-    app = args.app
-    if app == "web":
-        uuid = os.environ.get("COOLIFY_WEB_UUID", WEB_UUID_PADRAO)
-    else:
-        uuid = os.environ.get("COOLIFY_APP_UUID", UUID_PADRAO)
-    token = os.environ.get("COOLIFY_TOKEN")
+    load_dotenv(ARQUIVO_ENV, override=False)
+    var_uuid = "COOLIFY_WEB_UUID" if args.app == "web" else "COOLIFY_APP_UUID"
+    exigidas = ["COOLIFY_API", var_uuid] + ([] if args.dry_run else ["COOLIFY_TOKEN"])
+    faltando = [nome for nome in exigidas if not os.environ.get(nome)]
+    if faltando:
+        print(f"FALTA env {', '.join(faltando)} (no ambiente ou em {ARQUIVO_ENV}).", file=sys.stderr)
+        return 2
+    api = os.environ["COOLIFY_API"].rstrip("/")
+    uuid = os.environ[var_uuid]
+    token = os.environ.get("COOLIFY_TOKEN", "")
     dry_run = args.dry_run
     sem_espera = args.no_wait
-
-    if not token and not dry_run:
-        print(
-            "FALTA env COOLIFY_TOKEN (Bearer do Coolify). "
-            "Veja a seção Coolify no CLAUDE.md global.",
-            file=sys.stderr,
-        )
-        return 2
 
     url = f"{api}/deploy?uuid={uuid}"
     if dry_run:

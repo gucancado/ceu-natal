@@ -19,3 +19,6 @@ scripts/dados_familia.json
 .superpowers/
 .mypy_cache/
 .ruff_cache/
+docs/superpowers/
+# Destino do deploy (host e uuids do Coolify): local, ver scripts/deploy.py
+scripts/deploy.env

@@ -84,7 +84,7 @@ class TestParseData:
 # ─────────────────────────────────────────────────────────────
 class TestParseHora:
     def test_hora_valida(self):
-        assert parse_hora("09:20") == (9, 20)
+        assert parse_hora("14:30") == (14, 30)
 
     def test_hora_none(self):
         assert parse_hora(None) == (None, None)

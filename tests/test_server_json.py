@@ -12,3 +12,4 @@ def test_server_json_coerente_com_o_servidor():
     assert doc["version"] == Settings().server_version
     assert doc["remotes"][0] == {"type": "streamable-http", "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/"}
     assert doc["repository"] == {"url": "https://github.com/gucancado/ceu-natal", "source": "github"}
+    assert doc["websiteUrl"] == "https://mistico.gustavocancado.com.br"

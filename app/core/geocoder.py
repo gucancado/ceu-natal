@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Geocodificação de cidades: GeoNames, com Nominatim de reserva, e cache persistente."""
+
 import functools
 import json
 import logging

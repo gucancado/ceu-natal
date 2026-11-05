@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Mapa natal: posições, casas, ângulos, aspectos e síntese."""
+
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos

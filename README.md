@@ -1,325 +1,170 @@
-# Céu Natal — Servidor MCP de Astrologia
+# Céu Natal
 
-Servidor [Model Context Protocol](https://modelcontextprotocol.io/) que expõe
-ferramentas de cálculo astrológico para agentes de IA. Calcula mapas natais e
-sinastria com [Kerykeion](https://github.com/g-battaglia/kerykeion) +
-[Swiss Ephemeris](https://www.astro.com/swisseph/swephinfo_e.htm) (NASA JPL).
+Servidor MCP que calcula mapas astrais com efemérides suíças para o seu assistente de IA interpretar.
 
-- Transporte: **SSE** sobre HTTP (servidor remoto multi-cliente)
-- Protocolo: MCP 2024-11-05
-- Autenticação: API key via header `Authorization: Bearer ...` (query string não é aceita)
-- Produção: `https://astrologia-mcp.gustavocancado.com.br`
+**In English.** Céu Natal is an open-source Model Context Protocol server that computes
+natal charts, synastry, transits, progressions and solar/lunar returns with the Swiss
+Ephemeris, answering in Portuguese. A free public endpoint runs at
+`https://astrologia-mcp.gustavocancado.com.br/mcp/` (no sign-up). Licensed AGPL-3.0.
 
-> **Para LLMs / agentes que vão propor mudanças:** leia
-> [CLAUDE.md](CLAUDE.md) primeiro. Anti-padrões mais comuns:
-> não é mais REST FastAPI (foi migrado para MCP), tools de trânsitos /
-> progressões / composto **já existem** em `app/tools/`, e o deploy no
-> Coolify é manual. Verifique o estado real com
-> `curl https://astrologia-mcp.gustavocancado.com.br/tools` antes de
-> planejar trabalho novo.
+[![CI](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml/badge.svg)](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml)
+[![Licença: AGPL-3.0](https://img.shields.io/badge/licen%C3%A7a-AGPL--3.0-blue.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 
----
+## Por que existe
 
-## Tools expostas
+Peça um mapa astral a um assistente de IA e ele responde com segurança, mas as posições
+costumam ser inventadas: o modelo não tem efemérides, então chuta o signo da Lua e o
+ascendente. Este servidor faz a conta de verdade e devolve os números; a IA só interpreta.
 
-9 tools no total. Todas aceitam `sistema_casas` opcional (P=Placidus, K=Koch,
-W=Whole Sign, E=Equal, R=Regiomontanus, C=Campanus, O=Porphyrius, B=Alcabitus,
-M=Morinus, T=Topocentric — default `P`).
+## Use agora
 
-### `calcular_mapa_natal`
+Endpoint MCP público e gratuito (Streamable HTTP, sem login):
 
-Mapa natal completo com posições planetárias, casas, ângulos (ASC, MC, DESC,
-FC), aspectos entre planetas, pontos sensíveis (nodos verdadeiros e Quíron) e
-síntese (elementos, qualidades, hemisférios, stelliums).
-
-**Parâmetros:**
-
-| campo           | tipo            | obrigatório | descrição                                  |
-|-----------------|-----------------|-------------|--------------------------------------------|
-| `data`          | `string`        | sim         | DD/MM/YYYY                                 |
-| `hora`          | `string \| null`| não         | HH:MM                                      |
-| `local`         | `string \| null`| não         | "Cidade, UF" (BR) ou "Cidade, País"        |
-| `nome`          | `string \| null`| não         | identificador no retorno                   |
-| `sistema_casas` | `string \| null`| não         | identificador (P, K, W, ...). Default P.   |
-
-Sem `hora` ou `local`, retorna apenas posições por signo (sem casas/ângulos).
-
-### `calcular_sinastria`
-
-Aspectos cruzados entre os mapas de duas pessoas e em quais casas de uma os
-planetas da outra caem. Útil para análise de relacionamento.
-
-**Parâmetros:** `pessoa_a`, `pessoa_b` (mesmo formato do `calcular_mapa_natal`)
-e `sistema_casas` opcional (aplicado nos dois mapas).
-
-### `calcular_transitos`
-
-Trânsitos planetários para uma data específica em relação a um mapa natal.
-Posições atuais, aspectos cruzados (com aplicando/separando), em qual casa
-natal cada planeta em trânsito cai, e síntese com destaque para trânsitos
-de planetas lentos (Saturno, Urano, Netuno, Plutão, Quíron) com orbe < 2°.
-
-**Parâmetros:** `natal` (mesmo formato), `data_transito` (DD/MM/YYYY,
-obrigatório), `hora_transito` (HH:MM — default 12:00 UTC), `local_transito`
-(default Greenwich/UTC), `sistema_casas`.
-
-### `calcular_progressoes`
-
-Progressões secundárias (técnica "um dia = um ano") para uma data alvo.
-Posições progredidas, aspectos progredido↔natal, destaque para Lua progredida
-(fase emocional atual, ~2.5 anos por signo) e Sol progredido (~30 anos por
-signo), com sinalização de ingressos recentes e mudanças iminentes de signo.
-
-**Parâmetros:** `natal`, `data_alvo` (DD/MM/YYYY, obrigatório), `sistema_casas`.
-
-### `calcular_mapa_composto`
-
-Mapa composto (composite chart) de duas pessoas pelo método de **midpoints** —
-o mapa da "relação como entidade". Posições compostas, ângulos (ASC e MC
-compostos quando ambos têm hora+local), aspectos internos e síntese de
-elementos. **Não retorna casas** — composto por midpoint não tem instante/local
-definidos.
-
-**Parâmetros:** `pessoa_a`, `pessoa_b` (mesmo formato), `sistema_casas`.
-
-### `calcular_revolucao_solar`
-
-Revolução solar (solar return) — o mapa do instante exato em que o Sol retorna à
-longitude eclíptica que ocupava no nascimento. Técnica de **previsão anual**: o
-mapa rege o período até a revolução seguinte. Como o ano trópico tem 365,2422
-dias, o retorno cai na véspera, no dia ou no dia seguinte ao aniversário.
-
-Retorna o mapa completo da revolução (planetas, casas, ângulos, aspectos
-internos), os aspectos revolução↔natal, a sobreposição dos dois mapas nos dois
-sentidos e destaques da leitura: ascendente da revolução com regentes moderno e
-tradicional, os dois luminares com casa da revolução e casa natal, e planetas
-angulares.
-
-A conjunção do Sol da revolução com o Sol natal vem marcada com
-`definicional: true` em `aspectos_revolucao_natal` — ela tem orbe 0 por
-construção (é a definição da técnica), então encabeça a lista ordenada por orbe
-sem ser um achado interpretativo.
-
-`revolucao.vigencia` traz `inicio_utc` e `fim_aproximado_utc` com offset
-explícito. O fim é o início somado à duração média do ciclo, não a revolução
-seguinte calculada de fato — erro típico de 20 a 30 minutos, declarado no campo
-`nota`.
-
-**Parâmetros:**
-
-| campo             | tipo            | obrigatório | descrição                                     |
-|-------------------|-----------------|-------------|-----------------------------------------------|
-| `natal`           | `object`        | sim         | mesmo formato das outras tools; exige `hora` e `local` |
-| `ano`             | `integer`       | sim         | ano da revolução (1800–2200)                  |
-| `local_revolucao` | `string`        | sim         | onde a pessoa estará no momento do retorno    |
-| `sistema_casas`   | `string \| null`| não         | default P                                     |
-
-`local_revolucao` é obrigatório de propósito: ele **não altera nenhuma posição
-planetária** — define apenas ascendente, meio do céu e cúspides. Um default
-silencioso entregaria as casas do local natal a quem mudou de cidade, que é a
-maioria dos casos.
-
-Revolução **trópica, sem correção de precessão** (declarado no campo `metodo` do
-retorno). A hora de nascimento é obrigatória: sem ela o Sol natal erra até 0,5°,
-o que desloca o instante do retorno em até 12 horas.
-
-### `calcular_revolucao_lunar`
-
-Revolução lunar (lunar return) — mesma mecânica com a Lua, ciclo de ~27,32 dias.
-Técnica de **previsão mensal**. `destaques` tem o mesmo shape da solar, com
-`luminar_principal: "lua"`.
-
-**Parâmetros:** `natal`, `data_referencia` (DD/MM/YYYY, obrigatório),
-`local_revolucao` (obrigatório), `sistema_casas`.
-
-⚠️ Devolve o **próximo** retorno a partir de `data_referencia`, não o ciclo em
-curso. Passar a data de hoje normalmente devolve o mês lunar que ainda vai
-começar. Quando isso acontece, o resultado inclui o bloco `ciclo_em_curso` com
-`inicio_aproximado_utc` — chame de novo com essa data para obter o mapa do ciclo
-vigente.
-
-### `listar_aspectos_tipos`
-
-Tipos de aspectos suportados com ângulos, orbes e natureza
-(harmônico/tensão/neutro). Sem parâmetros.
-
-### `healthcheck`
-
-Status e versão do servidor. Sem parâmetros.
-
----
-
-## Aspectos calculados
-
-| Aspecto      | Ângulo | Orbe (luminar) | Orbe (demais) | Natureza   |
-|--------------|--------|----------------|---------------|------------|
-| Conjunção    | 0°     | 8°             | 6°            | neutro     |
-| Oposição     | 180°   | 8°             | 6°            | tensão     |
-| Trígono      | 120°   | 4°             | 4°            | harmônico  |
-| Quadratura   | 90°    | 6°             | 6°            | tensão     |
-| Sextil       | 60°    | 4°             | 4°            | harmônico  |
-| Quintil      | 72°    | 2°             | 2°            | neutro     |
-| Inconjunção  | 150°   | 2°             | 2°            | tensão     |
-| Semi-sextil  | 30°    | 2°             | 2°            | neutro     |
-
-`exato: true` quando orbe < 0.5°. `aplicando: true` quando o aspecto se forma
-(planetas se aproximando do ângulo exato).
-
----
-
-## Como rodar localmente (Docker)
-
-```bash
-cp .env.example .env
-# editar .env: GEONAMES_USERNAME e (opcional) MCP_API_KEY
-docker compose up --build
+```
+https://astrologia-mcp.gustavocancado.com.br/mcp/
 ```
 
-Servidor sobe em `http://localhost:8000`:
+Passo a passo para Claude (web, Desktop e Code), ChatGPT, Gemini, Cursor e n8n:
+<https://mistico.gustavocancado.com.br/conectar>.
 
-- `GET /` — redireciona (302) para `PUBLIC_SITE_URL` (público)
-- `GET /llms.txt` — descrição do servidor para LLMs (público)
-- `GET /health` — healthcheck (público)
-- `GET /tools` — lista as tools registradas em JSON; público quando `MCP_API_KEY` está vazia (padrão em produção). Útil pra debug
-- `POST/GET /mcp` — endpoint MCP Streamable HTTP (recomendado)
-- `GET /sse` — handshake MCP via SSE (legado, autenticado)
-- `POST /messages/` — canal de mensagens SSE (legado, autenticado)
+## O que calcula
 
-Exemplo de inspeção rápida sem cliente MCP:
+| Tool | O que faz |
+|------|-----------|
+| `calcular_mapa_natal` | Posições, casas, ângulos, aspectos, nodos, Quíron e síntese de um mapa natal. |
+| `calcular_sinastria` | Aspectos cruzados entre duas pessoas e planetas de uma nas casas da outra. |
+| `calcular_transitos` | Posições numa data, aspectos com o mapa natal e destaque dos trânsitos lentos. |
+| `calcular_progressoes` | Progressões secundárias (1 dia = 1 ano), com Lua e Sol progredidos. |
+| `calcular_mapa_composto` | Mapa composto de duas pessoas pelo método de midpoints. |
+| `calcular_revolucao_solar` | Mapa do retorno do Sol à posição natal num ano, com local da revolução. |
+| `calcular_revolucao_lunar` | Próximo retorno da Lua à posição natal a partir de uma data. |
+| `listar_aspectos_tipos` | Aspectos suportados, com ângulos, orbes e natureza. |
+| `healthcheck` | Status e versão do servidor. |
 
-```bash
-curl http://localhost:8000/tools | jq
-```
+Entrada de pessoa: `data` (DD/MM/YYYY, obrigatória), `hora` (HH:MM), `local`
+("Cidade, UF" ou "Cidade, País"), `nome`, `is_dst`. No mapa natal sem `hora`, o cálculo usa 12:00 no
+horário local, a Lua vem marcada como incerta (`posicao_incerta`, `signo_pode_mudar`) e
+não saem casas nem ângulos. `sistema_casas` é opcional: `P` Placidus (padrão), `K` Koch,
+`W` Whole Sign, `E` Equal, `R` Regiomontanus, `C` Campanus, `O` Porphyrius, `B` Alcabitus,
+`M` Morinus, `T` Topocentric. Os schemas completos estão em `GET /tools`.
 
----
+## Exemplo
 
-## Variáveis de ambiente
-
-| Variável                | Default                                          | Descrição                                                       |
-|-------------------------|--------------------------------------------------|-----------------------------------------------------------------|
-| `GEONAMES_USERNAME`     | `gucancado`                                      | conta GeoNames para geocodificação                              |
-| `GEOCODER_CACHE_PATH`   | `/tmp/ceu-natal-geocode-cache.json`              | caminho do cache persistente. Em Docker, montar volume em `/var/cache/ceu-natal` |
-| `GEOCODER_MAX_CONCORRENTES` | `4`                                          | teto de chamadas simultâneas aos provedores de geocodificação   |
-| `GEOCODER_ESPERA_MAX_S` | `3.0`                                            | espera máxima (s) por uma vaga no teto acima; depois, erro      |
-| `NOMINATIM_USER_AGENT`  | `ceu-natal-mcp/2.0`                              | User-Agent enviado ao Nominatim (OSM)                           |
-| `NOMINATIM_MIN_INTERVAL_S` | `1.0`                                         | intervalo mínimo (s) entre chamadas ao Nominatim                |
-| `MCP_API_KEY`           | *(vazio)*                                        | se vazio, libera tudo (modo dev); só aceita header `Authorization: Bearer` |
-| `MCP_ALLOWED_HOSTS`     | *(vazio)*                                        | hosts aceitos no `/mcp` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
-| `MCP_HOST`              | `0.0.0.0`                                        | bind                                                            |
-| `MCP_PORT`              | `8000`                                           | porta                                                           |
-| `MCP_SERVER_NAME`       | `ceu-natal`                                      | nome retornado em `initialize`                                  |
-| `MCP_SERVER_VERSION`    | `2.1.0`                                          | versão exposta                                                  |
-| `PUBLIC_SITE_URL`       | `https://github.com/gucancado/ceu-natal`         | destino do redirect de `/` e link do site em `/llms.txt`        |
-| `PUBLIC_MCP_URL`        | `https://astrologia-mcp.gustavocancado.com.br`   | URL pública do MCP exibida em `/llms.txt`                       |
-| `RATE_LIMIT_SESSION_PER_MIN` | `30`                                        | chamadas de tool por minuto por sessão MCP (0 desliga)          |
-| `RATE_LIMIT_GLOBAL_PER_MIN`  | `600`                                       | chamadas de tool por minuto no total (0 desliga)                |
-| `RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN` | `6`                                  | pedidos ao `/mapa-rapido` por minuto por IP (0 desliga)         |
-| `RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN` | `120`                            | pedidos ao `/mapa-rapido` por minuto no total (0 desliga)       |
-| `CORS_ORIGINS`          | *(vazio = `PUBLIC_SITE_URL`)*                    | origens aceitas pelo CORS do `/mapa-rapido`, separadas por vírgula |
-
----
-
-## Conectar ao Claude (web ou Desktop)
-
-Guia passo-a-passo pra usuário final em
-[docs/CONECTAR-CLAUDE-AI.md](docs/CONECTAR-CLAUDE-AI.md). Resumo abaixo.
-
-Política de privacidade: [docs/legal/privacidade.md](docs/legal/privacidade.md)
-
-### Claude Desktop
-
-Em `claude_desktop_config.json`:
+Pedido (`tools/call`):
 
 ```json
 {
-  "mcpServers": {
-    "ceu-natal": {
-      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/",
-      "headers": {
-        "Authorization": "Bearer SEU_MCP_API_KEY"
-      }
-    }
-  }
+  "name": "calcular_mapa_natal",
+  "arguments": {"nome": "Ana", "data": "12/03/1990", "hora": "14:30", "local": "Belo Horizonte, MG"}
 }
 ```
 
-Sem `MCP_API_KEY` configurado no servidor, o header `Authorization` pode ser
-omitido.
+Trecho da resposta:
 
----
-
-## Conectar ao n8n
-
-No nó **MCP Client** do n8n:
-
-- **Endpoint URL:** `https://astrologia-mcp.gustavocancado.com.br/mcp/`
-- **Authentication:** Header Auth → `Authorization: Bearer SEU_MCP_API_KEY`
-
----
-
-## Testes
-
-```bash
-docker compose run --rm ceu-natal pytest -v
+```json
+{
+  "planetas": {
+    "sol": {"signo": "Peixes", "grau": "21°52'", "grau_decimal": 21.8779, "posicao_absoluta": 351.8779,
+            "retrogrado": false, "elemento": "Agua", "qualidade": "Mutavel", "casa": 8},
+    "lua": {"signo": "Libra", "grau": "6°19'", "grau_decimal": 6.329, "posicao_absoluta": 186.329,
+            "retrogrado": false, "elemento": "Ar", "qualidade": "Cardinal", "casa": 3}
+  },
+  "angulos": {
+    "ascendente": {"signo": "Cancer", "grau": "18°38'", "grau_decimal": 18.6412, "posicao_absoluta": 108.6412}
+  },
+  "aspectos": [
+    {"planeta_a": "lua", "planeta_b": "venus", "tipo": "trigono", "orbe": 0.48,
+     "aplicando": true, "exato": true, "natureza": "harmonico"}
+  ],
+  "local_resolvido": {"lat": -19.9167, "lng": -43.9333, "fuso": "America/Sao_Paulo"}
+}
 ```
 
-Os testes usam coordenadas fixas (Belo Horizonte) sem chamar o geocoder, para
-rodar sem rede.
+A resposta completa traz também os outros planetas, as 12 casas, meio do céu,
+descendente, fundo do céu, pontos sensíveis e a síntese (elementos, qualidades,
+hemisférios, stelliums).
 
-Desde a 2.1.0 `tests/test_server.py`, `tests/test_ratelimit.py`,
-`tests/test_server_json.py`, `tests/test_deploy_script.py` e
-`tests/test_periodos.py` rodam em qualquer ambiente (as tools são importadas
-sob demanda); só os testes de `app/tools/*` e do geocoder exigem Linux/CI
-(`pyswisseph`, dependência transitiva do Kerykeion, não compila no Windows).
+## Rodar local
 
----
+Com Docker:
+
+```bash
+cp .env.example .env
+docker compose up --build        # http://localhost:8000
+```
+
+Com `pip` (Linux ou macOS; no Windows, use o WSL, porque o pyswisseph não compila nele):
+
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.server:app --port 8000
+```
+
+Rotas: `/mcp/` (MCP Streamable HTTP), `/sse` e `/messages/` (SSE legado), `/health`,
+`/tools` (lista de tools; pública quando `MCP_API_KEY` está vazia), `/llms.txt`,
+`/mapa-rapido` (formulário do site) e `/` (redireciona para `PUBLIC_SITE_URL`).
+
+Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy app` e
+`python -m pytest -q`. Detalhes em [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Variáveis de ambiente
+
+| Variável | Default | Descrição |
+|----------|---------|-----------|
+| `MCP_SERVER_NAME` | `ceu-natal` | nome devolvido no `initialize` |
+| `MCP_SERVER_VERSION` | `2.2.0` | versão exposta |
+| `MCP_API_KEY` | *(vazio)* | se definida, exige `Authorization: Bearer <chave>`; vazia, libera tudo |
+| `MCP_ALLOWED_HOSTS` | *(vazio)* | hosts aceitos no `/mcp/` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
+| `RATE_LIMIT_SESSION_PER_MIN` | `30` | chamadas de tool por minuto por sessão MCP (0 desliga) |
+| `RATE_LIMIT_GLOBAL_PER_MIN` | `600` | chamadas de tool por minuto no total (0 desliga) |
+| `RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN` | `6` | pedidos ao `/mapa-rapido` por minuto por IP (0 desliga) |
+| `RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN` | `120` | pedidos ao `/mapa-rapido` por minuto no total (0 desliga) |
+| `PUBLIC_SITE_URL` | `https://github.com/gucancado/ceu-natal` | destino do redirect de `/` e link do site no `/llms.txt` |
+| `PUBLIC_MCP_URL` | `https://astrologia-mcp.gustavocancado.com.br` | URL do MCP exibida no `/llms.txt` |
+| `CORS_ORIGINS` | *(vazio = `PUBLIC_SITE_URL`)* | origens aceitas pelo CORS do `/mapa-rapido`, separadas por vírgula |
+| `GEONAMES_USERNAME` | `gucancado` | conta GeoNames da geocodificação (crie a sua em geonames.org) |
+| `NOMINATIM_USER_AGENT` | `ceu-natal-mcp/2.0` | User-Agent enviado ao Nominatim (OSM) |
+| `NOMINATIM_MIN_INTERVAL_S` | `1.0` | intervalo mínimo (s) entre chamadas ao Nominatim |
+| `GEOCODER_MAX_CONCORRENTES` | `4` | teto de chamadas simultâneas aos provedores de geocodificação |
+| `GEOCODER_ESPERA_MAX_S` | `3.0` | espera máxima (s) por uma vaga nesse teto; depois, erro |
+| `GEOCODER_CACHE_PATH` | `<tmp>/ceu-natal-geocode-cache.json` | cache persistente de coordenadas; no Docker, volume em `/var/cache/ceu-natal` |
 
 ## Site (`web/`)
 
-Landing em Next.js 16 (`@beeads/ui`, tokens da marca em `web/src/app/globals.css`), independente do servidor Python.
+O site de apresentação (<https://mistico.gustavocancado.com.br>) é um app Next.js 16
+separado, com imagem Docker própria (`web/Dockerfile`). Para rodar:
+`cd web && pnpm install && pnpm dev`; as URLs vêm de `web/.env.example`.
 
-```bash
-cd web && pnpm install && pnpm dev   # http://localhost:3000
-pnpm test && pnpm typecheck && pnpm build
-```
+## Precisão e limites
 
-Variáveis de ambiente (ver `web/.env.example`; `NEXT_PUBLIC_*` são embutidas no build): `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MCP_URL`, `NEXT_PUBLIC_REPO_URL`. Todas as URLs passam por `web/src/lib/site.ts`.
+- **Efemérides:** Swiss Ephemeris, da Astrodienst AG, via
+  [Kerykeion](https://github.com/g-battaglia/kerykeion) e pyswisseph. Zodíaco tropical.
+- **Latitude acima de 66°:** o cálculo de casas não é confiável perto dos polos. O mapa
+  natal sai sem casas nem ângulos, com aviso; trânsitos, progressões e revoluções recusam.
+- **Anos:** datas de 1000 a 3000; revolução solar de 1800 a 2200.
+- **Horário de verão:** se a hora cai na transição (ambígua ou inexistente), o servidor
+  devolve erro pedindo `is_dst` (`true` = horário de verão, `false` = padrão).
+- **Sem hora de nascimento:** cálculo às 12:00 locais; a Lua pode estar até ~6,5° antes ou
+  depois, e o resultado diz quando o signo dela pode mudar.
+- **Limites do endpoint público:** 30 chamadas por minuto por sessão e 600 por minuto no
+  total. Nada sobre pessoas é armazenado; veja a
+  [política de privacidade](docs/legal/privacidade.md).
 
-Deploy: imagem própria (`web/Dockerfile`, saída `standalone`), fora da imagem Python (`.dockerignore` da raiz exclui `web/`). Roda no Coolify como app `ceu-natal-web` (uuid `atbazr01ybzciaqfmvnyfdvg`, base directory `/web`, porta 3000, domínio `https://mistico.gustavocancado.com.br`). Deploy manual: `COOLIFY_TOKEN=<bearer> python scripts/deploy.py --app web`. As três envs `NEXT_PUBLIC_*` (`NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_MCP_URL`, `NEXT_PUBLIC_REPO_URL`) ficam no Coolify (prod e preview). A imagem carrega `curl` porque o healthcheck do Coolify precisa dele.
+## Contribuir
 
----
+Issues e pull requests são bem-vindos. Veja [CONTRIBUTING.md](CONTRIBUTING.md); para
+falhas de segurança, [SECURITY.md](SECURITY.md).
 
 ## Licença
 
-O código é AGPL-3.0 (texto completo em [`LICENSE`](LICENSE)).
+[AGPL-3.0-or-later](LICENSE). A AGPL vale também para uso pela rede: quem oferecer este
+servidor como serviço modificado precisa publicar o código. O endpoint público roda
+exatamente o código deste repositório.
 
-Por quê: Kerykeion e Swiss Ephemeris são AGPL, e a AGPL alcança uso por rede. Por isso o serviço hospedado em `astrologia-mcp.gustavocancado.com.br` roda exatamente este código público.
-
-Na prática, qualquer pessoa pode rodar a própria instância. O que se paga no serviço hospedado (quando existir) é hospedagem e dados, não o cálculo.
-
----
-
-## Estrutura
-
-```
-app/
-├── server.py           # entrypoint MCP (Streamable HTTP + SSE legado)
-├── core/
-│   ├── kerykeion.py    # wrapper do AstrologicalSubject
-│   ├── aspectos.py     # cálculo de aspectos com orbes do spec
-│   ├── sintese.py      # elementos, hemisférios, stelliums
-│   ├── formatter.py    # tradução PT-BR, formatação e regências
-│   ├── validators.py   # parse de data/hora/local
-│   ├── periodos.py     # lógica temporal das revoluções (sem Kerykeion)
-│   ├── revolucoes.py   # core compartilhado das revoluções
-│   └── geocoder.py     # GeoNames + Nominatim + cache
-└── tools/
-    ├── mapa_natal.py
-    ├── sinastria.py
-    ├── transitos.py
-    ├── progressoes.py
-    ├── composto.py
-    ├── revolucao_solar.py
-    └── revolucao_lunar.py
-tests/                  # um arquivo por módulo de core/ e tools/
-```
+A escolha segue as dependências: o Kerykeion é AGPL-3.0, e o pyswisseph (Swiss Ephemeris)
+é distribuído sob AGPL-3.0 ou sob a licença profissional paga da Astrodienst. Um uso fora
+dos termos da AGPL exigiria a licença profissional da Swiss Ephemeris e trocar o
+Kerykeion. O site usa os pacotes `@beeads/*`, sob licença MIT, compatível
+com a AGPL.

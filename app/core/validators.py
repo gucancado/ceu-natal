@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Parse e validação de data, hora, local e sistema de casas."""
+
 from datetime import datetime
 from typing import Optional, Tuple, overload
 
