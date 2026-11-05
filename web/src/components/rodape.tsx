@@ -31,7 +31,7 @@ export function Rodape() {
           </ul>
         </nav>
         <div className="text-muted-fg md:text-right">
-          <p>Feito em Belo Horizonte por Gustavo Cançado</p>
+          <p>fiz em belo horizonte. gustavo cançado</p>
           <p className="font-mono text-sm">{site.contato}</p>
         </div>
       </div>

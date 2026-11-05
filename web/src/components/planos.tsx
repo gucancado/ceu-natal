@@ -1,13 +1,14 @@
 import { Badge, Button } from "@beeads/ui";
 import { Secao } from "@/components/secao";
 import { planoInclui, planos, rotuloPreco } from "@/content/planos";
+import { planeta } from "@/lib/glifos";
 
 // Linhas = união dos itens de inclusão, na ordem em que aparecem de Grátis a Profissional.
 const linhas = [...new Set(planos.flatMap((p) => p.inclui))];
 
 export function Planos() {
   return (
-    <Secao id="planos" titulo="Planos">
+    <Secao id="planos" titulo="o que vem por aí" simbolo={planeta.netuno}>
       {/* relative: os sr-only (position absolute) da tabela ficam presos ao invólucro e não alargam a página */}
       <div
         className="relative overflow-x-auto"
@@ -66,7 +67,7 @@ export function Planos() {
         </table>
       </div>
       <p className="mt-8 max-w-[36rem] text-muted-fg">
-        Os planos com conta chegam depois do grátis. Preços serão publicados aqui.
+        por enquanto é tudo grátis. quando os planos com conta chegarem, eu conto aqui primeiro.
       </p>
       <div className="mt-6">
         <Button asChild size="lg">

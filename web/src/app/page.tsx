@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Carta } from "@/components/carta";
 import { Comparacao } from "@/components/comparacao";
 import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
@@ -9,6 +10,7 @@ import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Profissionais } from "@/components/profissionais";
 import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
+import { planeta } from "@/lib/glifos";
 
 // A descrição continua a do layout.
 export const metadata: Metadata = {
@@ -20,9 +22,10 @@ export default function Home() {
     <>
       <JsonLd />
       <Hero />
+      <Carta />
       <Prova />
       <Comparacao />
-      <Secao id="conectar" titulo="Conectar">
+      <Secao id="conectar" titulo="como conectar" simbolo={planeta.jupiter}>
         {/* Sem JavaScript, cada cartão é um link para o guia completo. */}
         <Suspense fallback={<PlataformasGrade inicial={null} />}>
           <Plataformas />

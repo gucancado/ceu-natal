@@ -116,6 +116,19 @@ body::after {
   to { opacity: 1; }
 }
 
+.glifo {
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", "Apple Symbols", sans-serif;
+  font-style: normal;
+}
+
+.anel-zodiacal {
+  animation: girar 240s linear infinite;
+}
+
+@keyframes girar {
+  to { rotate: 360deg; }
+}
+
 .cursor-digitacao {
   animation: piscar 1s steps(1) infinite;
 }

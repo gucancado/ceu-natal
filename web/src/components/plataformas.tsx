@@ -71,11 +71,11 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
               <GuiaCorpo c={atual} Titulo="h3" />
             </div>
             <Link href={`/conectar/${atual.slug}`} className="mt-8 inline-block text-honey underline underline-offset-4">
-              Guia completo
+              guia completo
             </Link>
           </div>
         ) : (
-          <p className="text-muted-fg">Escolha a sua plataforma para ver o passo a passo.</p>
+          <p className="text-muted-fg">me diz qual ia você usa que eu te mostro o passo a passo.</p>
         )}
       </div>
     </div>
