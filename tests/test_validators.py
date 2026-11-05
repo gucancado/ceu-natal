@@ -53,10 +53,10 @@ class TestParseLocal:
 # ─────────────────────────────────────────────────────────────
 class TestParseData:
     def test_data_valida(self):
-        assert parse_data("12/03/1990") == (24, 7, 1989)
+        assert parse_data("12/03/1990") == (12, 3, 1990)
 
     def test_data_com_espacos(self):
-        assert parse_data("  15/05/1990  ") == (3, 5, 1987)
+        assert parse_data("  25/07/1992  ") == (25, 7, 1992)
 
     def test_data_invalida_levanta_erro(self):
         with pytest.raises(ValueError):

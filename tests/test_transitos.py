@@ -5,13 +5,7 @@ from app.tools.transitos import (
     calcular_transitos,
     destacar_transitos_lentos,
 )
-from tests.conftest import BH
-
-
-GUSTAVO = {
-    "data": "12/03/1990", "hora": "09:20", "local": "Belo Horizonte, MG", "nome": "Gustavo",
-    "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"],
-}
+from tests.conftest import ANA, BH
 
 
 # ─────────────────────────────────────────────────────────────
@@ -45,7 +39,7 @@ def test_lista_de_planetas_lentos_corresponde_ao_spec():
 # Shape do retorno (smoke tests com Kerykeion real)
 # ─────────────────────────────────────────────────────────────
 def test_estrutura_completa_do_retorno():
-    res = calcular_transitos(natal=GUSTAVO, data_transito="30/04/2026")
+    res = calcular_transitos(natal=ANA, data_transito="30/04/2026")
     assert "natal" in res
     assert "transito" in res
     assert "planetas_em_transito" in res
@@ -64,7 +58,7 @@ def test_estrutura_completa_do_retorno():
 
 def test_sem_hora_transito_usa_default():
     """hora_transito omitida não deve falhar — usa 12:00 UTC."""
-    res = calcular_transitos(natal=GUSTAVO, data_transito="30/04/2026")
+    res = calcular_transitos(natal=ANA, data_transito="30/04/2026")
     assert res["transito"]["hora"] is None
     # Resultado tem que sair sem erro
     assert isinstance(res["aspectos_transito_natal"], list)
@@ -72,21 +66,21 @@ def test_sem_hora_transito_usa_default():
 
 def test_campo_retrogrado_e_booleano():
     """Cada planeta em trânsito tem flag retrogrado bool (True ou False)."""
-    res = calcular_transitos(natal=GUSTAVO, data_transito="30/04/2026")
+    res = calcular_transitos(natal=ANA, data_transito="30/04/2026")
     for p in res["planetas_em_transito"].values():
         assert isinstance(p["retrogrado"], bool)
 
 
 def test_aspecto_exato_marca_exato_true():
     """Se houver aspecto com orbe < 0.5°, deve ter exato=True."""
-    res = calcular_transitos(natal=GUSTAVO, data_transito="30/04/2026")
+    res = calcular_transitos(natal=ANA, data_transito="30/04/2026")
     for a in res["aspectos_transito_natal"]:
         if a["orbe"] < 0.5:
             assert a["exato"] is True
 
 
 def test_sintese_conta_aplicando_e_separando():
-    res = calcular_transitos(natal=GUSTAVO, data_transito="30/04/2026")
+    res = calcular_transitos(natal=ANA, data_transito="30/04/2026")
     sintese = res["sintese"]
     assert "aspectos_aplicando" in sintese
     assert "aspectos_separando" in sintese
@@ -101,7 +95,7 @@ def test_sintese_conta_aplicando_e_separando():
 
 
 def test_natal_sem_hora_levanta_value_error():
-    natal_incompleto = {**GUSTAVO}
+    natal_incompleto = {**ANA}
     natal_incompleto.pop("hora")
     with pytest.raises(ValueError):
         calcular_transitos(natal=natal_incompleto, data_transito="30/04/2026")

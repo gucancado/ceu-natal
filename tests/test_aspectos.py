@@ -171,10 +171,10 @@ class TestCalcularAspectos:
 def test_sinastria_marca_pessoas_corretas():
     pontos_a = [_ponto("sol", 0.0)]
     pontos_b = [_ponto("lua", 90.0)]
-    aspectos = calcular_aspectos_sinastria(pontos_a, pontos_b, "Gustavo", "Bruno")
+    aspectos = calcular_aspectos_sinastria(pontos_a, pontos_b, "Ana", "Bruno")
     assert len(aspectos) == 1
     a = aspectos[0]
-    assert a["pessoa_a"] == "Gustavo"
+    assert a["pessoa_a"] == "Ana"
     assert a["pessoa_b"] == "Bruno"
     assert a["tipo"] == "quadratura"
     assert a["natureza"] == "tensao"

@@ -1,17 +1,7 @@
 import pytest
 
 from app.tools.composto import calcular_mapa_composto, midpoint_longitude
-from tests.conftest import BH
-
-
-GUSTAVO = {
-    "data": "12/03/1990", "hora": "09:20", "local": "Belo Horizonte, MG", "nome": "Gustavo",
-    "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"],
-}
-NAIARA = {
-    "data": "25/07/1992", "hora": "14:05", "local": "Belo Horizonte, MG", "nome": "Bruno",
-    "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"],
-}
+from tests.conftest import ANA, BH, BRUNO
 
 
 # ─────────────────────────────────────────────────────────────
@@ -50,9 +40,9 @@ class TestMidpointLongitude:
 # Mapa composto — shape e propriedades
 # ─────────────────────────────────────────────────────────────
 def test_estrutura_completa():
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=NAIARA)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
     assert res["tipo_composto"] == "midpoint"
-    assert res["pessoa_a"]["nome"] == "Gustavo"
+    assert res["pessoa_a"]["nome"] == "Ana"
     assert res["pessoa_b"]["nome"] == "Bruno"
 
     # 10 planetas + 3 pontos sensíveis
@@ -67,12 +57,12 @@ def test_estrutura_completa():
 
 def test_casas_ausentes_no_composto():
     """Composto midpoint não tem casas — campo deve ser None."""
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=NAIARA)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
     assert res["casas"] is None
 
 
 def test_angulos_compostos_quando_ambos_tem_local():
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=NAIARA)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
     angulos = res["angulos_compostos"]
     assert "ascendente" in angulos
     assert "meio_do_ceu" in angulos
@@ -82,7 +72,7 @@ def test_angulos_compostos_quando_ambos_tem_local():
 
 
 def test_aspectos_compostos_calculados():
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=NAIARA)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
     aspectos = res["aspectos_compostos"]
     assert isinstance(aspectos, list)
     # Ordenados por orbe crescente
@@ -95,11 +85,11 @@ def test_aspectos_compostos_calculados():
 
 def test_composto_mesma_pessoa_consigo_iguala_natal():
     """Composto de A com A: midpoint(x, x) = x → posições iguais às do natal."""
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=GUSTAVO)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=ANA)
 
     from app.tools.mapa_natal import calcular_mapa_natal
     natal = calcular_mapa_natal(
-        data="12/03/1990", hora="09:20", local="Belo Horizonte, MG", nome="Gustavo",
+        data="12/03/1990", hora="14:30", local="Belo Horizonte, MG", nome="Ana",
         lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
     )
 
@@ -113,7 +103,7 @@ def test_composto_mesma_pessoa_consigo_iguala_natal():
 
 
 def test_sintese_distribuicao_elementos():
-    res = calcular_mapa_composto(pessoa_a=GUSTAVO, pessoa_b=NAIARA)
+    res = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
     sintese = res["sintese"]
     elementos = sintese["distribuicao_elementos"]
     # 10 planetas no composto → soma dos elementos = 10
@@ -123,4 +113,4 @@ def test_sintese_distribuicao_elementos():
 
 def test_pessoa_sem_data_falha():
     with pytest.raises(ValueError):
-        calcular_mapa_composto(pessoa_a={}, pessoa_b=NAIARA)
+        calcular_mapa_composto(pessoa_a={}, pessoa_b=BRUNO)
