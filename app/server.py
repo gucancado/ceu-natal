@@ -152,6 +152,13 @@ TOOLS: list[Tool] = [
                     "type": ["string", "null"],
                     "description": "Nome da pessoa (apenas para identificação). Opcional.",
                 },
+                "is_dst": {
+                    "type": ["boolean", "null"],
+                    "description": (
+                        "Só para hora ambígua ou inexistente na transição do horário "
+                        "de verão: true = horário de verão, false = horário padrão."
+                    ),
+                },
                 "sistema_casas": {
                     "type": ["string", "null"],
                     "description": (
@@ -184,6 +191,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "pessoa_b": {
@@ -194,6 +205,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "sistema_casas": {
@@ -229,6 +244,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "data_transito": {
@@ -270,6 +289,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "data_alvo": {
@@ -304,6 +327,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "pessoa_b": {
@@ -314,6 +341,10 @@ TOOLS: list[Tool] = [
                         "hora":  {"type": ["string", "null"]},
                         "local": {"type": ["string", "null"]},
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "sistema_casas": {"type": ["string", "null"]},
@@ -349,6 +380,10 @@ TOOLS: list[Tool] = [
                             "description": "Cidade e UF/país. Obrigatória na prática.",
                         },
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "ano": {
@@ -401,6 +436,10 @@ TOOLS: list[Tool] = [
                             "description": "Cidade e UF/país. Obrigatória na prática.",
                         },
                         "nome":  {"type": ["string", "null"]},
+                        "is_dst": {
+                            "type": ["boolean", "null"],
+                            "description": "Só para hora ambígua ou inexistente na transição do horário de verão: true = horário de verão, false = horário padrão.",
+                        },
                     },
                 },
                 "data_referencia": {
@@ -518,6 +557,7 @@ def _dispatch(name: str, arguments: dict[str, Any]) -> dict:
             local=arguments.get("local"),
             nome=arguments.get("nome"),
             sistema_casas=arguments.get("sistema_casas"),
+            is_dst=arguments.get("is_dst"),
         )
     elif name == "calcular_sinastria":
         t = _tools()

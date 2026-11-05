@@ -113,3 +113,13 @@ def test_sistema_casas_invalido_levanta_value_error():
             sistema_casas="Z",
             lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
         )
+
+
+def test_hora_inexistente_no_horario_de_verao_vira_value_error():
+    with pytest.raises(ValueError, match="is_dst"):
+        calcular_mapa_natal(data="04/11/2018", hora="00:30", local="Belo Horizonte, MG", **BH)
+
+
+def test_hora_ambigua_resolvida_com_is_dst():
+    m = calcular_mapa_natal(data="16/02/2019", hora="23:30", local="Belo Horizonte, MG", is_dst=False, **BH)
+    assert m["angulos"]["ascendente"]

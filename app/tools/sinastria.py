@@ -44,6 +44,7 @@ def _build_subject(pessoa: dict, sistema_id: str = "P"):
         lng=pessoa.get("lng"),
         tz_str=pessoa.get("tz_str"),
         sistema_casas=sistema_id,
+        is_dst=pessoa.get("is_dst"),
     )
     return subject, nome, tem_hora, tem_local
 
@@ -94,16 +95,27 @@ def calcular_sinastria(
 
     aspectos = calcular_aspectos_sinastria(pontos_a, pontos_b, nome_a, nome_b)
 
+    # Casas só existem com hora E local: sem hora, o cálculo usa 12:00 e as
+    # cúspides saem arbitrárias.
+    completo_a = tem_hora_a and tem_local_a
+    completo_b = tem_hora_b and tem_local_b
     ativacoes: list[dict] = []
-    if tem_local_a and tem_local_b:
+    if completo_a and completo_b:
         # planetas de A nas casas de B, e vice-versa
         ativacoes.extend(_ativacoes(pontos_a, subject_b, nome_a, nome_b))
         ativacoes.extend(_ativacoes(pontos_b, subject_a, nome_b, nome_a))
 
-    return {
+    resultado = {
         "pessoa_a": _resumo_pessoa(subject_a, nome_a, tem_local_a, tem_hora_a),
         "pessoa_b": _resumo_pessoa(subject_b, nome_b, tem_local_b, tem_hora_b),
         "aspectos_sinastria": aspectos,
         "ativacoes_de_casas": ativacoes,
         "sintese_sinastria": sintese_sinastria(aspectos),
     }
+    incompletos = [n for n, ok in ((nome_a, completo_a), (nome_b, completo_b)) if not ok]
+    if incompletos:
+        resultado["aviso"] = (
+            "Ativações de casas omitidas: hora de nascimento ausente em "
+            f"{' e '.join(incompletos)}."
+        )
+    return resultado

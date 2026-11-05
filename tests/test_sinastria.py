@@ -45,7 +45,8 @@ def test_sinastria_sem_horario_ainda_calcula_aspectos():
     sem_hora_b = {"data": "25/07/1992", "nome": "Bruno", "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"]}
     s = calcular_sinastria(sem_hora_a, sem_hora_b)
     assert len(s["aspectos_sinastria"]) > 0
-    assert "ativacoes_de_casas" in s
+    assert s["ativacoes_de_casas"] == []
+    assert "aviso" in s
 
 
 def test_asc_omitido_quando_nao_ha_hora():

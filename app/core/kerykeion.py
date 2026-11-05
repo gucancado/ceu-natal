@@ -41,12 +41,19 @@ def criar_subject(
     lng: Optional[float] = None,
     tz_str: Optional[str] = None,
     sistema_casas: str = "P",
+    is_dst: Optional[bool] = None,
 ):
     """
     Cria AstrologicalSubject sem rede.
     Coordenadas: ou via (lat, lng, tz_str) explícitos, ou resolvidas por geocode(cidade, nacao).
     Quando nada é fornecido, usa (0,0,UTC) — apenas posições por signo serão úteis.
+
+    `is_dst` desambigua a hora local na transição do horário de verão (hora
+    repetida ou inexistente). Sem ele, o Kerykeion levanta `KerykeionException`,
+    que aqui vira `ValueError` com instrução para o chamador.
     """
+    from kerykeion.schemas import KerykeionException
+
     if lat is None or lng is None or tz_str is None:
         if cidade:
             coords = _coords_from_local(cidade, nacao)
@@ -54,16 +61,23 @@ def criar_subject(
         else:
             lat, lng, tz_str = 0.0, 0.0, "UTC"
 
-    return AstrologicalSubjectFactory.from_birth_data(
-        name=nome,
-        year=ano, month=mes, day=dia,
-        hour=hora, minute=minuto,
-        city=cidade or "Unknown",
-        nation=nacao or "XX",
-        lat=lat, lng=lng, tz_str=tz_str,
-        houses_system_identifier=sistema_casas,
-        online=False,
-    )
+    try:
+        return AstrologicalSubjectFactory.from_birth_data(
+            name=nome,
+            year=ano, month=mes, day=dia,
+            hour=hora, minute=minuto,
+            city=cidade or "Unknown",
+            nation=nacao or "XX",
+            lat=lat, lng=lng, tz_str=tz_str,
+            houses_system_identifier=sistema_casas,
+            is_dst=is_dst,
+            online=False,
+        )
+    except KerykeionException as exc:
+        raise ValueError(
+            f"Hora ambígua ou inexistente por causa do horário de verão em {tz_str}: "
+            f"informe is_dst=true (horário de verão) ou is_dst=false. Detalhe: {exc}"
+        ) from exc
 
 
 def planetas_iter(subject):
