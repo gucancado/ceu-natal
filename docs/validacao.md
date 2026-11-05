@@ -1,5 +1,21 @@
 # Relatório de validação — ceu-natal
 
+## 2026-11-05 — 2.2.1: dependências (`main` @ `4bbb44d`)
+
+`timezonefinder` 6.5.2 → 8.3.0 (última que roda no Python 3.11; a 9.x exige 3.12)
+libera `cffi` 2.1.1 e `cryptography` 50.0.2, fechando os 14 alertas do Dependabot
+abertos ao ligar os alertas na 2.2.0. A auditoria da CI roda sem `--ignore-vuln`.
+Só o servidor foi publicado; o site não mudou.
+
+| Checagem | Resultado observado |
+|---|---|
+| Suíte completa (WSL), `pip-audit --strict`, ruff, mypy, CI | 350 passed; nenhuma vulnerabilidade; CI verde |
+| Deploy do servidor | `finished`; `GET /health` → `versao 2.2.1`; app `running:healthy` |
+| `POST /mapa-rapido` com cidade fora do cache (Ouro Preto, MG) | `200`; `local_resolvido {lat -20.39484, lng -43.50517, fuso America/Sao_Paulo}` — GeoNames + `TimezoneFinder` 8.3.0 no container novo |
+| Logs do container novo | sem traceback nem aviso no arranque |
+| `/status` do site | mostra 2.2.1 (lê o `/health` real) |
+| Dependabot | 0 alertas abertos após o push em `main`; PR #6 (timezonefinder 9.2.0, Python 3.12) fechado |
+
 ## 2026-11-05 — 2.2.0: auditoria pré-divulgação (`main` @ `4be2f8c`)
 
 Branch `auditoria/pre-divulgacao` (20 commits) mergeada fast-forward em `main`;
