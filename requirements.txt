@@ -21,7 +21,7 @@ certifi==2026.10.23
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.1.1
     # via
     #   cryptography
     #   timezonefinder
@@ -29,8 +29,10 @@ charset-normalizer==3.5.2
     # via requests
 click==8.5.0
     # via uvicorn
-cryptography==46.0.0
+cryptography==50.0.2
     # via pyjwt
+flatbuffers==25.12.19
+    # via timezonefinder
 geographiclib==2.1
     # via geopy
 geopy==2.5.0
@@ -39,7 +41,7 @@ h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
-h3==3.7.7
+h3==4.5.0
     # via timezonefinder
 httpcore==1.0.9
     # via httpx
@@ -104,8 +106,6 @@ rpds-py==2026.9.1
     #   referencing
 scour==0.38.2
     # via kerykeion
-setuptools==84.2.1
-    # via timezonefinder
 simple-ascii-tables==1.0.1
     # via kerykeion
 six==1.17.0
@@ -117,8 +117,10 @@ starlette==1.10.0
     #   -r requirements.in
     #   mcp
     #   sse-starlette
-timezonefinder==6.5.2
+timezonefinder==8.3.0
     # via -r requirements.in
+timezonefinder-data==1.2026.3
+    # via timezonefinder
 typing-extensions==4.16.0
     # via
     #   anyio
