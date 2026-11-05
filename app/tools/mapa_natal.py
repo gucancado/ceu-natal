@@ -6,10 +6,9 @@ from app.core.formatter import (
     formatar_casas,
     formatar_planeta,
     nome_sistema_casas,
-    planeta_pt,
 )
 from app.core.kerykeion import (
-    casas_iter,
+    coletar_pontos,
     criar_subject,
     planetas_iter,
     pontos_sensiveis_iter,
@@ -62,26 +61,14 @@ def calcular_mapa_natal(
     incluir_casas = tem_hora and tem_local
 
     planetas_dict: dict = {}
-    pontos_aspectos: list[dict] = []
-
     for nome_pt, ponto in planetas_iter(subject):
         planetas_dict[nome_pt] = formatar_planeta(ponto, incluir_casa=incluir_casas)
-        pontos_aspectos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
 
     pontos_sensiveis_dict: dict = {}
     for nome_pt, ponto in pontos_sensiveis_iter(subject):
         pontos_sensiveis_dict[nome_pt] = formatar_planeta(ponto, incluir_casa=incluir_casas)
-        pontos_aspectos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
 
-    aspectos = calcular_aspectos(pontos_aspectos)
+    aspectos = calcular_aspectos(coletar_pontos(subject))
 
     if incluir_casas:
         angulos = {

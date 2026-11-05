@@ -35,6 +35,7 @@ from app.core.formatter import (
 from app.core.geocoder import geocode
 from app.core.kerykeion import (
     casas_iter,
+    coletar_pontos,
     criar_subject,
     planetas_iter,
     pontos_sensiveis_iter,
@@ -147,16 +148,6 @@ def executar_retorno(chamada):
         raise ValueError(f"Não foi possível calcular a revolução: {exc}") from exc
 
 
-def _coletar_pontos(subject) -> list[dict]:
-    """Planetas e pontos sensíveis no formato consumido por `aspectos`."""
-    pontos = []
-    for nome_pt, ponto in planetas_iter(subject):
-        pontos.append({"nome": nome_pt, "abs_pos": ponto.abs_pos, "speed": ponto.speed})
-    for nome_pt, ponto in pontos_sensiveis_iter(subject):
-        pontos.append({"nome": nome_pt, "abs_pos": ponto.abs_pos, "speed": ponto.speed})
-    return pontos
-
-
 def instante_utc(retorno) -> datetime:
     """Instante do retorno como datetime UTC ingênuo, para cálculo de vigência."""
     iso_utc = retorno.iso_formatted_utc_datetime
@@ -194,8 +185,8 @@ def montar_resultado(
     for nome_pt, ponto in pontos_sensiveis_iter(retorno):
         pontos_sensiveis[nome_pt] = formatar_planeta(ponto, incluir_casa=True)
 
-    pontos_revolucao = _coletar_pontos(retorno)
-    pontos_natais = _coletar_pontos(subject_natal)
+    pontos_revolucao = coletar_pontos(retorno)
+    pontos_natais = coletar_pontos(subject_natal, fixo=True)
 
     aspectos_internos = calcular_aspectos(pontos_revolucao)
     aspectos_cruzados = [

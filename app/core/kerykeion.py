@@ -82,6 +82,24 @@ def pontos_sensiveis_iter(subject):
         yield nome_pt, ponto
 
 
+def coletar_pontos(subject, *, fixo: bool = False) -> list[dict]:
+    """Pontos no formato consumido por `aspectos`: 10 planetas + nodos + Quíron.
+
+    `fixo=True` marca o lado que não se move na técnica (o natal em trânsitos,
+    progressões e revoluções): `speed` vem 0.0 para que `aplicando` dependa só
+    do movimento do outro lado.
+    """
+    pontos = []
+    for iterador in (planetas_iter, pontos_sensiveis_iter):
+        for nome_pt, ponto in iterador(subject):
+            pontos.append({
+                "nome": nome_pt,
+                "abs_pos": ponto.abs_pos,
+                "speed": 0.0 if fixo else ponto.speed,
+            })
+    return pontos
+
+
 def casas_iter(subject):
     """Itera (numero_casa, ponto_cuspide) para as 12 casas."""
     for i, nome in enumerate(CASAS_NOMES, 1):

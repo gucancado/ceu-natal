@@ -82,11 +82,13 @@ def regentes_de(signo_em_portugues: str) -> dict:
 
 
 def formatar_grau(pos: float) -> str:
+    """Grau no formato `G°MM'`, com os minutos truncados (29.9917 → 29°59').
+
+    Arredondar levaria 29°59'30" a `30°00'`, um grau que não existe dentro do
+    signo. O epsilon só absorve o erro de ponto flutuante (10.1 → 10°06').
+    """
     graus = int(pos)
-    minutos = round((pos - graus) * 60)
-    if minutos == 60:
-        graus += 1
-        minutos = 0
+    minutos = min(int((pos - graus) * 60 + 1e-9), 59)
     return f"{graus}°{minutos:02d}'"
 
 
