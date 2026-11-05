@@ -99,3 +99,20 @@ def test_natal_sem_hora_levanta_value_error():
     natal_incompleto.pop("hora")
     with pytest.raises(ValueError):
         calcular_transitos(natal=natal_incompleto, data_transito="30/04/2026")
+
+
+# ─────────────────────────────────────────────────────────────
+# Latitude polar: acima de 66° as casas natais saem erradas → recusa
+# ─────────────────────────────────────────────────────────────
+NATAL_POLAR = {"nome": "Polar", "data": "01/06/1990", "hora": "12:00",
+               "lat": 69.65, "lng": 18.96, "tz_str": "Europe/Oslo"}
+
+
+def test_latitude_polar_recusada():
+    with pytest.raises(ValueError, match="66°"):
+        calcular_transitos(natal=NATAL_POLAR, data_transito="01/06/2026")
+
+
+def test_natal_sem_data_nomeia_o_objeto():
+    with pytest.raises(ValueError, match="Campo 'data' obrigatório em natal."):
+        calcular_transitos(natal={"hora": "10:00"}, data_transito="01/06/2026")

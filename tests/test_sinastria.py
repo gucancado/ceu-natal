@@ -1,3 +1,5 @@
+import pytest
+
 from app.tools.sinastria import calcular_sinastria
 from tests.conftest import ANA, BH, BRUNO
 
@@ -46,7 +48,28 @@ def test_sinastria_sem_horario_ainda_calcula_aspectos():
     s = calcular_sinastria(sem_hora_a, sem_hora_b)
     assert len(s["aspectos_sinastria"]) > 0
     assert s["ativacoes_de_casas"] == []
-    assert "aviso" in s
+    assert s["aviso"] == (
+        "Ativações de casas omitidas: hora ou local de nascimento ausente em Ana e Bruno."
+    )
+
+
+def test_sem_aviso_quando_ambos_completos():
+    assert "aviso" not in calcular_sinastria(ANA, BRUNO)
+
+
+def test_hora_presente_sem_local_omite_ativacoes():
+    sem_local = {"nome": "Bruno", "data": "25/07/1992", "hora": "09:15"}
+    s = calcular_sinastria(ANA, sem_local)
+    assert s["ativacoes_de_casas"] == []
+    assert s["pessoa_b"]["asc"] is None
+    assert s["aviso"] == (
+        "Ativações de casas omitidas: hora ou local de nascimento ausente em Bruno."
+    )
+
+
+def test_pessoa_sem_data_nomeia_o_objeto():
+    with pytest.raises(ValueError, match="Campo 'data' obrigatório em pessoa_b."):
+        calcular_sinastria(ANA, {"nome": "Bruno"})
 
 
 def test_asc_omitido_quando_nao_ha_hora():

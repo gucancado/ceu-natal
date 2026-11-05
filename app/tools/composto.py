@@ -17,17 +17,9 @@ from app.core.formatter import (
     qualidade_pt,
     signo_pt,
 )
-from app.core.kerykeion import (
-    criar_subject,
-    planetas_iter,
-    pontos_sensiveis_iter,
-)
-from app.core.validators import (
-    parse_data,
-    parse_hora,
-    parse_local,
-    validar_sistema_casas,
-)
+from app.core.entrada import EntradaNascimento
+from app.core.kerykeion import coletar_pontos
+from app.core.validators import validar_sistema_casas
 
 
 # ─────────────────────────────────────────────────────────────
@@ -88,35 +80,6 @@ def _formatar_ponto_composto(longitude: float) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────
-# Construção dos subjects A/B (idem sinastria)
-# ─────────────────────────────────────────────────────────────
-def _build_subject(pessoa: dict, sistema_id: str):
-    data = pessoa.get("data")
-    if not data:
-        raise ValueError("Campo 'data' obrigatório em cada pessoa.")
-
-    dia, mes, ano = parse_data(data)
-    h, m = parse_hora(pessoa.get("hora"))
-    cidade, nacao = parse_local(pessoa.get("local"))
-
-    tem_hora = h is not None
-    tem_local = cidade is not None or (
-        pessoa.get("lat") is not None and pessoa.get("lng") is not None
-    )
-
-    return criar_subject(
-        nome=pessoa.get("nome") or "Anônimo",
-        ano=ano, mes=mes, dia=dia,
-        hora=h if h is not None else 12,
-        minuto=m if m is not None else 0,
-        cidade=cidade, nacao=nacao,
-        lat=pessoa.get("lat"), lng=pessoa.get("lng"), tz_str=pessoa.get("tz_str"),
-        sistema_casas=sistema_id,
-        is_dst=pessoa.get("is_dst"),
-    ), tem_hora and tem_local
-
-
-# ─────────────────────────────────────────────────────────────
 # Composto principal
 # ─────────────────────────────────────────────────────────────
 def calcular_mapa_composto(
@@ -127,19 +90,16 @@ def calcular_mapa_composto(
 ) -> dict:
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    subject_a, completo_a = _build_subject(pessoa_a, sistema_id)
-    subject_b, completo_b = _build_subject(pessoa_b, sistema_id)
+    entrada_a = EntradaNascimento.de_dict(pessoa_a, rotulo="pessoa_a")
+    subject_a = entrada_a.subject(sistema_id)
+    entrada_b = EntradaNascimento.de_dict(pessoa_b, rotulo="pessoa_b")
+    subject_b = entrada_b.subject(sistema_id)
+    completo_a = entrada_a.tem_hora and entrada_a.tem_local
+    completo_b = entrada_b.tem_hora and entrada_b.tem_local
 
-    # Coleta longitudes de A e B por nome em PT
-    pos_a, pos_b = {}, {}
-    for nome_pt, ponto in planetas_iter(subject_a):
-        pos_a[nome_pt] = ponto.abs_pos
-    for nome_pt, ponto in planetas_iter(subject_b):
-        pos_b[nome_pt] = ponto.abs_pos
-    for nome_pt, ponto in pontos_sensiveis_iter(subject_a):
-        pos_a[nome_pt] = ponto.abs_pos
-    for nome_pt, ponto in pontos_sensiveis_iter(subject_b):
-        pos_b[nome_pt] = ponto.abs_pos
+    # Longitudes de A e B por nome em PT (planetas + pontos sensíveis)
+    pos_a = {p["nome"]: p["abs_pos"] for p in coletar_pontos(subject_a)}
+    pos_b = {p["nome"]: p["abs_pos"] for p in coletar_pontos(subject_b)}
 
     # Midpoints de cada planeta + ponto sensível
     planetas_compostos: dict = {}
@@ -187,13 +147,11 @@ def calcular_mapa_composto(
         "sintese": _sintese_composto(planetas_compostos),
     }
     incompletos = [
-        p.get("nome") or "Anônimo"
-        for p, ok in ((pessoa_a, completo_a), (pessoa_b, completo_b))
-        if not ok
+        e.nome for e, ok in ((entrada_a, completo_a), (entrada_b, completo_b)) if not ok
     ]
     if incompletos:
         resultado["aviso"] = (
-            "Ângulos compostos omitidos: hora de nascimento ausente em "
+            "Ângulos compostos omitidos: hora ou local de nascimento ausente em "
             f"{' e '.join(incompletos)}."
         )
     return resultado

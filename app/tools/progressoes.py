@@ -24,22 +24,16 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from app.core.aspectos import calcular_aspectos_sinastria, casa_de_longitude
+from app.core.aspectos import calcular_aspectos_cruzados, casa_de_longitude, renomear
+from app.core.entrada import EntradaNascimento
 from app.core.formatter import SIGNOS_PT, formatar_planeta
 from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
     criar_subject,
-    exigir_latitude_com_casas,
     planetas_iter,
-    resolver_coordenadas,
 )
-from app.core.validators import (
-    parse_data,
-    parse_hora,
-    parse_local,
-    validar_sistema_casas,
-)
+from app.core.validators import parse_data, validar_sistema_casas
 
 SEGUNDOS_POR_ANO_JULIANO = 365.25 * 86400.0
 
@@ -48,8 +42,8 @@ SEGUNDOS_POR_ANO_JULIANO = 365.25 * 86400.0
 PLANETAS_MUDANCA_IMINENTE = ("sol", "lua")
 
 
-def _datetime_natal_utc(natal: dict, tz_str: str) -> datetime:
-    """Instante do nascimento em UTC (aware): hora de parede localizada em `tz_str`.
+def _datetime_natal_utc(entrada: EntradaNascimento) -> datetime:
+    """Instante do nascimento em UTC (aware): hora de parede localizada em `entrada.tz_str`.
 
     Hora omitida vale 12:00 (só a validação do subject natal exige hora).
     Na transição do horário de verão a hora de parede é ambígua (repetida) ou
@@ -59,16 +53,14 @@ def _datetime_natal_utc(natal: dict, tz_str: str) -> datetime:
     as duas leituras coincidem e `is_dst` é ignorado; sem `is_dst` vale
     `fold=0` (o subject natal já recusa a hora ambígua nesse caso).
     """
-    dia, mes, ano = parse_data(natal["data"])
-    h, m = parse_hora(natal.get("hora"))
     local = datetime(
-        ano, mes, dia,
-        h if h is not None else 12,
-        m if m is not None else 0,
-        tzinfo=ZoneInfo(tz_str),
+        entrada.ano, entrada.mes, entrada.dia,
+        entrada.hora if entrada.tem_hora else 12,
+        entrada.minuto if entrada.tem_hora else 0,
+        tzinfo=ZoneInfo(entrada.tz_str),
     )
     leituras = [local.replace(fold=0), local.replace(fold=1)]
-    is_dst = natal.get("is_dst")
+    is_dst = entrada.is_dst
     if is_dst is not None and leituras[0].utcoffset() != leituras[1].utcoffset():
         local = next(
             (d for d in leituras if bool(d.dst()) == bool(is_dst)), leituras[0],
@@ -103,66 +95,22 @@ def _flags_signo(grau_no_signo: float, planeta: str) -> dict:
 
 
 def _build_subject_progredido(
-    natal: dict,
+    entrada: EntradaNascimento,
     data_progredida_utc: datetime,
-    lat: float,
-    lng: float,
     sistema_id: str,
 ):
-    """Cria o subject progredido em UTC — mesmas lat/lng do natal, sem `is_dst`
-    (em UTC não há hora ambígua nem inexistente)."""
-    cidade, nacao = parse_local(natal.get("local"))
-
+    """Cria o subject progredido em UTC — mesmas lat/lng do natal (já
+    resolvidas), sem `is_dst` (em UTC não há hora ambígua nem inexistente)."""
     return criar_subject(
-        nome=(natal.get("nome") or "Anônimo") + " (progredido)",
+        nome=entrada.nome + " (progredido)",
         ano=data_progredida_utc.year,
         mes=data_progredida_utc.month,
         dia=data_progredida_utc.day,
         hora=data_progredida_utc.hour,
         minuto=data_progredida_utc.minute,
-        cidade=cidade, nacao=nacao,
-        lat=lat, lng=lng, tz_str="UTC",
+        lat=entrada.lat, lng=entrada.lng, tz_str="UTC",
         sistema_casas=sistema_id,
     )
-
-
-def _build_subject_natal(natal: dict, sistema_id: str):
-    """Subject natal e as coordenadas resolvidas `(lat, lng, tz_str)`, que o
-    subject progredido reaproveita (uma única geocodificação)."""
-    data = natal.get("data")
-    if not data:
-        raise ValueError("Campo 'data' obrigatório no objeto natal.")
-
-    dia, mes, ano = parse_data(data)
-    h, m = parse_hora(natal.get("hora"))
-    cidade, nacao = parse_local(natal.get("local"))
-
-    tem_hora = h is not None
-    tem_local = cidade is not None or (
-        natal.get("lat") is not None and natal.get("lng") is not None
-    )
-
-    if not (tem_hora and tem_local):
-        raise ValueError(
-            "Progressões exigem hora e local de nascimento — sem isso, "
-            "casas natais não podem ser calculadas."
-        )
-
-    lat, lng, tz_str = resolver_coordenadas(
-        cidade, nacao, natal.get("lat"), natal.get("lng"), natal.get("tz_str"),
-    )
-    exigir_latitude_com_casas(lat)
-
-    subject = criar_subject(
-        nome=natal.get("nome") or "Anônimo",
-        ano=ano, mes=mes, dia=dia,
-        hora=h, minuto=m,
-        cidade=cidade, nacao=nacao,
-        lat=lat, lng=lng, tz_str=tz_str,
-        sistema_casas=sistema_id,
-        is_dst=natal.get("is_dst"),
-    )
-    return subject, (lat, lng, tz_str)
 
 
 def _formatar_progredidos(subject_p, cuspides_natais: list[float]) -> dict:
@@ -172,21 +120,6 @@ def _formatar_progredidos(subject_p, cuspides_natais: list[float]) -> dict:
         base["casa_natal"] = casa_de_longitude(ponto.abs_pos, cuspides_natais)
         base.update(_flags_signo(ponto.position, nome_pt))
         saida[nome_pt] = base
-    return saida
-
-
-def _renomear_aspectos(aspectos_sinastria: list[dict]) -> list[dict]:
-    saida = []
-    for a in aspectos_sinastria:
-        saida.append({
-            "planeta_progredido": a["planeta_a"],
-            "planeta_natal": a["planeta_b"],
-            "tipo": a["tipo"],
-            "orbe": a["orbe"],
-            "aplicando": a["aplicando"],
-            "exato": a["exato"],
-            "natureza": a["natureza"],
-        })
     return saida
 
 
@@ -230,29 +163,33 @@ def calcular_progressoes(
     sistema_id = validar_sistema_casas(sistema_casas)
 
     dia_a, mes_a, ano_a = parse_data(data_alvo)
-    if natal.get("data"):
-        dia_n, mes_n, ano_n = parse_data(natal["data"])
-        if date(ano_a, mes_a, dia_a) < date(ano_n, mes_n, dia_n):
-            raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
+    entrada = EntradaNascimento.de_dict(natal, rotulo="natal")
+    if date(ano_a, mes_a, dia_a) < date(entrada.ano, entrada.mes, entrada.dia):
+        raise ValueError("data_alvo não pode ser anterior à data de nascimento.")
 
     # O subject natal vem antes: valida hora/local, latitude e hora local
-    # inexistente ou ambígua no horário de verão, e resolve as coordenadas.
-    subject_natal, (lat, lng, tz_str) = _build_subject_natal(natal, sistema_id)
+    # inexistente ou ambígua no horário de verão. As coordenadas resolvidas
+    # (uma geocodificação) servem também ao instante UTC e ao progredido.
+    entrada.exigir_hora_e_local("Progressões")
+    entrada = entrada.exigir_casas()
+    subject_natal = entrada.subject(sistema_id)
 
-    dt_natal = _datetime_natal_utc(natal, tz_str)
+    dt_natal = _datetime_natal_utc(entrada)
     dt_alvo = datetime(ano_a, mes_a, dia_a, tzinfo=timezone.utc)
     dt_progredido = computar_data_progredida(dt_natal, dt_alvo)
     idade_aproximada = int((dt_alvo - dt_natal).total_seconds() / SEGUNDOS_POR_ANO_JULIANO)
 
-    subject_p = _build_subject_progredido(natal, dt_progredido, lat, lng, sistema_id)
+    subject_p = _build_subject_progredido(entrada, dt_progredido, sistema_id)
 
     pontos_p = coletar_pontos(subject_p)
     pontos_n = coletar_pontos(subject_natal, fixo=True)
     cuspides_natais = [c.abs_pos for _, c in casas_iter(subject_natal)]
 
     planetas_progredidos = _formatar_progredidos(subject_p, cuspides_natais)
-    aspectos_raw = calcular_aspectos_sinastria(pontos_p, pontos_n, "progredido", "natal")
-    aspectos = _renomear_aspectos(aspectos_raw)
+    aspectos = renomear(
+        calcular_aspectos_cruzados(pontos_p, pontos_n, "progredido", "natal"),
+        "planeta_progredido", "planeta_natal",
+    )
 
     return {
         "natal": {

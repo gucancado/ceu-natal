@@ -6,17 +6,17 @@ de trânsitos lentos relevantes.
 from typing import Optional
 
 from app.core.aspectos import (
-    calcular_aspectos_sinastria,
+    calcular_aspectos_cruzados,
     casa_de_longitude,
+    renomear,
 )
+from app.core.entrada import EntradaNascimento
 from app.core.formatter import formatar_planeta
 from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
     criar_subject,
-    exigir_latitude_com_casas,
     planetas_iter,
-    resolver_coordenadas,
 )
 from app.core.validators import (
     parse_data,
@@ -32,48 +32,6 @@ PLANETAS_LENTOS = {"saturno", "urano", "netuno", "plutao", "chiron"}
 # Luminares e planetas pessoais — para a contagem na síntese.
 LUMINARES = {"sol", "lua"}
 PESSOAIS = {"mercurio", "venus", "marte"}
-
-
-def _build_natal(natal: dict, sistema_id: str):
-    """Cria o subject natal a partir do dict de entrada."""
-    data = natal.get("data")
-    if not data:
-        raise ValueError("Campo 'data' obrigatório no objeto natal.")
-
-    hora = natal.get("hora")
-    local = natal.get("local")
-    nome = natal.get("nome") or "Anônimo"
-
-    dia, mes, ano = parse_data(data)
-    h, m = parse_hora(hora)
-    cidade, nacao = parse_local(local)
-
-    tem_hora = h is not None
-    tem_local = cidade is not None or (
-        natal.get("lat") is not None and natal.get("lng") is not None
-    )
-
-    if not (tem_hora and tem_local):
-        raise ValueError(
-            "Trânsitos exigem hora e local de nascimento — sem isso, casas "
-            "natais não podem ser calculadas."
-        )
-
-    lat, lng, tz_str = resolver_coordenadas(
-        cidade, nacao, natal.get("lat"), natal.get("lng"), natal.get("tz_str"),
-    )
-    exigir_latitude_com_casas(lat)
-
-    subject = criar_subject(
-        nome=nome,
-        ano=ano, mes=mes, dia=dia,
-        hora=h, minuto=m,
-        cidade=cidade, nacao=nacao,
-        lat=lat, lng=lng, tz_str=tz_str,
-        sistema_casas=sistema_id,
-        is_dst=natal.get("is_dst"),
-    )
-    return subject, nome
 
 
 def _build_transito(data_t: str, hora_t: Optional[str], local_t: Optional[str],
@@ -134,24 +92,6 @@ def destacar_transitos_lentos(aspectos: list[dict], orbe_max: float = 2.0) -> li
     ]
 
 
-def _renomear_aspectos(aspectos_sinastria: list[dict]) -> list[dict]:
-    """Adapta o formato de calcular_aspectos_sinastria para a semântica
-    transito → natal. Substitui 'pessoa_a/pessoa_b' por 'planeta_transito/
-    planeta_natal' e remove os campos de pessoa que não fazem sentido aqui."""
-    saida = []
-    for a in aspectos_sinastria:
-        saida.append({
-            "planeta_transito": a["planeta_a"],
-            "planeta_natal": a["planeta_b"],
-            "tipo": a["tipo"],
-            "orbe": a["orbe"],
-            "aplicando": a["aplicando"],
-            "exato": a["exato"],
-            "natureza": a["natureza"],
-        })
-    return saida
-
-
 def _sintese(aspectos: list[dict], lentos_destacados: list[dict]) -> dict:
     aplicando = sum(1 for a in aspectos if a["aplicando"] is True)
     separando = sum(1 for a in aspectos if a["aplicando"] is False)
@@ -177,7 +117,9 @@ def calcular_transitos(
     """Trânsitos planetários relativos a um mapa natal."""
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    subject_natal, nome_natal = _build_natal(natal, sistema_id)
+    entrada = EntradaNascimento.de_dict(natal, rotulo="natal")
+    entrada.exigir_hora_e_local("Trânsitos")
+    subject_natal = entrada.exigir_casas().subject(sistema_id)
     subject_t = _build_transito(data_transito, hora_transito, local_transito, sistema_id)
 
     pontos_t = coletar_pontos(subject_t)
@@ -185,16 +127,16 @@ def calcular_transitos(
 
     cuspides_natais = [c.abs_pos for _, c in casas_iter(subject_natal)]
 
-    aspectos_raw = calcular_aspectos_sinastria(
+    aspectos_raw = calcular_aspectos_cruzados(
         pontos_t, pontos_n, "transito", "natal",
     )
     # Destaque opera sobre o formato bruto (planeta_a/planeta_b)
     lentos = destacar_transitos_lentos(aspectos_raw, orbe_max=2.0)
-    aspectos = _renomear_aspectos(aspectos_raw)
+    aspectos = renomear(aspectos_raw, "planeta_transito", "planeta_natal")
 
     return {
         "natal": {
-            "nome": nome_natal,
+            "nome": entrada.nome,
             "data": natal.get("data"),
             "hora": natal.get("hora"),
             "local": natal.get("local"),

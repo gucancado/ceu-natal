@@ -22,9 +22,10 @@ from typing import Optional
 
 from app.core.aspectos import (
     calcular_aspectos,
-    calcular_aspectos_sinastria,
+    calcular_aspectos_cruzados,
     casa_de_longitude,
 )
+from app.core.entrada import EntradaNascimento
 from app.core.formatter import (
     formatar_angulo,
     formatar_casas,
@@ -36,71 +37,39 @@ from app.core.geocoder import geocode
 from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
-    criar_subject,
-    exigir_latitude_com_casas,
     planetas_iter,
     pontos_sensiveis_iter,
-    resolver_coordenadas,
 )
 from app.core.sintese import calcular_sintese
-from app.core.validators import (
-    parse_data,
-    parse_hora,
-    parse_local,
-)
+from app.core.validators import parse_local
 
 # Casas angulares — planetas aqui são os de maior peso na leitura da revolução.
 CASAS_ANGULARES = (1, 4, 7, 10)
 
 
-def build_subject_natal(natal: dict, sistema_id: str):
+def entrada_natal(natal: dict) -> EntradaNascimento:
     """
-    Cria o subject natal, exigindo hora e local.
+    Entrada natal validada para revolução: exige hora e local e resolve as
+    coordenadas (recusando latitude em que as casas natais saem erradas).
 
     Hora é inegociável aqui: sem ela o Sol natal erra até 0,5°, o que desloca o
     instante do retorno em até 12 horas e inutiliza o ascendente da revolução —
     justamente o ponto central da técnica.
     """
-    data = natal.get("data")
-    if not data:
-        raise ValueError("Campo 'data' obrigatório no objeto natal.")
-
-    dia, mes, ano = parse_data(data)
-    h, m = parse_hora(natal.get("hora"))
-    cidade, nacao = parse_local(natal.get("local"))
-
-    tem_local = cidade is not None or (
-        natal.get("lat") is not None and natal.get("lng") is not None
-    )
-
-    if h is None:
+    entrada = EntradaNascimento.de_dict(natal, rotulo="natal")
+    if not entrada.tem_hora:
         raise ValueError(
             "Revoluções exigem a hora de nascimento. Sem ela o Sol natal erra "
             "até 0,5°, o que desloca o instante do retorno em até 12 horas e "
             "torna o ascendente da revolução — o ponto central da técnica — "
             "inutilizável."
         )
-    if not tem_local:
+    if not entrada.tem_local:
         raise ValueError(
             "Revoluções exigem o local de nascimento para sobrepor a revolução "
             "às casas natais."
         )
-
-    lat, lng, tz_str = resolver_coordenadas(
-        cidade, nacao, natal.get("lat"), natal.get("lng"), natal.get("tz_str"),
-    )
-    exigir_latitude_com_casas(lat)
-
-    subject = criar_subject(
-        nome=natal.get("nome") or "Anônimo",
-        ano=ano, mes=mes, dia=dia,
-        hora=h, minuto=m,
-        cidade=cidade, nacao=nacao,
-        lat=lat, lng=lng, tz_str=tz_str,
-        sistema_casas=sistema_id,
-        is_dst=natal.get("is_dst"),
-    )
-    return subject, (dia, mes, ano)
+    return entrada.exigir_casas()
 
 
 def resolver_local_revolucao(local_revolucao: Optional[str]) -> dict:
@@ -216,7 +185,7 @@ def montar_resultado(
                 and a["tipo"] == "conjuncao"
             ),
         }
-        for a in calcular_aspectos_sinastria(
+        for a in calcular_aspectos_cruzados(
             pontos_revolucao, pontos_natais, "revolucao", "natal"
         )
     ]

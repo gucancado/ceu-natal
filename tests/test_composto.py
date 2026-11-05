@@ -114,7 +114,7 @@ def test_sintese_distribuicao_elementos():
 
 
 def test_pessoa_sem_data_falha():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Campo 'data' obrigatório em pessoa_a."):
         calcular_mapa_composto(pessoa_a={}, pessoa_b=BRUNO)
 
 
@@ -122,4 +122,30 @@ def test_angulos_omitidos_quando_pessoa_sem_hora():
     sem_hora = {"data": "25/07/1992", "nome": "Bruno", "lat": BH["lat"], "lng": BH["lng"], "tz_str": BH["tz_str"]}
     c = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=sem_hora)
     assert c["angulos_compostos"] == {}
-    assert "aviso" in c
+    assert c["aviso"] == (
+        "Ângulos compostos omitidos: hora ou local de nascimento ausente em Bruno."
+    )
+
+
+def test_sem_aviso_quando_ambos_completos():
+    c = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=BRUNO)
+    assert "aviso" not in c
+    assert set(c["angulos_compostos"]) == {"ascendente", "meio_do_ceu"}
+
+
+def test_hora_presente_sem_local_omite_angulos():
+    sem_local = {"nome": "Bruno", "data": "25/07/1992", "hora": "09:15"}
+    c = calcular_mapa_composto(pessoa_a=ANA, pessoa_b=sem_local)
+    assert c["angulos_compostos"] == {}
+    assert c["aviso"] == (
+        "Ângulos compostos omitidos: hora ou local de nascimento ausente em Bruno."
+    )
+
+
+def test_aviso_nomeia_as_duas_pessoas_e_anonimo():
+    a = {"nome": "Ana", "data": "12/03/1990"}
+    b = {"data": "25/07/1992", "hora": "09:15"}
+    c = calcular_mapa_composto(pessoa_a=a, pessoa_b=b)
+    assert c["aviso"] == (
+        "Ângulos compostos omitidos: hora ou local de nascimento ausente em Ana e Anônimo."
+    )

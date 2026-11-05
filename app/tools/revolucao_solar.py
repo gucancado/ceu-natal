@@ -13,8 +13,8 @@ from app.core.periodos import (
     vigencia_solar,
 )
 from app.core.revolucoes import (
-    build_subject_natal,
     criar_factory,
+    entrada_natal,
     executar_retorno,
     instante_utc,
     montar_destaques,
@@ -46,13 +46,14 @@ def calcular_revolucao_solar(
     sistema_id = validar_sistema_casas(sistema_casas)
     validar_ano_revolucao(ano)  # faixa de efemérides, antes de qualquer geocoding
 
-    subject_natal, (dia_n, mes_n, ano_n) = build_subject_natal(natal, sistema_id)
-    validar_ano_revolucao(ano, ano_nascimento=ano_n)
+    entrada = entrada_natal(natal)
+    subject_natal = entrada.subject(sistema_id)
+    validar_ano_revolucao(ano, ano_nascimento=entrada.ano)
 
     coords = resolver_local_revolucao(local_revolucao)
 
     factory = criar_factory(subject_natal, coords)
-    ancora = ancora_revolucao_solar(dia_n, mes_n, ano)
+    ancora = ancora_revolucao_solar(entrada.dia, entrada.mes, ano)
     retorno = executar_retorno(
         lambda: factory.next_return_from_date(
             ancora.year, ancora.month, ancora.day, return_type="Solar"

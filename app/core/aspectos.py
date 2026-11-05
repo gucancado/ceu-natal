@@ -65,6 +65,32 @@ def _aplicando(p1_abs: float, p1_speed: float,
     return abs(sep_next - alvo) < abs(sep_now - alvo)
 
 
+def _aspecto_entre(p1: dict, p2: dict) -> Optional[dict]:
+    """Aspecto formado pelo par (o de menor ângulo na ordem de `ASPECTOS_DEF`), ou None.
+
+    Um par só forma um tipo de aspecto. Chaves: planeta_a, planeta_b, tipo,
+    orbe, aplicando, exato, natureza.
+    """
+    sep = _diferenca_circular(p1["abs_pos"], p2["abs_pos"])
+    for tipo, angulo, natureza in ASPECTOS_DEF:
+        orbe = abs(sep - angulo)
+        if orbe <= orbe_para(tipo, p1["nome"], p2["nome"]):
+            return {
+                "planeta_a": p1["nome"],
+                "planeta_b": p2["nome"],
+                "tipo": tipo,
+                "orbe": round(orbe, 4),
+                "aplicando": _aplicando(
+                    p1["abs_pos"], p1.get("speed"),
+                    p2["abs_pos"], p2.get("speed"),
+                    angulo,
+                ),
+                "exato": orbe < ORBE_EXATO,
+                "natureza": natureza,
+            }
+    return None
+
+
 def calcular_aspectos(pontos: list[dict]) -> list[dict]:
     """
     Recebe lista de pontos no formato:
@@ -72,62 +98,55 @@ def calcular_aspectos(pontos: list[dict]) -> list[dict]:
     Retorna lista de aspectos {planeta_a, planeta_b, tipo, orbe, aplicando, exato, natureza}.
     """
     resultado = []
-    n = len(pontos)
-    for i in range(n):
-        p1 = pontos[i]
-        for j in range(i + 1, n):
-            p2 = pontos[j]
-            sep = _diferenca_circular(p1["abs_pos"], p2["abs_pos"])
-            for tipo, angulo, natureza in ASPECTOS_DEF:
-                orbe = abs(sep - angulo)
-                if orbe <= orbe_para(tipo, p1["nome"], p2["nome"]):
-                    resultado.append({
-                        "planeta_a": p1["nome"],
-                        "planeta_b": p2["nome"],
-                        "tipo": tipo,
-                        "orbe": round(orbe, 4),
-                        "aplicando": _aplicando(
-                            p1["abs_pos"], p1.get("speed"),
-                            p2["abs_pos"], p2.get("speed"),
-                            angulo,
-                        ),
-                        "exato": orbe < ORBE_EXATO,
-                        "natureza": natureza,
-                    })
-                    break  # um par só forma um tipo de aspecto
+    for i, p1 in enumerate(pontos):
+        for p2 in pontos[i + 1:]:
+            aspecto = _aspecto_entre(p1, p2)
+            if aspecto:
+                resultado.append(aspecto)
     return sorted(resultado, key=lambda x: x["orbe"])
 
 
-def calcular_aspectos_sinastria(pontos_a: list[dict], pontos_b: list[dict],
-                                pessoa_a: str, pessoa_b: str) -> list[dict]:
+def calcular_aspectos_cruzados(pontos_a: list[dict], pontos_b: list[dict],
+                               rotulo_a: str, rotulo_b: str) -> list[dict]:
     """
-    Aspectos cruzados entre pontos de duas pessoas (sinastria).
-    Cada item: planeta de A vs planeta de B (não calcula intra-pessoa).
+    Aspectos cruzados entre dois conjuntos de pontos (sinastria, trânsito x
+    natal, progredido x natal, revolução x natal). Cada item: ponto de A vs
+    ponto de B (não calcula intra-conjunto), com `pessoa_a`/`pessoa_b` = rótulos.
     """
     resultado = []
     for p1 in pontos_a:
         for p2 in pontos_b:
-            sep = _diferenca_circular(p1["abs_pos"], p2["abs_pos"])
-            for tipo, angulo, natureza in ASPECTOS_DEF:
-                orbe = abs(sep - angulo)
-                if orbe <= orbe_para(tipo, p1["nome"], p2["nome"]):
-                    resultado.append({
-                        "planeta_a": p1["nome"],
-                        "pessoa_a": pessoa_a,
-                        "planeta_b": p2["nome"],
-                        "pessoa_b": pessoa_b,
-                        "tipo": tipo,
-                        "orbe": round(orbe, 4),
-                        "aplicando": _aplicando(
-                            p1["abs_pos"], p1.get("speed"),
-                            p2["abs_pos"], p2.get("speed"),
-                            angulo,
-                        ),
-                        "exato": orbe < ORBE_EXATO,
-                        "natureza": natureza,
-                    })
-                    break
+            aspecto = _aspecto_entre(p1, p2)
+            if aspecto:
+                resultado.append({
+                    "planeta_a": aspecto.pop("planeta_a"),
+                    "pessoa_a": rotulo_a,
+                    "planeta_b": aspecto.pop("planeta_b"),
+                    "pessoa_b": rotulo_b,
+                    **aspecto,
+                })
     return sorted(resultado, key=lambda x: x["orbe"])
+
+
+# Nome histórico (sinastria); mesma função.
+calcular_aspectos_sinastria = calcular_aspectos_cruzados
+
+
+def renomear(aspectos: list[dict], chave_a: str, chave_b: str) -> list[dict]:
+    """Aspectos cruzados com `planeta_a`/`planeta_b` renomeados para a semântica
+    da técnica (ex.: planeta_transito/planeta_natal), sem `pessoa_a`/`pessoa_b`."""
+    return [
+        {
+            chave_a: a["planeta_a"],
+            chave_b: a["planeta_b"],
+            "tipo": a["tipo"],
+            "orbe": a["orbe"],
+            "aplicando": a["aplicando"],
+            "exato": a["exato"],
+            "natureza": a["natureza"],
+        }
+        for a in aspectos
+    ]
 
 
 def listar_tipos_aspectos() -> list[dict]:

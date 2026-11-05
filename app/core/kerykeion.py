@@ -65,6 +65,14 @@ def resolver_coordenadas(
     return lat, lng, tz_str
 
 
+def _erro_de_horario_de_verao(exc: BaseException) -> bool:
+    """True quando a exceção do Kerykeion nasceu de hora ambígua/inexistente (pytz)."""
+    from pytz.exceptions import AmbiguousTimeError, NonExistentTimeError
+
+    origem = exc.__cause__ or exc.__context__
+    return isinstance(origem, (AmbiguousTimeError, NonExistentTimeError))
+
+
 def criar_subject(
     *,
     nome: str,
@@ -87,8 +95,9 @@ def criar_subject(
     Quando nada é fornecido, usa (0,0,UTC) — apenas posições por signo serão úteis.
 
     `is_dst` desambigua a hora local na transição do horário de verão (hora
-    repetida ou inexistente). Sem ele, o Kerykeion levanta `KerykeionException`,
-    que aqui vira `ValueError` com instrução para o chamador.
+    repetida ou inexistente). Sem ele, o Kerykeion levanta `KerykeionException`
+    a partir do erro do pytz, que aqui vira `ValueError` com instrução para o
+    chamador. Outras `KerykeionException` sobem como estão.
     """
     from kerykeion.schemas import KerykeionException
 
@@ -107,6 +116,8 @@ def criar_subject(
             online=False,
         )
     except KerykeionException as exc:
+        if not _erro_de_horario_de_verao(exc):
+            raise
         raise ValueError(
             f"Hora ambígua ou inexistente por causa do horário de verão em {tz_str}: "
             f"informe is_dst=true (horário de verão) ou is_dst=false. Detalhe: {exc}"
