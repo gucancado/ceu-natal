@@ -68,3 +68,23 @@ def test_limite_por_ip(monkeypatch):
     assert bloqueado.status_code == 429 and "retry-after" in bloqueado.headers
     outro = client.post("/mapa-rapido", json={"data": "15/05/1990"}, headers={"X-Forwarded-For": "198.51.100.2"})
     assert outro.status_code == 200
+
+
+def test_xff_forjado_nao_escapa_do_limite(monkeypatch):
+    """O cliente controla o início do X-Forwarded-For; vale o último item (o que o proxy viu)."""
+    _, client, _ = _app(monkeypatch, por_ip="2")
+    corpo = {"data": "15/05/1990"}
+    assert client.post("/mapa-rapido", json=corpo, headers={"X-Forwarded-For": "1.1.1.1, 9.9.9.9"}).status_code == 200
+    assert client.post("/mapa-rapido", json=corpo, headers={"X-Forwarded-For": "2.2.2.2, 9.9.9.9"}).status_code == 200
+    bloqueado = client.post("/mapa-rapido", json=corpo, headers={"X-Forwarded-For": "3.3.3.3, 9.9.9.9"})
+    assert bloqueado.status_code == 429
+
+
+def test_corpo_grande_demais(monkeypatch):
+    _, client, chamadas = _app(monkeypatch)
+    r = client.post("/mapa-rapido", content=b"x" * 5000,
+                    headers={"Content-Length": "5000", "Content-Type": "application/json", "Origin": SITE})
+    assert r.status_code == 413
+    assert r.json() == {"erro": "Corpo grande demais."}
+    assert r.headers["access-control-allow-origin"] == SITE
+    assert chamadas == []

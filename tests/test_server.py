@@ -31,6 +31,10 @@ def test_health_publico_sem_auth(monkeypatch):
     assert body["service"] == "ceu-natal"
     assert body["transporte"] == "streamable-http+sse"
     assert body["auth_required"] is True
+    assert body["mapa_rapido"] == {
+        "por_ip_por_min": mod.RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN,
+        "global_por_min": mod.RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN,
+    }
 
 
 def test_health_sem_auth_quando_key_vazia(monkeypatch):
@@ -116,9 +120,9 @@ def test_tools_exige_auth_quando_key_configurada(monkeypatch):
     resp = client.get("/tools", headers={"Authorization": "Bearer segredo"})
     assert resp.status_code == 200
 
-    # Com query param correto → 200
+    # Query param não autentica mais (vazava a chave em logs de proxy) → 401
     resp = client.get("/tools?api_key=segredo")
-    assert resp.status_code == 200
+    assert resp.status_code == 401
 
     # Com Bearer errado → 401
     resp = client.get("/tools", headers={"Authorization": "Bearer outro"})
