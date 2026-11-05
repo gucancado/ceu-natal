@@ -1,5 +1,30 @@
 # Relatório de validação — ceu-natal
 
+## 2026-11-05 — 2.2.0: auditoria pré-divulgação (`main` @ `4be2f8c`)
+
+Branch `auditoria/pre-divulgacao` (20 commits) mergeada fast-forward em `main`;
+tag `v2.2.0` + release no GitHub com o trecho 2.2.0 do CHANGELOG; metadados do
+repositório (descrição, homepage, 10 tópicos, wiki desligada, alertas do
+Dependabot, correções automáticas e relato privado de vulnerabilidade ligados).
+Servidor MCP e site publicados pelo `scripts/deploy.py` (uuids em
+`scripts/deploy.env`, fora do repo).
+
+| Checagem | Resultado observado |
+|---|---|
+| Suíte completa (WSL) e CI da branch | 350 passed; ruff, mypy e pip-audit limpos; CI verde |
+| Deploy do servidor | `finished`; `GET /health` → `versao 2.2.0`, `streamable-http+sse`, `site` = mistico, limites 30/600 e mapa-rápido 6/120 |
+| `GET /tools` | 9 tools (`calcular_mapa_natal` … `healthcheck`) |
+| `POST /mapa-rapido` com `Origin` do site (12/03/1990 14:30, Belo Horizonte) | `200`, `Access-Control-Allow-Origin` = site, `local_resolvido {lat -19.92083, lng -43.93778, fuso America/Sao_Paulo}`; geocode via GeoNames e depois `cache_hit` |
+| `POST /mapa-rapido` com corpo de 5 KB | `413` (teto 4096 bytes); log `status: body_too_large` |
+| `?api_key=` na query string | ignorado (prod sem chave, `auth_required: false`; o transporte responde `406` sem `Accept`) |
+| Deploy do site, 1ª tentativa | `failed` + rollback: o healthcheck do Coolify roda `curl`/`wget` dentro do container e a imagem `node:24-slim` não tem nenhum (o `curl` saiu na 2.2.0). Healthcheck do Coolify desligado no app; vale o `HEALTHCHECK` do Dockerfile (`node -e fetch`) |
+| Deploy do site, 2ª tentativa | `finished`; app `running:healthy` pelo `HEALTHCHECK` do Dockerfile; Next "Ready" |
+| Cabeçalhos do site | `Content-Security-Policy` (`default-src 'self'`, `connect-src` só o servidor MCP, `frame-ancestors 'none'`), `Referrer-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`; `X-Powered-By` ausente |
+| `/privacidade`, home | Versão 3 da política; email de contato em texto nas duas páginas |
+| `/status`, `/conectar`, `/termos`, `/llms.txt`, `/sitemap.xml`, `/robots.txt`, `/opengraph-image` | `200`; `/status` mostra 2.2.0; rota inexistente → `404` |
+| Logs do servidor após o deploy | sem traceback nas rotas novas; 2 ocorrências de `AssertionError: Unexpected message … http.response.start` ao encerrar sessão do transporte SSE legado (`handle_sse` devolve `Response()` depois do stream, sob `BaseHTTPMiddleware`) — código igual ao da 2.1.0, efeito só no log; follow-up |
+| Cache do geocoder com o user `app` (sem root) | `GEOCODER_CACHE_PATH` não setada e sem volume persistente → cache efêmero dentro do container; nenhum aviso de escrita no log |
+
 ## 2026-11-04 — F2: site mistico.gustavocancado.com.br (`produto/f2` @ `9730000`)
 
 Landing Next.js 16.4.4 em `web/` (Tasks 1–7 do plano F2) publicada no Coolify
