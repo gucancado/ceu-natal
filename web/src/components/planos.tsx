@@ -1,4 +1,5 @@
-import { Badge, Button } from "@beeads/ui";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Secao } from "@/components/secao";
 import { planoInclui, planos, rotuloPreco } from "@/content/planos";
 import { planeta } from "@/lib/glifos";
@@ -28,7 +29,7 @@ export function Planos() {
                   <span className="flex flex-wrap items-center gap-2 font-display text-xl font-medium">
                     {p.nome}
                     {!p.disponivel ? (
-                      <Badge variant="outline" className="border-border font-normal text-muted-fg">
+                      <Badge>
                         Em breve
                       </Badge>
                     ) : null}
@@ -70,9 +71,9 @@ export function Planos() {
         por enquanto é tudo grátis. quando os planos com conta chegarem, eu conto aqui primeiro.
       </p>
       <div className="mt-6">
-        <Button asChild size="lg">
-          <a href="#conectar">Conectar agora</a>
-        </Button>
+        <a href="#conectar" className={buttonVariants({ size: "lg" })}>
+          Conectar agora
+        </a>
       </div>
     </Secao>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FocusEvent } from "react";
-import { Button } from "@beeads/ui";
+import { Button } from "@/components/ui/button";
 import { prompts } from "@/content/prompts";
 
 const MS_POR_LETRA = 22;
@@ -94,10 +94,14 @@ export function RotadorPrompts() {
           variant="ghost"
           size="sm"
           aria-pressed={pausado}
-          onClick={() => setPausado((p) => !p)}
+          onClick={() => {
+            // Despausar retoma na hora, mesmo com o mouse ou o foco ainda em cima.
+            setEmCima(false);
+            setPausado((p) => !p);
+          }}
           className="mt-4 text-muted-fg"
         >
-          {pausado ? "continuar" : "pausar"}
+          Pausar
         </Button>
       )}
     </div>

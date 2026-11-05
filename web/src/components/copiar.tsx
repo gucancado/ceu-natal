@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { buttonVariants } from "@beeads/ui";
+import { buttonVariants } from "@/components/ui/button";
 
 type Props = {
   texto: string;

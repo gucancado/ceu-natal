@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@beeads/ui";
+import { buttonVariants } from "@/components/ui/button";
 import { Copiar } from "@/components/copiar";
 import { AnelZodiacal } from "@/components/anel-zodiacal";
 import { RotadorPrompts } from "@/components/rotador-prompts";
@@ -29,9 +29,9 @@ export function Hero() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole no seu assistente" variant="default" size="lg" />
-            <Button asChild size="lg" variant="outline">
-              <Link href="/mapa">Fazer meu mapa astral grátis</Link>
-            </Button>
+            <Link href="/mapa" className={buttonVariants({ size: "lg", variant: "outline" })}>
+              Fazer meu mapa astral grátis
+            </Link>
           </div>
         </div>
         <div className="relative isolate lg:col-span-6">

@@ -5,7 +5,8 @@ import { site } from "./src/lib/site";
 // chamado pelo formulário do /mapa. 'unsafe-inline' fica por causa do runtime inline do Next e dos estilos.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  // O next dev avalia código com eval (Fast Refresh); em produção isso não existe.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
@@ -16,8 +17,6 @@ const csp = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  // Importa só os componentes usados do @beeads/ui em vez do barril inteiro.
-  experimental: { optimizePackageImports: ["@beeads/ui"] },
   async headers() {
     return [
       {

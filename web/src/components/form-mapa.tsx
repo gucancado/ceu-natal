@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Button, Input, Label } from "@beeads/ui";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { CaixaPrompt } from "@/components/caixa-prompt";
 import { textoMapa, type MapaRapido } from "@/lib/mapa-texto";
 import { site } from "@/lib/site";
