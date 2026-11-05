@@ -1,3 +1,4 @@
+import functools
 import json
 import logging
 import os
@@ -16,6 +17,15 @@ logger = logging.getLogger(__name__)
 GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "gucancado")
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "ceu-natal-mcp/2.0")
 HTTP_TIMEOUT = 8
+GEONAMES_URL = "https://secure.geonames.org/searchJSON"
+# Teto de chamadas simultâneas aos provedores: cada uma prende um worker do
+# threadpool por até HTTP_TIMEOUT s; sem teto, /mapa-rapido vira vetor de DoS.
+GEOCODER_MAX_CONCORRENTES = int(os.getenv("GEOCODER_MAX_CONCORRENTES", "4"))
+GEOCODER_ESPERA_MAX_S = float(os.getenv("GEOCODER_ESPERA_MAX_S", "3.0"))
+# Falha fica no cache por 1 h (evita martelar provedor com cidade inexistente).
+TTL_FALHA_S = 3600
+# Teto de entradas do cache; ao exceder, descarta a mais antiga.
+CACHE_MAX = 10_000
 # Nominatim/OSM exige no máximo 1 req/s. Serializamos as chamadas.
 _NOMINATIM_MIN_INTERVAL = float(os.getenv("NOMINATIM_MIN_INTERVAL_S", "1.0"))
 
@@ -29,6 +39,9 @@ _ESTADOS_BR = {
     "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI",
     "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 }
+
+# UFs que também são siglas de estados dos EUA ("Boston, MA"): sem filtro de país.
+_UFS_AMBIGUAS = {"AL", "MA", "MS", "MT", "PA", "SC"}
 
 # Mapeamento conservador de nomes comuns → ISO 3166-1 alpha-2.
 # GeoNames exige código alpha-2 no parâmetro `country`. Para nomes não
@@ -56,7 +69,7 @@ class GeocodingError(Exception):
     """Falha resolvendo cidade/coordenadas em todos os provedores."""
 
 
-_tf = TimezoneFinder()
+_SEMAFORO = threading.BoundedSemaphore(GEOCODER_MAX_CONCORRENTES)
 _cache_lock = threading.Lock()
 _cache: dict = {}
 _cache_loaded = False
@@ -86,6 +99,15 @@ def _log_geocode(cidade: str, nacao: str, source: str, cache_hit: bool) -> None:
     }, ensure_ascii=False))
 
 
+def _entrada_sucesso(valor) -> bool:
+    return isinstance(valor, dict) and {"lat", "lng", "tz_str"} <= valor.keys()
+
+
+def _entrada_falha(valor) -> bool:
+    return (isinstance(valor, dict) and valor.get("erro") is True
+            and isinstance(valor.get("ts"), (int, float)))
+
+
 def _load_cache() -> dict:
     global _cache, _cache_loaded
     with _cache_lock:
@@ -96,6 +118,8 @@ def _load_cache() -> dict:
                 _cache = json.load(f)
                 if not isinstance(_cache, dict):
                     raise ValueError("formato inesperado")
+                _cache = {k: v for k, v in _cache.items()
+                          if _entrada_sucesso(v) or _entrada_falha(v)}
         except FileNotFoundError:
             _cache = {}
         except (json.JSONDecodeError, ValueError, OSError) as exc:
@@ -119,11 +143,27 @@ def _save_cache() -> None:
                        CACHE_PATH, exc)
 
 
+def _guardar(cache_key: str, valor: dict) -> None:
+    """Grava no cache (já carregado), respeita CACHE_MAX e persiste."""
+    with _cache_lock:
+        _cache.pop(cache_key, None)
+        _cache[cache_key] = valor
+        while len(_cache) > CACHE_MAX:
+            del _cache[next(iter(_cache))]
+        _save_cache()
+
+
+@functools.lru_cache(maxsize=1)
+def _timezone_finder() -> TimezoneFinder:
+    """Instancia o TimezoneFinder só no primeiro uso (carregar leva segundos)."""
+    return TimezoneFinder()
+
+
 def _resolve_timezone(lat: float, lng: float) -> str:
-    tz = _tf.timezone_at(lat=lat, lng=lng)
-    if not tz:
-        tz = _tf.closest_timezone_at(lat=lat, lng=lng)
-    return tz or "UTC"
+    _tf = _timezone_finder()
+    return (_tf.timezone_at(lat=lat, lng=lng)
+            or _tf.timezone_at_land(lat=lat, lng=lng)
+            or "UTC")
 
 
 def _country_iso(nacao: str) -> Optional[str]:
@@ -131,6 +171,8 @@ def _country_iso(nacao: str) -> Optional[str]:
     if not nacao:
         return None
     nacao_up = nacao.strip().upper()
+    if nacao_up in _UFS_AMBIGUAS:
+        return None
     if nacao_up in _ESTADOS_BR:
         return "BR"
     if len(nacao_up) == 2 and nacao_up.isalpha():
@@ -146,13 +188,15 @@ def _try_geonames(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
     params = {
         "q": _build_query(cidade, nacao),
         "maxRows": 1,
+        "featureClass": "P",
+        "orderby": "population",
         "username": GEONAMES_USERNAME,
     }
     iso = _country_iso(nacao)
     if iso:
         params["country"] = iso
 
-    url = "http://api.geonames.org/searchJSON?" + urllib.parse.urlencode(params)
+    url = GEONAMES_URL + "?" + urllib.parse.urlencode(params)
     try:
         with urllib.request.urlopen(url, timeout=HTTP_TIMEOUT) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -199,26 +243,40 @@ def geocode(cidade: str, nacao: str) -> dict:
     nacao = (nacao or "").strip()
     cache_key = f"{cidade.strip().lower()}|{nacao.lower()}"
 
-    cache = _load_cache()
-    if cache_key in cache:
-        _log_geocode(cidade, nacao, source="cache", cache_hit=True)
-        return cache[cache_key]
+    msg_falha = (
+        f"Não foi possível geocodificar '{cidade}"
+        f"{', ' + nacao if nacao else ''}'. "
+        "Verifique o nome da cidade ou tente novamente em instantes."
+    )
 
-    geonames_result = _try_geonames(cidade, nacao)
-    if geonames_result:
-        coords, source = geonames_result, "geonames"
-    else:
-        nominatim_result = _try_nominatim(cidade, nacao)
-        coords, source = nominatim_result, "nominatim"
+    cache = _load_cache()
+    with _cache_lock:
+        entrada = cache.get(cache_key)
+    if entrada is not None:
+        if not entrada.get("erro"):
+            _log_geocode(cidade, nacao, source="cache", cache_hit=True)
+            return entrada
+        if time.time() - entrada["ts"] < TTL_FALHA_S:
+            _log_geocode(cidade, nacao, source="cache_falha", cache_hit=True)
+            raise GeocodingError(msg_falha)
+
+    if not _SEMAFORO.acquire(timeout=GEOCODER_ESPERA_MAX_S):
+        raise GeocodingError("Geocodificador ocupado. Tente de novo em instantes.")
+    try:
+        geonames_result = _try_geonames(cidade, nacao)
+        if geonames_result:
+            coords, source = geonames_result, "geonames"
+        else:
+            nominatim_result = _try_nominatim(cidade, nacao)
+            coords, source = nominatim_result, "nominatim"
+    finally:
+        _SEMAFORO.release()
 
     if coords is None:
         # Diferenciar "todos os provedores indisponíveis" vs "cidade não encontrada"
         # é difícil sem expor estado interno; mensagem cobre ambos os casos.
-        raise GeocodingError(
-            f"Não foi possível geocodificar '{cidade}"
-            f"{', ' + nacao if nacao else ''}'. "
-            "Verifique o nome da cidade ou tente novamente em instantes."
-        )
+        _guardar(cache_key, {"erro": True, "ts": time.time()})
+        raise GeocodingError(msg_falha)
 
     lat, lng = coords
     if lat is None or lng is None:
@@ -229,8 +287,6 @@ def geocode(cidade: str, nacao: str) -> dict:
     tz_str = _resolve_timezone(lat, lng)
 
     resultado = {"lat": lat, "lng": lng, "tz_str": tz_str}
-    with _cache_lock:
-        cache[cache_key] = resultado
-        _save_cache()
+    _guardar(cache_key, resultado)
     _log_geocode(cidade, nacao, source=source, cache_hit=False)
     return resultado

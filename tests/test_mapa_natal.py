@@ -216,3 +216,15 @@ def test_com_hora_lua_sem_marcas_de_incerteza():
     assert "posicao_incerta" not in mapa["planetas"]["lua"]
     assert "signo_pode_mudar" not in mapa["planetas"]["lua"]
     assert all("incerto" not in a for a in mapa["aspectos"])
+
+
+def test_local_resolvido_presente_com_local():
+    mapa = calcular_mapa_natal(data="12/03/1990", hora="14:30", local="Belo Horizonte, MG", **BH)
+    assert mapa["local_resolvido"] == {
+        "lat": BH["lat"], "lng": BH["lng"], "fuso": BH["tz_str"],
+    }
+
+
+def test_local_resolvido_ausente_sem_local():
+    mapa = calcular_mapa_natal(data="12/03/1990", hora="14:30")
+    assert "local_resolvido" not in mapa

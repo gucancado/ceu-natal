@@ -217,3 +217,159 @@ class TestLogResolucao:
         eventos = self._eventos(caplog)
         assert eventos and eventos[-1]["source"] == "nominatim"
         assert eventos[-1]["cache_hit"] is False
+
+
+# ─────────────────────────────────────────────────────────────
+# UF ambígua (também é estado dos EUA) e URL do GeoNames
+# ─────────────────────────────────────────────────────────────
+class TestUFAmbigua:
+    def test_uf_ambigua_sem_filtro_de_pais(self, geocoder):
+        assert geocoder._country_iso("MA") is None
+
+    def test_uf_nao_ambigua_vira_br(self, geocoder):
+        assert geocoder._country_iso("MG") == "BR"
+
+    def test_iso_fora_das_ufs_passa_direto(self, geocoder):
+        assert geocoder._country_iso("CA") == "CA"
+
+
+class _RespostaFalsa:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self):
+        return b'{"geonames": []}'
+
+
+def test_geonames_https_so_cidades_por_populacao(geocoder, monkeypatch):
+    urls = []
+
+    def fake_urlopen(url, timeout=None):
+        urls.append(url)
+        return _RespostaFalsa()
+
+    monkeypatch.setattr(geocoder.urllib.request, "urlopen", fake_urlopen)
+    assert geocoder._try_geonames("Boston", "MA") is None
+    assert len(urls) == 1
+    url = urls[0]
+    assert url.startswith("https://secure.geonames.org/searchJSON?")
+    assert "featureClass=P" in url
+    assert "orderby=population" in url
+    assert "maxRows=1" in url
+    assert "country=" not in url
+
+
+# ─────────────────────────────────────────────────────────────
+# Cache de falhas (TTL) e teto de entradas
+# ─────────────────────────────────────────────────────────────
+def _provedores_contados(geocoder, monkeypatch, coords=None):
+    chamadas = {"geonames": 0, "nominatim": 0}
+
+    def fake_geonames(c, n):
+        chamadas["geonames"] += 1
+        return coords
+
+    def fake_nominatim(c, n):
+        chamadas["nominatim"] += 1
+        return None
+
+    monkeypatch.setattr(geocoder, "_try_geonames", fake_geonames)
+    monkeypatch.setattr(geocoder, "_try_nominatim", fake_nominatim)
+    monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "UTC")
+    return chamadas
+
+
+def test_falha_cacheada_nao_chama_provedor(geocoder, monkeypatch, caplog):
+    chamadas = _provedores_contados(geocoder, monkeypatch)
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    with caplog.at_level("INFO", logger="app.core.geocoder"):
+        with pytest.raises(geocoder.GeocodingError):
+            geocoder.geocode("Cidade Inexistente", "BR")
+    assert chamadas == {"geonames": 1, "nominatim": 1}
+    eventos = [_json.loads(r.getMessage()) for r in caplog.records
+               if r.getMessage().startswith("{")]
+    assert eventos and eventos[-1]["source"] == "cache_falha"
+
+
+def test_falha_cacheada_expira_apos_ttl(geocoder, monkeypatch):
+    chamadas = _provedores_contados(geocoder, monkeypatch)
+    relogio = {"t": 1_000_000.0}
+    monkeypatch.setattr(geocoder.time, "time", lambda: relogio["t"])
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    relogio["t"] += geocoder.TTL_FALHA_S + 1
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    assert chamadas["geonames"] == 2
+
+
+def test_falha_persistida_em_arquivo(geocoder, monkeypatch):
+    _provedores_contados(geocoder, monkeypatch)
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    with open(geocoder.CACHE_PATH, "r", encoding="utf-8") as f:
+        salvo = json.load(f)
+    assert salvo["cidade inexistente|br"]["erro"] is True
+
+
+def test_cache_descarta_entradas_invalidas_ao_carregar(geocoder):
+    with open(geocoder.CACHE_PATH, "w", encoding="utf-8") as f:
+        json.dump({
+            "ok|br": {"lat": 1.0, "lng": 2.0, "tz_str": "UTC"},
+            "falha|br": {"erro": True, "ts": 123.0},
+            "lixo|br": "qualquer coisa",
+            "meio|br": {"lat": 1.0},
+        }, f)
+    cache = geocoder._load_cache()
+    assert set(cache) == {"ok|br", "falha|br"}
+
+
+def test_cache_cheio_expulsa_a_mais_antiga(geocoder, monkeypatch):
+    _provedores_contados(geocoder, monkeypatch, coords=(1.0, 2.0))
+    monkeypatch.setattr(geocoder, "CACHE_MAX", 2)
+    geocoder.geocode("Cidade A", "BR")
+    geocoder.geocode("Cidade B", "BR")
+    geocoder.geocode("Cidade C", "BR")
+    cache = geocoder._load_cache()
+    assert list(cache) == ["cidade b|br", "cidade c|br"]
+
+
+# ─────────────────────────────────────────────────────────────
+# Semáforo: limita chamadas concorrentes aos provedores
+# ─────────────────────────────────────────────────────────────
+def test_semaforo_esgotado_levanta_ocupado(geocoder, monkeypatch):
+    import threading
+    chamadas = _provedores_contados(geocoder, monkeypatch, coords=(1.0, 2.0))
+    sem = threading.BoundedSemaphore(1)
+    sem.acquire()
+    monkeypatch.setattr(geocoder, "_SEMAFORO", sem)
+    monkeypatch.setattr(geocoder, "GEOCODER_ESPERA_MAX_S", 0.01)
+    with pytest.raises(geocoder.GeocodingError, match="ocupado"):
+        geocoder.geocode("Belo Horizonte", "MG")
+    assert chamadas == {"geonames": 0, "nominatim": 0}
+
+
+def test_semaforo_liberado_apos_falha_do_provedor(geocoder, monkeypatch):
+    import threading
+    _provedores_contados(geocoder, monkeypatch)
+    sem = threading.BoundedSemaphore(1)
+    monkeypatch.setattr(geocoder, "_SEMAFORO", sem)
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Cidade Inexistente", "BR")
+    assert sem.acquire(timeout=0.01)
+
+
+def test_resolve_timezone_cai_para_terra(geocoder, monkeypatch):
+    class FinderFalso:
+        def timezone_at(self, lat, lng):
+            return None
+
+        def timezone_at_land(self, lat, lng):
+            return "Europe/Lisbon"
+
+    monkeypatch.setattr(geocoder, "_timezone_finder", lambda: FinderFalso())
+    assert geocoder._resolve_timezone(38.7, -9.1) == "Europe/Lisbon"
