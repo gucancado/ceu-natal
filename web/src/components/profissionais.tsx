@@ -1,8 +1,7 @@
 import { Badge } from "@beeads/ui";
-import { LinkEmail } from "@/components/email-oculto";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
-import { site } from "@/lib/site";
+import { contato, site } from "@/lib/site";
 
 const assunto = `${site.nome} para astrólogos`;
 
@@ -23,9 +22,12 @@ export function Profissionais() {
           consentimento lgpd registrado.
         </p>
         <p>
-          <LinkEmail assunto={assunto} className="text-honey underline underline-offset-4">
+          <a
+            href={`mailto:${contato.email}?subject=${encodeURIComponent(assunto)}`}
+            className="text-honey underline underline-offset-4"
+          >
             me escreve, quero ouvir como você trabalha
-          </LinkEmail>
+          </a>
         </p>
       </div>
     </Secao>

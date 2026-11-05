@@ -1,3 +1,6 @@
+// Mês da última verificação dos guias de conexão (aviso dos guias e rodapé da página de cada cliente).
+export const verificadoEm = "novembro de 2026";
+
 // Prompt que a pessoa cola no próprio assistente para ele guiar a conexão.
 import { site } from "../lib/site";
 

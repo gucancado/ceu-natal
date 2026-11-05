@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FormMapa } from "@/components/form-mapa";
+import { jsonLdScript } from "@/components/json-ld";
 import { planeta } from "@/lib/glifos";
 import { site } from "@/lib/site";
 
@@ -65,10 +66,9 @@ const jsonLd = [
 ];
 
 export default function PaginaMapa() {
-  const json = JSON.stringify(jsonLd).replace(/</g, "\u003c");
   return (
     <article className="mx-auto max-w-[72rem] px-6 py-16 md:py-24">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />
+      {jsonLdScript(jsonLd)}
       <p className="mb-6 font-mono text-sm text-muted-fg">
         <span aria-hidden="true" className="glifo mr-2 text-honey">
           {planeta.sol}

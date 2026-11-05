@@ -29,7 +29,7 @@ export const planos: Plano[] = [
   {
     id: "gratis",
     nome: "Grátis",
-    paraQuem: "Para quem usa Claude, ChatGPT, Cursor ou n8n.",
+    paraQuem: "Para quem usa Claude, ChatGPT, Gemini, Cursor ou n8n.",
     inclui: [
       "As 9 ferramentas no endpoint aberto",
       "Sem conta e sem login",

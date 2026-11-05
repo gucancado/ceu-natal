@@ -30,9 +30,4 @@ export const faq: ItemFaq[] = [
     pergunta: "Existe limite de uso?",
     resposta: `Sim. São ${porSessaoPorMin} chamadas por minuto por sessão MCP e ${globalPorMin} por minuto no total do servidor. Se passar do limite, a resposta volta como um erro pedindo para aguardar e tentar de novo.`,
   },
-  {
-    pergunta: "Como cancelo?",
-    resposta:
-      "Hoje não há cobrança, então não há nada a cancelar. Quando os planos pagos chegarem, você cancela sozinho na página da sua conta.",
-  },
 ];

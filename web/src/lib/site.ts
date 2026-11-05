@@ -17,8 +17,12 @@ export const site = {
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
 } as const;
 
-// Email em partes: nunca aparece inteiro no HTML (ver components/email-oculto.tsx).
-export const contato = { usuario: "gustavo.azvd", dominio: "gmail.com" } as const;
+// Contato do controlador (LGPD): escrito em texto no rodapé e na política, sem depender de JavaScript.
+export const contato = { email: "gustavo.azvd@gmail.com" } as const;
+
+// Frase da home: vai no <title> e na imagem de compartilhamento (OG).
+export const fraseHome = "mapa astral calculado dentro do seu chat";
+export const tituloHome = `${site.nome}: ${fraseHome}`;
 
 // Descrição padrão do site (metadata e schema.org).
 export const descricaoSite = "Mapa astral calculado com efemérides suíças dentro do seu assistente de IA.";

@@ -1,14 +1,16 @@
+import { useId } from "react";
 import { Copiar } from "@/components/copiar";
 import { partesTextoGuia } from "@/lib/texto-guia";
 
 export function BlocoCodigo({ codigo }: { codigo: string }) {
+  const id = useId();
   return (
     <div className="relative max-w-[48rem] rounded-md border border-border bg-muted">
-      <pre className="overflow-x-auto p-4 pr-24 font-mono text-sm leading-[1.6]">
+      <pre id={id} className="overflow-x-auto p-4 pr-24 font-mono text-sm leading-[1.6]">
         <code>{codigo}</code>
       </pre>
       <div className="absolute right-2 top-2">
-        <Copiar texto={codigo} />
+        <Copiar texto={codigo} alvoId={id} />
       </div>
     </div>
   );

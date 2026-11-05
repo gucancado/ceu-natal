@@ -14,8 +14,13 @@ const dados = {
   inLanguage: "pt-BR",
 };
 
-// Schema.org da home. "<" escapado para nunca fechar o <script> por acidente.
-export function JsonLd() {
+// Script schema.org. "<" vira a sequência \u003c para o texto nunca fechar o <script> por acidente.
+export function jsonLdScript(dados: object) {
   const json = JSON.stringify(dados).replace(/</g, "\\u003c");
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
+}
+
+// Schema.org da home.
+export function JsonLd() {
+  return jsonLdScript(dados);
 }

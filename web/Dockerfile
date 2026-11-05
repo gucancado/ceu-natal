@@ -1,6 +1,7 @@
 FROM node:24-slim AS deps
 WORKDIR /app
-RUN npm install -g pnpm@11
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
@@ -12,7 +13,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_MCP_URL
 ARG NEXT_PUBLIC_REPO_URL
-RUN npm install -g pnpm@11
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
@@ -22,8 +24,6 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 WORKDIR /app
-# O healthcheck do Coolify precisa de curl/wget dentro da imagem (node:24-slim não traz).
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
@@ -31,7 +31,7 @@ COPY --from=build --chown=node:node /app/public ./public
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -fsS http://localhost:3000/ > /dev/null || exit 1
+  CMD node -e "fetch('http://localhost:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 USER node
 CMD ["node", "server.js"]

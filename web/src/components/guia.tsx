@@ -1,9 +1,9 @@
 import { Alert, AlertDescription } from "@beeads/ui";
 import { BlocoCodigo, TextoGuia } from "@/components/bloco-codigo";
 import type { Cliente } from "@/content/clientes";
+import { verificadoEm } from "@/content/setup";
 
-export const avisoConfianca =
-  "Este guia foi verificado em novembro de 2026; a interface deste app muda com frequência.";
+export const avisoConfianca = `Este guia foi verificado em ${verificadoEm}; a interface deste app muda com frequência.`;
 
 // Corpo comum ao painel da aba e à página do cliente.
 export function GuiaCorpo({ c, Titulo }: { c: Cliente; Titulo: "h2" | "h3" }) {
