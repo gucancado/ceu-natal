@@ -18,7 +18,7 @@ Guia dos canais onde o servidor MCP é listado. Todos os passos abaixo são feit
 ## MCP Registry (oficial)
 
 - **Quem faz:** o mantenedor.
-- **Pré-requisito:** conta GitHub `gucancado`; `server.json` na raiz do repo (já existe, versão `2.2.0`); binário `mcp-publisher` baixado em https://github.com/modelcontextprotocol/registry/releases/latest (não versionar o binário).
+- **Pré-requisito:** conta GitHub `gucancado`; `server.json` na raiz do repo (já existe, versão `2.2.1`); binário `mcp-publisher` baixado em https://github.com/modelcontextprotocol/registry/releases/latest (não versionar o binário).
 - **Passos:**
   1. No diretório do repo: `mcp-publisher validate` (deve dizer que o `server.json` é válido).
   2. `mcp-publisher login github` abre o device flow no navegador; autorizar com a conta `gucancado`.
