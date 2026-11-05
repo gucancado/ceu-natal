@@ -14,9 +14,11 @@ export const site = {
   mcpEndpoint: `${mcpUrl}/mcp/`,
   sseEndpoint: `${mcpUrl}/sse`,
   repoUrl: semBarraFinal(process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/gucancado/ceu-natal"),
-  contato: "gustavo.azvd@gmail.com",
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
 } as const;
+
+// Email em partes: nunca aparece inteiro no HTML (ver components/email-oculto.tsx).
+export const contato = { usuario: "gustavo.azvd", dominio: "gmail.com" } as const;
 
 // Descrição padrão do site (metadata e schema.org).
 export const descricaoSite = "Mapa astral calculado com efemérides suíças dentro do seu assistente de IA.";

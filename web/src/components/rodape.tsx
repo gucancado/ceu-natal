@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmailOculto } from "@/components/email-oculto";
 import { site } from "@/lib/site";
 
 const linkRodape =
@@ -32,7 +33,7 @@ export function Rodape() {
         </nav>
         <div className="text-muted-fg md:text-right">
           <p>fiz em belo horizonte. gustavo cançado</p>
-          <p className="font-mono text-sm">{site.contato}</p>
+          <EmailOculto className="block font-mono text-sm" />
         </div>
       </div>
     </footer>

@@ -5,7 +5,7 @@ const foco = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-v
 const linkNav = `${foco} text-muted-fg transition-colors hover:text-fg`;
 
 const ancoras = [
-  { href: "/mapa", rotulo: "Mapa grátis" },
+  { href: "/mapa", rotulo: "Mapa astral grátis" },
   { href: "/#conectar", rotulo: "Conectar" },
   { href: "/#planos", rotulo: "Planos" },
 ];
