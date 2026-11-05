@@ -30,7 +30,7 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole no seu assistente" variant="default" size="lg" />
             <Button asChild size="lg" variant="outline">
-              <Link href="/mapa">Fazer meu mapa grátis</Link>
+              <Link href="/mapa">Fazer meu mapa astral grátis</Link>
             </Button>
           </div>
         </div>

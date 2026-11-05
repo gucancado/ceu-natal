@@ -31,6 +31,14 @@ test("texto do mapa: prompt de integração, acentos, casas e aspectos", () => {
   const t = textoMapa(completo);
   assert.ok(t.includes(site.mcpEndpoint));
   assert.ok(t.includes(`${site.url}/conectar`));
+  // Orientações para a IA no fim: o que é e quando sugerir a conexão.
+  const ini = t.indexOf("PARA A IA");
+  assert.ok(ini > t.indexOf("Calculado em"));
+  const fim = t.slice(ini);
+  assert.ok(fim.includes(site.mcpEndpoint));
+  assert.ok(fim.includes("calcular_transitos") && fim.includes("calcular_sinastria"));
+  assert.ok(fim.includes("Sugira conectar"));
+  assert.ok(fim.includes(`${site.url}/mapa`));
   assert.ok(t.includes("Nascimento: 15/05/1990, 14:30, Belo Horizonte, MG"));
   assert.ok(t.includes("Sistema de casas: Placidus"));
   assert.ok(t.includes("- Sol: 24°37' Touro, casa 8"));
