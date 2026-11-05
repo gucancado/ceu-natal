@@ -507,3 +507,22 @@ def test_configurar_zera_cache_e_semaforo(geocoder, tmp_path):
     assert geocoder._SEMAFORO.acquire(timeout=0)
     assert not geocoder._SEMAFORO.acquire(timeout=0)
     geocoder._SEMAFORO.release()
+
+
+def test_evicao_preserva_a_falha_recem_inserida(geocoder, monkeypatch):
+    """Cache cheio de coordenadas: a falha nova fica e sai a coordenada mais antiga."""
+    _provedores_contados(geocoder, monkeypatch, coords=(1.0, 2.0))
+    monkeypatch.setattr(geocoder, "CACHE_MAX", 2)
+    geocoder.geocode("Cidade A", "BR")
+    geocoder.geocode("Cidade B", "BR")
+    monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: None)
+    monkeypatch.setattr(geocoder, "_try_nominatim", lambda c, n: None)
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Inexistente", "BR")
+    cache = geocoder._load_cache()
+    assert list(cache) == ["cidade b|br", "inexistente|br"]
+    assert cache["inexistente|br"]["erro"] is True
+    # A falha cacheada evita nova chamada aos provedores.
+    monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: pytest.fail("devia vir do cache"))
+    with pytest.raises(geocoder.GeocodingError):
+        geocoder.geocode("Inexistente", "BR")
