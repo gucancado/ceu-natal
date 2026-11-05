@@ -1,4 +1,5 @@
 import { Secao } from "@/components/secao";
+import { planeta } from "@/lib/glifos";
 
 type Linha = { tema: string; sem: string; com: string };
 
@@ -37,23 +38,24 @@ const linhas: Linha[] = [
 
 export function Comparacao() {
   return (
-    <Secao id="comparacao" titulo="Sem e com o Céu Natal">
+    <Secao id="comparacao" titulo="por que eu criei isso" simbolo={planeta.mercurio}>
       <div className="max-w-[60rem]">
+        <p className="mb-10 max-w-[36rem] text-lg text-muted-fg">pedi meu mapa pra várias ias. cada uma me deu um céu diferente. é isso que muda:</p>
         <div aria-hidden="true" className="hidden grid-cols-[12rem_1fr_1fr] gap-8 border-b border-border pb-3 font-mono text-sm text-muted-fg md:grid">
           <span />
-          <span>Só o assistente</span>
-          <span className="text-honey">Assistente + Céu Natal</span>
+          <span>só a ia</span>
+          <span className="text-honey">a ia com o céu natal</span>
         </div>
         <dl className="divide-y divide-border">
           {linhas.map((l) => (
             <div key={l.tema} className="grid gap-3 py-5 md:grid-cols-[12rem_1fr_1fr] md:gap-8">
               <dt className="font-display text-lg font-medium">{l.tema}</dt>
               <dd className="text-muted-fg">
-                <span className="font-mono text-xs md:sr-only">Só o assistente: </span>
+                <span className="font-mono text-xs md:sr-only">só a ia: </span>
                 {l.sem}
               </dd>
               <dd>
-                <span className="font-mono text-xs text-honey md:sr-only">Com o Céu Natal: </span>
+                <span className="font-mono text-xs text-honey md:sr-only">com o céu natal: </span>
                 {l.com}
               </dd>
             </div>
