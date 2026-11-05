@@ -1,18 +1,17 @@
 """Endpoint público /mapa-rapido (formulário do site)."""
-import importlib
-
 from starlette.testclient import TestClient
+
+from app.config import Settings
+from app.server import MAPA_RAPIDO_BODY_MAX, create_app
 
 SITE = "https://mistico.exemplo.com"
 
 
-def _app(monkeypatch, api_key="", por_ip="6"):
-    monkeypatch.setenv("MCP_API_KEY", api_key)
-    monkeypatch.setenv("PUBLIC_SITE_URL", SITE)
-    monkeypatch.delenv("CORS_ORIGINS", raising=False)
-    monkeypatch.setenv("RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN", por_ip)
-    from app import server as mod
-    importlib.reload(mod)
+def _app(monkeypatch, api_key="", por_ip=6):
+    app = create_app(Settings(
+        api_key=api_key, public_site_url=SITE, rate_limit_mapa_rapido_ip_per_min=por_ip,
+    ))
+    ceu = app.state.ceu
     chamadas = []
 
     def falso(nome, argumentos):
@@ -21,8 +20,8 @@ def _app(monkeypatch, api_key="", por_ip="6"):
             raise ValueError("Data inválida.")
         return {"nascimento": argumentos, "planetas": {}}
 
-    monkeypatch.setattr(mod, "_dispatch", falso)
-    return mod, TestClient(mod.app), chamadas
+    monkeypatch.setattr(ceu, "dispatch", falso)
+    return ceu, TestClient(app), chamadas
 
 
 def test_calcula_sem_chave_mesmo_com_api_key(monkeypatch):
@@ -50,6 +49,14 @@ def test_preflight_so_para_o_site(monkeypatch):
     assert "access-control-allow-origin" not in fora.headers
 
 
+def test_cors_origins_configuradas_substituem_o_site(monkeypatch):
+    app = create_app(Settings(public_site_url=SITE, cors_origins=("https://outro.exemplo.com/",)))
+    client = TestClient(app)
+    ok = client.options("/mapa-rapido", headers={"Origin": "https://outro.exemplo.com"})
+    assert ok.headers["access-control-allow-origin"] == "https://outro.exemplo.com"
+    assert "access-control-allow-origin" not in client.options("/mapa-rapido", headers={"Origin": SITE}).headers
+
+
 def test_erros_de_entrada(monkeypatch):
     _, client, _ = _app(monkeypatch)
     assert client.post("/mapa-rapido", content=b"nao-json").status_code == 400
@@ -60,7 +67,7 @@ def test_erros_de_entrada(monkeypatch):
 
 
 def test_limite_por_ip(monkeypatch):
-    _, client, _ = _app(monkeypatch, por_ip="2")
+    _, client, _ = _app(monkeypatch, por_ip=2)
     h = {"X-Forwarded-For": "203.0.113.7, 10.0.0.1"}
     assert client.post("/mapa-rapido", json={"data": "15/05/1990"}, headers=h).status_code == 200
     assert client.post("/mapa-rapido", json={"data": "15/05/1990"}, headers=h).status_code == 200
@@ -72,7 +79,7 @@ def test_limite_por_ip(monkeypatch):
 
 def test_xff_forjado_nao_escapa_do_limite(monkeypatch):
     """O cliente controla o início do X-Forwarded-For; vale o último item (o que o proxy viu)."""
-    _, client, _ = _app(monkeypatch, por_ip="2")
+    _, client, _ = _app(monkeypatch, por_ip=2)
     corpo = {"data": "15/05/1990"}
     assert client.post("/mapa-rapido", json=corpo, headers={"X-Forwarded-For": "1.1.1.1, 9.9.9.9"}).status_code == 200
     assert client.post("/mapa-rapido", json=corpo, headers={"X-Forwarded-For": "2.2.2.2, 9.9.9.9"}).status_code == 200
@@ -87,4 +94,24 @@ def test_corpo_grande_demais(monkeypatch):
     assert r.status_code == 413
     assert r.json() == {"erro": "Corpo grande demais."}
     assert r.headers["access-control-allow-origin"] == SITE
+    assert chamadas == []
+
+
+def test_corpo_grande_demais_sem_content_length(monkeypatch):
+    """Upload chunked (gerador): sem Content-Length, o teto vale no corpo lido."""
+    _, client, chamadas = _app(monkeypatch)
+    enviados = []
+
+    def pedacos():
+        for _ in range(5):
+            enviados.append(1)
+            yield b"x" * 1000
+
+    r = client.post("/mapa-rapido", content=pedacos(),
+                    headers={"Content-Type": "application/json", "Origin": SITE})
+    assert "content-length" not in r.request.headers
+    assert enviados, "o gerador devia ter sido consumido"
+    assert 5 * 1000 > MAPA_RAPIDO_BODY_MAX
+    assert r.status_code == 413
+    assert r.json() == {"erro": "Corpo grande demais."}
     assert chamadas == []

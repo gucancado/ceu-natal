@@ -22,9 +22,14 @@ GEONAMES_URL = "https://secure.geonames.org/searchJSON"
 # threadpool por até HTTP_TIMEOUT s; sem teto, /mapa-rapido vira vetor de DoS.
 GEOCODER_MAX_CONCORRENTES = int(os.getenv("GEOCODER_MAX_CONCORRENTES", "4"))
 GEOCODER_ESPERA_MAX_S = float(os.getenv("GEOCODER_ESPERA_MAX_S", "3.0"))
-# Falha fica no cache por 1 h (evita martelar provedor com cidade inexistente).
+# "Não encontrado" (um provedor respondeu sem resultado) fica no cache por 1 h:
+# evita martelar provedor com cidade inexistente.
 TTL_FALHA_S = 3600
-# Teto de entradas do cache; ao exceder, descarta a mais antiga.
+# Provedor indisponível (rede, quota, resposta inválida) fica no máximo 5 min:
+# uma queda curta não pode bloquear uma cidade válida por 1 h.
+TTL_INDISPONIVEL_S = 300
+# Teto de entradas do cache; ao exceder, descarta primeiro falhas expiradas,
+# depois falhas vigentes e só então coordenadas (sempre da mais antiga).
 CACHE_MAX = 10_000
 # Nominatim/OSM exige no máximo 1 req/s. Serializamos as chamadas.
 _NOMINATIM_MIN_INTERVAL = float(os.getenv("NOMINATIM_MIN_INTERVAL_S", "1.0"))
@@ -69,6 +74,13 @@ class GeocodingError(Exception):
     """Falha resolvendo cidade/coordenadas em todos os provedores."""
 
 
+class ProvedorIndisponivel(Exception):
+    """O provedor não respondeu (rede, quota, resposta fora do formato).
+
+    Diferente de "não encontrado", que o provedor devolve como `None`.
+    """
+
+
 _SEMAFORO = threading.BoundedSemaphore(GEOCODER_MAX_CONCORRENTES)
 _cache_lock = threading.Lock()
 _cache: dict = {}
@@ -76,6 +88,30 @@ _cache_loaded = False
 
 _nominatim_lock = threading.Lock()
 _last_nominatim = 0.0
+
+
+def configurar(
+    *,
+    cache_path: Optional[str] = None,
+    max_concorrentes: Optional[int] = None,
+    espera_max_s: Optional[float] = None,
+) -> None:
+    """Reconfigura o módulo e zera o estado: cache em memória (recarregado do
+    arquivo no próximo uso), semáforo e relógio do Nominatim. Parâmetro omitido
+    mantém o valor atual. Os testes usam isto no lugar de recarregar o módulo."""
+    global CACHE_PATH, GEOCODER_MAX_CONCORRENTES, GEOCODER_ESPERA_MAX_S
+    global _SEMAFORO, _cache, _cache_loaded, _last_nominatim
+    if cache_path is not None:
+        CACHE_PATH = cache_path
+    if max_concorrentes is not None:
+        GEOCODER_MAX_CONCORRENTES = max_concorrentes
+    if espera_max_s is not None:
+        GEOCODER_ESPERA_MAX_S = espera_max_s
+    with _cache_lock:
+        _cache = {}
+        _cache_loaded = False
+    _SEMAFORO = threading.BoundedSemaphore(GEOCODER_MAX_CONCORRENTES)
+    _last_nominatim = 0.0
 
 
 def _throttle_nominatim() -> None:
@@ -106,6 +142,14 @@ def _entrada_sucesso(valor) -> bool:
 def _entrada_falha(valor) -> bool:
     return (isinstance(valor, dict) and valor.get("erro") is True
             and isinstance(valor.get("ts"), (int, float)))
+
+
+def _ttl_falha(entrada: dict) -> int:
+    return TTL_INDISPONIVEL_S if entrada.get("indisponivel") else TTL_FALHA_S
+
+
+def _falha_expirada(entrada: dict, agora: float) -> bool:
+    return agora - entrada["ts"] >= _ttl_falha(entrada)
 
 
 def _load_cache() -> dict:
@@ -143,13 +187,27 @@ def _save_cache() -> None:
                        CACHE_PATH, exc)
 
 
+def _evictar() -> None:
+    """Traz o cache para CACHE_MAX: falhas expiradas, depois falhas vigentes e
+    por último coordenadas, sempre da mais antiga. Chamada já com o lock."""
+    if len(_cache) <= CACHE_MAX:
+        return
+    agora = time.time()
+    for chave in [k for k, v in _cache.items() if _entrada_falha(v) and _falha_expirada(v, agora)]:
+        del _cache[chave]
+    falhas = [k for k, v in _cache.items() if _entrada_falha(v)]
+    while len(_cache) > CACHE_MAX and falhas:
+        del _cache[falhas.pop(0)]
+    while len(_cache) > CACHE_MAX:
+        del _cache[next(iter(_cache))]
+
+
 def _guardar(cache_key: str, valor: dict) -> None:
     """Grava no cache (já carregado), respeita CACHE_MAX e persiste."""
     with _cache_lock:
         _cache.pop(cache_key, None)
         _cache[cache_key] = valor
-        while len(_cache) > CACHE_MAX:
-            del _cache[next(iter(_cache))]
+        _evictar()
         _save_cache()
 
 
@@ -185,6 +243,11 @@ def _build_query(cidade: str, nacao: str) -> str:
 
 
 def _try_geonames(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
+    """(lat, lng), ou None se o GeoNames respondeu sem resultado.
+
+    Levanta `ProvedorIndisponivel` em erro de rede, quota (o GeoNames responde
+    200 com um bloco `status`) ou resposta fora do formato.
+    """
     params = {
         "q": _build_query(cidade, nacao),
         "maxRows": 1,
@@ -202,7 +265,12 @@ def _try_geonames(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
             data = json.loads(resp.read().decode("utf-8"))
     except Exception as exc:
         logger.info("GeoNames indisponível: %s", exc)
-        return None
+        raise ProvedorIndisponivel(f"GeoNames: {exc}") from exc
+
+    if not isinstance(data, dict) or data.get("status"):
+        detalhe = data.get("status") if isinstance(data, dict) else data
+        logger.info("GeoNames indisponível: %s", detalhe)
+        raise ProvedorIndisponivel(f"GeoNames: {detalhe}")
 
     results = data.get("geonames") or []
     if not results:
@@ -210,11 +278,15 @@ def _try_geonames(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
     first = results[0]
     try:
         return float(first["lat"]), float(first["lng"])
-    except (KeyError, TypeError, ValueError):
-        return None
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ProvedorIndisponivel(f"GeoNames: resposta sem coordenadas ({exc})") from exc
 
 
 def _try_nominatim(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
+    """(lat, lng), ou None se o Nominatim respondeu sem resultado.
+
+    Levanta `ProvedorIndisponivel` em erro de rede, quota ou resposta inválida.
+    """
     _throttle_nominatim()
     try:
         geolocator = Nominatim(user_agent=NOMINATIM_USER_AGENT, timeout=HTTP_TIMEOUT)
@@ -225,7 +297,7 @@ def _try_nominatim(cidade: str, nacao: str) -> Optional[Tuple[float, float]]:
         return float(location.latitude), float(location.longitude)
     except Exception as exc:
         logger.info("Nominatim indisponível: %s", exc)
-        return None
+        raise ProvedorIndisponivel(f"Nominatim: {exc}") from exc
 
 
 def geocode(cidade: str, nacao: str) -> dict:
@@ -256,26 +328,31 @@ def geocode(cidade: str, nacao: str) -> dict:
         if not entrada.get("erro"):
             _log_geocode(cidade, nacao, source="cache", cache_hit=True)
             return entrada
-        if time.time() - entrada["ts"] < TTL_FALHA_S:
+        if not _falha_expirada(entrada, time.time()):
             _log_geocode(cidade, nacao, source="cache_falha", cache_hit=True)
             raise GeocodingError(msg_falha)
 
-    if not _SEMAFORO.acquire(timeout=GEOCODER_ESPERA_MAX_S):
+    semaforo = _SEMAFORO
+    if not semaforo.acquire(timeout=GEOCODER_ESPERA_MAX_S):
         raise GeocodingError("Geocodificador ocupado. Tente de novo em instantes.")
+    coords, source, indisponivel = None, "", False
     try:
-        geonames_result = _try_geonames(cidade, nacao)
-        if geonames_result:
-            coords, source = geonames_result, "geonames"
-        else:
-            nominatim_result = _try_nominatim(cidade, nacao)
-            coords, source = nominatim_result, "nominatim"
+        for source, provedor in (("geonames", _try_geonames), ("nominatim", _try_nominatim)):
+            try:
+                coords = provedor(cidade, nacao)
+            except ProvedorIndisponivel:
+                indisponivel = True
+                continue
+            if coords:
+                break
     finally:
-        _SEMAFORO.release()
+        semaforo.release()
 
-    if coords is None:
-        # Diferenciar "todos os provedores indisponíveis" vs "cidade não encontrada"
-        # é difícil sem expor estado interno; mensagem cobre ambos os casos.
-        _guardar(cache_key, {"erro": True, "ts": time.time()})
+    if not coords:
+        # Mesma mensagem nos dois casos; muda quanto a falha fica no cache:
+        # "não encontrado" TTL_FALHA_S, algum provedor fora do ar
+        # TTL_INDISPONIVEL_S (o outro pode ter só não achado por ser pior).
+        _guardar(cache_key, {"erro": True, "ts": time.time(), "indisponivel": indisponivel})
         raise GeocodingError(msg_falha)
 
     lat, lng = coords
