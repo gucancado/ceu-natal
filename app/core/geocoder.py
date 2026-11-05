@@ -17,7 +17,8 @@ from timezonefinder import TimezoneFinder
 
 logger = logging.getLogger(__name__)
 
-GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "gucancado")
+# Vazio: o GeoNames sai da cadeia e só o Nominatim (1 req/s) é usado.
+GEONAMES_USERNAME = os.getenv("GEONAMES_USERNAME", "")
 NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "ceu-natal-mcp/2.0")
 HTTP_TIMEOUT = 8
 GEONAMES_URL = "https://secure.geonames.org/searchJSON"
@@ -92,6 +93,8 @@ _cache_loaded = False
 _nominatim_lock = threading.Lock()
 _last_nominatim = 0.0
 
+_avisado_sem_geonames = False
+
 
 def configurar(
     *,
@@ -103,7 +106,7 @@ def configurar(
     arquivo no próximo uso), semáforo e relógio do Nominatim. Parâmetro omitido
     mantém o valor atual. Os testes usam isto no lugar de recarregar o módulo."""
     global CACHE_PATH, GEOCODER_MAX_CONCORRENTES, GEOCODER_ESPERA_MAX_S
-    global _SEMAFORO, _cache, _cache_loaded, _last_nominatim
+    global _SEMAFORO, _cache, _cache_loaded, _last_nominatim, _avisado_sem_geonames
     if cache_path is not None:
         CACHE_PATH = cache_path
     if max_concorrentes is not None:
@@ -115,6 +118,27 @@ def configurar(
         _cache_loaded = False
     _SEMAFORO = threading.BoundedSemaphore(GEOCODER_MAX_CONCORRENTES)
     _last_nominatim = 0.0
+    _avisado_sem_geonames = False
+
+
+def _avisar_sem_geonames() -> None:
+    """Avisa uma vez por processo (ou por `configurar`) que o GeoNames está fora."""
+    global _avisado_sem_geonames
+    if _avisado_sem_geonames:
+        return
+    _avisado_sem_geonames = True
+    logger.warning(
+        "GEONAMES_USERNAME não definido: usando só o Nominatim (1 req/s). "
+        "Crie uma conta gratuita em geonames.org e defina a env."
+    )
+
+
+def _provedores() -> list:
+    """Cadeia de provedores na ordem de tentativa."""
+    if not GEONAMES_USERNAME:
+        _avisar_sem_geonames()
+        return [("nominatim", _try_nominatim)]
+    return [("geonames", _try_geonames), ("nominatim", _try_nominatim)]
 
 
 def _throttle_nominatim() -> None:
@@ -310,7 +334,8 @@ def geocode(cidade: str, nacao: str) -> dict:
     """
     Resolve cidade/nação para {lat, lng, tz_str}.
 
-    Tenta GeoNames (HTTP direto) e cai pra Nominatim/OSM como fallback.
+    Tenta GeoNames (HTTP direto) e cai pra Nominatim/OSM como fallback; sem
+    `GEONAMES_USERNAME`, usa só o Nominatim.
     Cache persistente em arquivo JSON (`GEOCODER_CACHE_PATH`).
 
     Levanta `GeocodingError` se nenhum provedor conseguir resolver.
@@ -343,7 +368,7 @@ def geocode(cidade: str, nacao: str) -> dict:
         raise GeocodingError("Geocodificador ocupado. Tente de novo em instantes.")
     coords, source, indisponivel = None, "", False
     try:
-        for nome, provedor in (("geonames", _try_geonames), ("nominatim", _try_nominatim)):
+        for nome, provedor in _provedores():
             try:
                 coords = provedor(cidade, nacao)
             except ProvedorIndisponivel:
