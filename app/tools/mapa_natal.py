@@ -122,6 +122,10 @@ def calcular_mapa_natal(
         "sintese": sintese,
     }
 
+    if tem_local:
+        # Valores resolvidos antes do subject: o Kerykeion corta |lat| > 66°.
+        resultado["local_resolvido"] = {"lat": lat, "lng": lng, "fuso": tz_str}
+
     if not incluir_casas:
         avisos = []
         if not tem_hora:
