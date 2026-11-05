@@ -43,7 +43,7 @@ export function RotadorPrompts() {
       clearTimeout(espera);
       if (troca) clearTimeout(troca);
     };
-  }, [digitando, texto]);
+  }, [letras, digitando, texto]);
 
   return (
     <div>
