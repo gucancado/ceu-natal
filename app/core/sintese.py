@@ -16,8 +16,8 @@ def _hemisferio(qtd_a: int, qtd_b: int, nome_a: str, nome_b: str):
 
 
 def calcular_sintese(planetas_dict: dict, aspectos: list[dict]) -> dict:
-    elementos = Counter()
-    qualidades = Counter()
+    elementos: Counter[str] = Counter()
+    qualidades: Counter[str] = Counter()
     for nome in PLANETAS_PRINCIPAIS_PT:
         p = planetas_dict.get(nome, {})
         if p.get("elemento"):
@@ -47,14 +47,14 @@ def calcular_sintese(planetas_dict: dict, aspectos: list[dict]) -> dict:
     )
     hemisferio_horizontal = _hemisferio(leste, oeste, "Leste", "Oeste")
 
-    contagem = Counter()
+    contagem: Counter[str] = Counter()
     for asp in aspectos:
         contagem[asp["planeta_a"]] += 1
         contagem[asp["planeta_b"]] += 1
     planeta_mais_aspectado = contagem.most_common(1)[0][0] if contagem else None
 
-    por_signo = Counter()
-    por_casa = Counter()
+    por_signo: Counter[str] = Counter()
+    por_casa: Counter[int] = Counter()
     planetas_por_signo: dict = {}
     planetas_por_casa: dict = {}
     for nome in PLANETAS_PRINCIPAIS_PT:
@@ -91,8 +91,8 @@ def sintese_sinastria(aspectos: list[dict]) -> dict:
     tensao = sum(1 for a in aspectos if a["natureza"] == "tensao")
     neutros = sum(1 for a in aspectos if a["natureza"] == "neutro")
 
-    contagem_a = Counter()
-    contagem_b = Counter()
+    contagem_a: Counter[str] = Counter()
+    contagem_b: Counter[str] = Counter()
     for a in aspectos:
         contagem_a[a["planeta_a"]] += 1
         contagem_b[a["planeta_b"]] += 1

@@ -5,7 +5,7 @@ from app.tools.transitos import (
     calcular_transitos,
     destacar_transitos_lentos,
 )
-from tests.conftest import ANA, BH
+from tests.conftest import ANA
 
 
 # ─────────────────────────────────────────────────────────────

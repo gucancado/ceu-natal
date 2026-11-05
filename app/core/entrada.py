@@ -45,6 +45,12 @@ class EntradaNascimento:
     def tem_hora(self) -> bool:
         return self.hora is not None
 
+    def hora_ou_meio_dia(self) -> tuple[int, int]:
+        """(hora, minuto) informados; sem hora, 12:00."""
+        if self.hora is None or self.minuto is None:
+            return 12, 0
+        return self.hora, self.minuto
+
     @property
     def tem_local(self) -> bool:
         """Local por nome de cidade ou por coordenadas explícitas (lat e lng)."""
@@ -123,7 +129,8 @@ class EntradaNascimento:
         from app.core.kerykeion import exigir_latitude_com_casas
 
         resolvida = self.resolvida()
-        if resolvida.tem_local:
+        # Resolvida com local sempre tem `lat`; o segundo teste só estreita o tipo.
+        if resolvida.tem_local and resolvida.lat is not None:
             exigir_latitude_com_casas(resolvida.lat)
         return resolvida
 
@@ -131,11 +138,11 @@ class EntradaNascimento:
         """AstrologicalSubject da entrada; sem hora, calcula para as 12:00."""
         from app.core.kerykeion import criar_subject
 
+        hora, minuto = self.hora_ou_meio_dia()
         return criar_subject(
             nome=self.nome,
             ano=self.ano, mes=self.mes, dia=self.dia,
-            hora=self.hora if self.tem_hora else 12,
-            minuto=self.minuto if self.tem_hora else 0,
+            hora=hora, minuto=minuto,
             cidade=self.cidade, nacao=self.nacao,
             lat=self.lat, lng=self.lng, tz_str=self.tz_str,
             sistema_casas=sistema_id,

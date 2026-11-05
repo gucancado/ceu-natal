@@ -172,15 +172,13 @@ class TestThrottleNominatim:
 # ─────────────────────────────────────────────────────────────
 # Log estruturado de resolução (telemetria)
 # ─────────────────────────────────────────────────────────────
-import json as _json
-
 
 class TestLogResolucao:
     def _eventos(self, caplog):
         eventos = []
         for rec in caplog.records:
             try:
-                obj = _json.loads(rec.getMessage())
+                obj = json.loads(rec.getMessage())
             except (ValueError, TypeError):
                 continue
             if obj.get("event") == "geocode":
@@ -288,7 +286,7 @@ def test_falha_cacheada_nao_chama_provedor(geocoder, monkeypatch, caplog):
         with pytest.raises(geocoder.GeocodingError):
             geocoder.geocode("Cidade Inexistente", "BR")
     assert chamadas == {"geonames": 1, "nominatim": 1}
-    eventos = [_json.loads(r.getMessage()) for r in caplog.records
+    eventos = [json.loads(r.getMessage()) for r in caplog.records
                if r.getMessage().startswith("{")]
     assert eventos and eventos[-1]["source"] == "cache_falha"
 

@@ -2,9 +2,12 @@
 Wrapper sobre Kerykeion 5.x: cria AstrologicalSubject com lat/lng/tz explícitos
 (online=False) e expõe utilitários para extrair planetas e casas.
 """
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, cast
 
 from kerykeion import AstrologicalSubjectFactory
+
+if TYPE_CHECKING:
+    from kerykeion.schemas import HousesSystemIdentifier
 
 from app.core.formatter import CASAS_NOMES, PLANETAS_NOMES_PT
 from app.core.geocoder import geocode
@@ -43,12 +46,6 @@ def exigir_latitude_com_casas(lat: float) -> None:
         raise ValueError(f"Casas e ângulos indisponíveis: {MOTIVO_LATITUDE_SEM_CASAS}.")
 
 
-def _coords_from_local(cidade: Optional[str], nacao: Optional[str]) -> Optional[dict]:
-    if not cidade:
-        return None
-    return geocode(cidade, nacao or "")
-
-
 def resolver_coordenadas(
     cidade: Optional[str],
     nacao: Optional[str],
@@ -59,7 +56,7 @@ def resolver_coordenadas(
     """(lat, lng, tz_str) explícitos, ou via geocode(cidade, nacao), ou (0, 0, UTC)."""
     if lat is None or lng is None or tz_str is None:
         if cidade:
-            coords = _coords_from_local(cidade, nacao)
+            coords = geocode(cidade, nacao or "")
             return coords["lat"], coords["lng"], coords["tz_str"]
         return 0.0, 0.0, "UTC"
     return lat, lng, tz_str
@@ -111,7 +108,8 @@ def criar_subject(
             city=cidade or "Unknown",
             nation=nacao or "XX",
             lat=lat, lng=lng, tz_str=tz_str,
-            houses_system_identifier=sistema_casas,
+            # `sistema_casas` já passou por `validar_sistema_casas` (subconjunto do Literal).
+            houses_system_identifier=cast("HousesSystemIdentifier", sistema_casas),
             is_dst=is_dst,
             online=False,
         )

@@ -53,10 +53,11 @@ def _datetime_natal_utc(entrada: EntradaNascimento) -> datetime:
     as duas leituras coincidem e `is_dst` é ignorado; sem `is_dst` vale
     `fold=0` (o subject natal já recusa a hora ambígua nesse caso).
     """
+    hora, minuto = entrada.hora_ou_meio_dia()
+    # A entrada chega resolvida (`exigir_casas`), então tem fuso.
+    assert entrada.tz_str is not None
     local = datetime(
-        entrada.ano, entrada.mes, entrada.dia,
-        entrada.hora if entrada.tem_hora else 12,
-        entrada.minuto if entrada.tem_hora else 0,
+        entrada.ano, entrada.mes, entrada.dia, hora, minuto,
         tzinfo=ZoneInfo(entrada.tz_str),
     )
     leituras = [local.replace(fold=0), local.replace(fold=1)]

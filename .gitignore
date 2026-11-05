@@ -17,3 +17,5 @@ venv/
 scripts/saida/
 scripts/dados_familia.json
 .superpowers/
+.mypy_cache/
+.ruff_cache/
