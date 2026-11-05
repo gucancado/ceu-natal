@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { EmailOculto } from "@/components/email-oculto";
-import { site } from "@/lib/site";
+import { contato, site } from "@/lib/site";
 
 const linkRodape =
   "rounded-sm text-muted-fg underline-offset-4 transition-colors hover:text-fg hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -25,7 +24,7 @@ export function Rodape() {
               </li>
             ))}
             <li>
-              <a href={site.repoUrl} rel="noopener" className={linkRodape}>
+              <a href={site.repoUrl} className={linkRodape}>
                 GitHub
               </a>
             </li>
@@ -33,7 +32,9 @@ export function Rodape() {
         </nav>
         <div className="text-muted-fg md:text-right">
           <p>fiz em belo horizonte. gustavo cançado</p>
-          <EmailOculto className="block font-mono text-sm" />
+          <a href={`mailto:${contato.email}`} className={`${linkRodape} block font-mono text-sm`}>
+            {contato.email}
+          </a>
         </div>
       </div>
     </footer>

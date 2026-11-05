@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { semBarraFinal } from "../src/lib/site";
+import { contato, semBarraFinal } from "../src/lib/site";
 
 test("semBarraFinal tira uma ou mais barras finais", () => {
   assert.equal(semBarraFinal("https://x.y/"), "https://x.y");
@@ -33,4 +33,8 @@ test("site lê defaults e monta os endpoints", () => {
   assert.equal(site.sseEndpoint, "https://astrologia-mcp.gustavocancado.com.br/sse");
   assert.equal(site.url, "https://mistico.gustavocancado.com.br");
   assert.equal(site.repoUrl, "https://github.com/gucancado/ceu-natal");
+});
+
+test("contato.email é um endereço em texto", () => {
+  assert.match(contato.email, /^[^@\s]+@[^@\s]+\.[^@\s]+$/);
 });

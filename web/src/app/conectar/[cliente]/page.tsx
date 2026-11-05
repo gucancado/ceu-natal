@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuiaCorpo } from "@/components/guia";
 import { cliente, clientes } from "@/content/clientes";
+import { verificadoEm } from "@/content/setup";
 
 type Props = { params: Promise<{ cliente: string }> };
 
@@ -45,7 +46,7 @@ export default async function PaginaCliente({ params }: Props) {
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-sm text-muted-fg">Verificado em novembro de 2026.</p>
+        <p className="mt-6 text-sm text-muted-fg">Verificado em {verificadoEm}.</p>
         <Link href="/#conectar" className="mt-8 inline-block text-honey underline underline-offset-4">
           Voltar para todos os guias
         </Link>

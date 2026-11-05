@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { GuiaCorpo } from "@/components/guia";
 import { cliente, clientes } from "@/content/clientes";
 import { logos, type Logo } from "@/content/logos";
@@ -30,10 +30,19 @@ function IconeLogo({ slug }: { slug: string }) {
 export function PlataformasGrade({ inicial }: { inicial: string | null }) {
   const [aberto, setAberto] = useState<string | null>(inicial);
   const atual = aberto ? cliente(aberto) : undefined;
+  const titulo = useRef<HTMLHeadingElement>(null);
+  // Só leva o foco quando a pessoa abriu um guia; o aberto pela URL (?cliente=) não rouba o foco.
+  const abriuAgora = useRef(false);
+
+  useEffect(() => {
+    if (aberto && abriuAgora.current) titulo.current?.focus();
+    abriuAgora.current = false;
+  }, [aberto]);
 
   function alternar(e: MouseEvent<HTMLAnchorElement>, slug: string) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
+    abriuAgora.current = aberto !== slug;
     setAberto((s) => (s === slug ? null : slug));
   }
 
@@ -60,10 +69,10 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
           );
         })}
       </ul>
-      <div id="passo-a-passo" aria-live="polite" className="mt-10">
+      <div id="passo-a-passo" className="mt-10">
         {atual ? (
           <div className="rounded-md border border-border p-6 md:p-8">
-            <h3 className="flex items-center gap-3 font-display text-2xl font-medium">
+            <h3 ref={titulo} tabIndex={-1} className="flex items-center gap-3 font-display text-2xl font-medium focus:outline-none">
               <IconeLogo slug={atual.slug} />
               {atual.nome}
             </h3>

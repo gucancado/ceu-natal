@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ThemeProvider } from "@beeads/ui";
 import { Cabecalho } from "@/components/cabecalho";
 import { Rodape } from "@/components/rodape";
 import { newsreader, plexMono } from "@/lib/fontes";
@@ -25,19 +24,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`dark ${newsreader.variable} ${plexMono.variable}`}>
+    // Tema único escuro: a classe fica fixa no HTML, sem provedor de tema no cliente.
+    <html lang="pt-BR" className={`dark ${newsreader.variable} ${plexMono.variable}`}>
       <body className="text-base leading-[1.6]">
-        <ThemeProvider attribute="class" forcedTheme="dark" defaultTheme="dark">
-          <a
-            href="#conteudo"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-bg focus:px-3 focus:py-2 focus:outline-2 focus:outline-honey"
-          >
-            Pular para o conteúdo
-          </a>
-          <Cabecalho />
-          <main id="conteudo">{children}</main>
-          <Rodape />
-        </ThemeProvider>
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-bg focus:px-3 focus:py-2 focus:outline-2 focus:outline-honey"
+        >
+          Pular para o conteúdo
+        </a>
+        <Cabecalho />
+        <main id="conteudo">{children}</main>
+        <Rodape />
       </body>
     </html>
   );

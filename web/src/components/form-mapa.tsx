@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button, Input, Label } from "@beeads/ui";
 import { CaixaPrompt } from "@/components/caixa-prompt";
 import { textoMapa, type MapaRapido } from "@/lib/mapa-texto";
@@ -12,6 +12,8 @@ function dataBr(iso: string): string {
   return `${d}/${m}/${a}`;
 }
 
+const TEMPO_MAX_MS = 15000;
+
 type Estado =
   | { tipo: "vazio" }
   | { tipo: "calculando" }
@@ -20,22 +22,33 @@ type Estado =
 
 export function FormMapa() {
   const [estado, setEstado] = useState<Estado>({ tipo: "vazio" });
+  const tituloResultado = useRef<HTMLHeadingElement>(null);
+  const campoLocal = useRef<HTMLInputElement>(null);
+
+  // Resultado pronto: o foco vai para o título, e o leitor de tela anuncia o que apareceu.
+  useEffect(() => {
+    if (estado.tipo === "pronto") tituloResultado.current?.focus();
+  }, [estado]);
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const data = String(f.get("data") || "");
+    const hora = String(f.get("hora") || "");
+    const local = String(f.get("local") || "").trim();
     if (!data) return;
+    if (hora && !local) {
+      setEstado({ tipo: "erro", mensagem: "Com a hora, preencha também a cidade: sem ela não dá para calcular ascendente e casas." });
+      campoLocal.current?.focus();
+      return;
+    }
     setEstado({ tipo: "calculando" });
     try {
       const r = await fetch(`${site.mcpUrl}/mapa-rapido`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: dataBr(data),
-          hora: String(f.get("hora") || ""),
-          local: String(f.get("local") || ""),
-        }),
+        body: JSON.stringify({ data: dataBr(data), hora, local }),
+        signal: AbortSignal.timeout(TEMPO_MAX_MS),
       });
       const corpo = await r.json().catch(() => null);
       if (!r.ok || !corpo || corpo.erro) {
@@ -43,8 +56,14 @@ export function FormMapa() {
         return;
       }
       setEstado({ tipo: "pronto", texto: textoMapa(corpo as MapaRapido) });
-    } catch {
-      setEstado({ tipo: "erro", mensagem: "Sem conexão com o servidor. Tente de novo em instantes." });
+    } catch (err) {
+      const estourou = err instanceof DOMException && err.name === "TimeoutError";
+      setEstado({
+        tipo: "erro",
+        mensagem: estourou
+          ? "O servidor demorou demais. Tente de novo."
+          : "Sem conexão com o servidor. Tente de novo em instantes.",
+      });
     }
   }
 
@@ -56,24 +75,27 @@ export function FormMapa() {
           <Input id="data" name="data" type="date" required min="1800-01-01" max="2100-12-31" />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="hora">Hora (opcional, mas sem ela não há ascendente nem casas)</Label>
+          <Label htmlFor="hora">Hora (opcional; com a cidade, dá ascendente e casas)</Label>
           <Input id="hora" name="hora" type="time" />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="local">Cidade (opcional)</Label>
-          <Input id="local" name="local" type="text" placeholder="Belo Horizonte, MG" maxLength={120} autoComplete="off" />
+          <Input ref={campoLocal} id="local" name="local" type="text" placeholder="Belo Horizonte, MG" maxLength={120} autoComplete="off" />
         </div>
         <div>
           <Button type="submit" size="lg" disabled={estado.tipo === "calculando"}>
             {estado.tipo === "calculando" ? "Calculando…" : "Calcular meu mapa"}
           </Button>
         </div>
-        <p aria-live="polite" role="status" className="text-sm text-muted-fg">
+        <p aria-live="polite" className="text-sm text-muted-fg">
           {estado.tipo === "erro" ? <span className="text-fg">{estado.mensagem}</span> : null}
         </p>
       </form>
       {estado.tipo === "pronto" ? (
         <div className="grid max-w-[48rem] gap-4">
+          <h2 ref={tituloResultado} tabIndex={-1} className="font-display text-2xl font-medium focus:outline-none">
+            Seu mapa está pronto
+          </h2>
           <p className="text-lg">
             Copie o texto abaixo e cole no seu assistente de IA. Ele já vai com o pedido para conectar o {site.nome}.
           </p>

@@ -10,29 +10,9 @@
   --breakpoint-3xl: 1700px;
 }
 
-/* Camada de tokens da marca: sobrescreve por completo a paleta honey/ink da BeeAds. */
+/* Tema único (escuro, céu profundo): os tokens da marca vivem em :root e sobrescrevem a paleta honey/ink da BeeAds.
+   Vêm depois do .dark do @beeads/tokens (mesma especificidade), então valem também com a classe dark no <html>. */
 :root {
-  --color-honey: #B5121B;
-  --color-honey-soft: #F7DADB;
-  --color-honey-deep: #8E0E15;
-  --color-ink: #1D2342;
-  --color-paper: #F3F6FA;
-  --color-paper-2: #E8EDF5;
-  --color-border: #D5DBE7;
-  --color-muted-fg: #5B6079;
-  --color-card: #FFFFFF;
-  --color-accent: var(--color-honey);
-  --color-accent-fg: #FFFFFF;
-  --color-ring: var(--color-honey);
-  --color-info: #1D2342;
-  --radius: 0.25rem;
-  --font-display: var(--font-newsreader), Georgia, serif;
-  --font-sans: var(--font-newsreader), Georgia, serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-}
-
-/* Só tema escuro: céu profundo. */
-.dark {
   color-scheme: dark;
   --color-bg: #05060F;
   --color-fg: #ECEEF8;
@@ -51,27 +31,41 @@
   --color-accent: #F0616B;
   --color-accent-fg: #05060F;
   --color-ring: #F0616B;
+  --radius: 0.25rem;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 html {
   background: var(--color-bg);
 }
 
-/* Todo texto visível em caixa baixa (o texto copiado e o HTML continuam como estão). */
 body {
   font-family: var(--font-sans);
   background: transparent;
   color: var(--color-fg);
-  text-transform: lowercase;
   position: relative;
 }
 
-/* Botões e campos não herdam text-transform por padrão. */
-button,
-input,
-select,
-textarea {
+/* Caixa baixa só nos blocos de marketing (hero, títulos de seção, carta). O texto copiado e o HTML continuam como estão. */
+.caixa-baixa {
+  text-transform: lowercase;
+}
+
+/* Botões herdam a caixa do bloco; código, campos e textos longos nunca mudam de caixa
+   (quem digita a configuração precisa ver "mcpServers", não "mcpservers"). */
+button {
   text-transform: inherit;
+}
+
+pre,
+code,
+kbd,
+input,
+textarea,
+article {
+  text-transform: none;
 }
 
 /* Nebulosa + campo de estrelas fixos atrás do conteúdo. */

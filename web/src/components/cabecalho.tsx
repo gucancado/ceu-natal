@@ -17,24 +17,22 @@ export function Cabecalho() {
         <Link href="/" className={`${foco} font-display text-2xl font-medium`}>
           {site.nome}
         </Link>
-        <div className="flex items-center gap-4">
-          <nav aria-label="Principal">
-            <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
-              {ancoras.map((a) => (
-                <li key={a.href}>
-                  <Link href={a.href} className={linkNav}>
-                    {a.rotulo}
-                  </Link>
-                </li>
-              ))}
-              <li>
-                <a href={site.repoUrl} rel="noopener" className={linkNav}>
-                  GitHub
-                </a>
+        <nav aria-label="Principal">
+          <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {ancoras.map((a) => (
+              <li key={a.href}>
+                <Link href={a.href} className={linkNav}>
+                  {a.rotulo}
+                </Link>
               </li>
-            </ul>
-          </nav>
-        </div>
+            ))}
+            <li>
+              <a href={site.repoUrl} className={linkNav}>
+                GitHub
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
     </header>
   );

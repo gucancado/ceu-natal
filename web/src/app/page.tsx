@@ -11,10 +11,11 @@ import { Profissionais } from "@/components/profissionais";
 import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
+import { tituloHome } from "@/lib/site";
 
 // A descrição continua a do layout.
 export const metadata: Metadata = {
-  title: { absolute: "Céu Natal: mapa astral calculado dentro do seu chat" },
+  title: { absolute: tituloHome },
 };
 
 export default function Home() {
