@@ -1,12 +1,11 @@
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos_sinastria, casa_de_longitude
-from app.core.formatter import planeta_pt, signo_pt
+from app.core.formatter import signo_pt
 from app.core.kerykeion import (
     casas_iter,
+    coletar_pontos,
     criar_subject,
-    planetas_iter,
-    pontos_sensiveis_iter,
 )
 from app.core.sintese import sintese_sinastria
 from app.core.validators import (
@@ -47,23 +46,6 @@ def _build_subject(pessoa: dict, sistema_id: str = "P"):
         sistema_casas=sistema_id,
     )
     return subject, nome, tem_hora, tem_local
-
-
-def _coletar_pontos(subject) -> list[dict]:
-    pontos = []
-    for nome_pt, ponto in planetas_iter(subject):
-        pontos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
-    for nome_pt, ponto in pontos_sensiveis_iter(subject):
-        pontos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
-    return pontos
 
 
 def _resumo_pessoa(subject, nome: str, tem_local: bool, tem_hora: bool) -> dict:
@@ -107,8 +89,8 @@ def calcular_sinastria(
     subject_a, nome_a, tem_hora_a, tem_local_a = _build_subject(pessoa_a, sistema_id)
     subject_b, nome_b, tem_hora_b, tem_local_b = _build_subject(pessoa_b, sistema_id)
 
-    pontos_a = _coletar_pontos(subject_a)
-    pontos_b = _coletar_pontos(subject_b)
+    pontos_a = coletar_pontos(subject_a)
+    pontos_b = coletar_pontos(subject_b)
 
     aspectos = calcular_aspectos_sinastria(pontos_a, pontos_b, nome_a, nome_b)
 

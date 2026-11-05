@@ -19,9 +19,9 @@ from app.core.aspectos import calcular_aspectos_sinastria, casa_de_longitude
 from app.core.formatter import formatar_planeta
 from app.core.kerykeion import (
     casas_iter,
+    coletar_pontos,
     criar_subject,
     planetas_iter,
-    pontos_sensiveis_iter,
 )
 from app.core.validators import (
     parse_data,
@@ -107,15 +107,6 @@ def _build_subject_natal(natal: dict, sistema_id: str):
     )
 
 
-def _coletar_pontos(subject) -> list[dict]:
-    pontos = []
-    for nome_pt, ponto in planetas_iter(subject):
-        pontos.append({"nome": nome_pt, "abs_pos": ponto.abs_pos, "speed": ponto.speed})
-    for nome_pt, ponto in pontos_sensiveis_iter(subject):
-        pontos.append({"nome": nome_pt, "abs_pos": ponto.abs_pos, "speed": ponto.speed})
-    return pontos
-
-
 def _formatar_progredidos(subject_p, cuspides_natais: list[float]) -> dict:
     saida = {}
     for nome_pt, ponto in planetas_iter(subject_p):
@@ -195,8 +186,8 @@ def calcular_progressoes(
     subject_natal = _build_subject_natal(natal, sistema_id)
     subject_p = _build_subject_progredido(natal, dt_progredido, sistema_id)
 
-    pontos_p = _coletar_pontos(subject_p)
-    pontos_n = _coletar_pontos(subject_natal)
+    pontos_p = coletar_pontos(subject_p)
+    pontos_n = coletar_pontos(subject_natal, fixo=True)
     cuspides_natais = [c.abs_pos for _, c in casas_iter(subject_natal)]
 
     planetas_progredidos = _formatar_progredidos(subject_p, cuspides_natais)

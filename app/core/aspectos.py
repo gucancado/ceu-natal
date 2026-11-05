@@ -2,7 +2,7 @@
 Cálculo de aspectos com orbes definidos no spec, sem depender da lógica
 interna do Kerykeion (que tem orbes diferentes).
 """
-from typing import Iterable, Optional
+from typing import Optional
 
 # (nome_pt, angulo_graus, natureza)
 ASPECTOS_DEF = [
@@ -51,6 +51,8 @@ def _aplicando(p1_abs: float, p1_speed: float,
     """
     Determina se o aspecto está aplicando (planetas se aproximando do ângulo exato).
     Compara |sep| atual vs estimativa após pequeno avanço de tempo.
+    Um lado fixo (natal em trânsitos, progressões e revoluções) chega com
+    `speed=0.0` — ver `coletar_pontos(..., fixo=True)` — e só o outro se move.
     Retorna None se velocidades não estiverem disponíveis.
     """
     if p1_speed is None or p2_speed is None:

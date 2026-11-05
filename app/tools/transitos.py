@@ -12,9 +12,9 @@ from app.core.aspectos import (
 from app.core.formatter import formatar_planeta
 from app.core.kerykeion import (
     casas_iter,
+    coletar_pontos,
     criar_subject,
     planetas_iter,
-    pontos_sensiveis_iter,
 )
 from app.core.validators import (
     parse_data,
@@ -101,24 +101,6 @@ def _build_transito(data_t: str, hora_t: Optional[str], local_t: Optional[str],
     )
 
 
-def _coletar_pontos_completos(subject) -> list[dict]:
-    """Lista de pontos para cálculo de aspectos: 10 planetas + nodos + Quíron."""
-    pontos = []
-    for nome_pt, ponto in planetas_iter(subject):
-        pontos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
-    for nome_pt, ponto in pontos_sensiveis_iter(subject):
-        pontos.append({
-            "nome": nome_pt,
-            "abs_pos": ponto.abs_pos,
-            "speed": ponto.speed,
-        })
-    return pontos
-
-
 def _formatar_planetas_em_transito(subject_t, cuspides_natais: list[float]) -> dict:
     """Cada planeta em trânsito recebe casa_natal (em qual casa do mapa natal cai)."""
     saida = {}
@@ -182,7 +164,6 @@ def calcular_transitos(
     data_transito: str,
     hora_transito: Optional[str] = None,
     local_transito: Optional[str] = None,
-    orbes_aplicados: Optional[float] = None,  # placeholder p/ futuro: multiplicador de orbe
     sistema_casas: Optional[str] = None,
 ) -> dict:
     """Trânsitos planetários relativos a um mapa natal."""
@@ -191,8 +172,8 @@ def calcular_transitos(
     subject_natal, nome_natal = _build_natal(natal, sistema_id)
     subject_t = _build_transito(data_transito, hora_transito, local_transito, sistema_id)
 
-    pontos_t = _coletar_pontos_completos(subject_t)
-    pontos_n = _coletar_pontos_completos(subject_natal)
+    pontos_t = coletar_pontos(subject_t)
+    pontos_n = coletar_pontos(subject_natal, fixo=True)
 
     cuspides_natais = [c.abs_pos for _, c in casas_iter(subject_natal)]
 

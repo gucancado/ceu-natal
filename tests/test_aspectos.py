@@ -197,3 +197,36 @@ class TestCasaDeLongitude:
         assert casa_de_longitude(5.0, cuspides) == 1
         assert casa_de_longitude(355.0, cuspides) == 1
         assert casa_de_longitude(25.0, cuspides) == 2
+
+
+# ─────────────────────────────────────────────────────────────
+# aplicando com o lado natal fixo (trânsitos, progressões, revoluções)
+# ─────────────────────────────────────────────────────────────
+def test_aplicando_com_natal_fixo_usa_so_velocidade_do_transito():
+    # Saturno em trânsito a 10.5° (+0.03°/dia) quadrando Lua natal a 100°: já passou do exato (10°) → separando
+    t = [_ponto("saturno", 10.5, 0.03)]
+    n = [_ponto("lua", 100.0, 0.0)]
+    assert calcular_aspectos_sinastria(t, n, "transito", "natal")[0]["aplicando"] is False
+
+
+def test_aplicando_true_quando_transito_se_aproxima():
+    t = [_ponto("saturno", 9.5, 0.03)]
+    n = [_ponto("lua", 100.0, 0.0)]
+    assert calcular_aspectos_sinastria(t, n, "transito", "natal")[0]["aplicando"] is True
+
+
+def test_coletar_pontos_fixo_zera_velocidade():
+    pytest.importorskip("kerykeion")
+    from app.core.kerykeion import coletar_pontos, criar_subject
+    from tests.conftest import BH
+
+    subject = criar_subject(nome="Ana", ano=1990, mes=3, dia=12, hora=14, minuto=30, **BH)
+    moveis = coletar_pontos(subject)
+    fixos = coletar_pontos(subject, fixo=True)
+
+    assert len(moveis) == 13  # 10 planetas + 2 nodos + Quíron
+    assert [p["nome"] for p in fixos] == [p["nome"] for p in moveis]
+    assert [p["abs_pos"] for p in fixos] == [p["abs_pos"] for p in moveis]
+    assert all(p["speed"] == 0.0 for p in fixos)
+    lua = next(p for p in moveis if p["nome"] == "lua")
+    assert lua["speed"] > 10.0  # velocidade real da Lua (~13°/dia)
