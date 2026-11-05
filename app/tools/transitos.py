@@ -45,7 +45,7 @@ def _build_transito(data_t: str, hora_t: Optional[str], local_t: Optional[str],
     dia, mes, ano = parse_data(data_t)
     h, m = parse_hora(hora_t)
 
-    if h is None:
+    if h is None or m is None:
         h, m = 12, 0
 
     cidade, nacao = parse_local(local_t)

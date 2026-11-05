@@ -1,0 +1,17 @@
+# Só configuração de ferramentas: o projeto não é um pacote instalável.
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["web", ".venv-validacao", ".superpowers", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

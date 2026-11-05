@@ -1,13 +1,13 @@
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos
+from app.core.entrada import EntradaNascimento
 from app.core.formatter import (
     formatar_angulo,
     formatar_casas,
     formatar_planeta,
     nome_sistema_casas,
 )
-from app.core.entrada import EntradaNascimento
 from app.core.kerykeion import (
     MOTIVO_LATITUDE_SEM_CASAS,
     coletar_pontos,
@@ -51,7 +51,8 @@ def calcular_mapa_natal(
     # Latitude resolvida antes do subject: o Kerykeion corta |lat| > 66° e
     # sobrescreve subject.lat, então depois não dá mais para saber.
     entrada = entrada.resolvida()
-    latitude_ok = not tem_local or latitude_suporta_casas(entrada.lat)
+    # Resolvida com local sempre tem `lat`; o teste de None só estreita o tipo.
+    latitude_ok = not tem_local or entrada.lat is None or latitude_suporta_casas(entrada.lat)
 
     subject = entrada.subject(sistema_id)
 
@@ -120,13 +121,12 @@ def calcular_mapa_natal(
             avisos.append("local de nascimento não informado")
         if not latitude_ok:
             avisos.append(MOTIVO_LATITUDE_SEM_CASAS)
-        resultado["aviso"] = (
-            f"Casas e ângulos omitidos: {' e '.join(avisos)}."
-        )
+        aviso = f"Casas e ângulos omitidos: {' e '.join(avisos)}."
         if not tem_hora:
-            resultado["aviso"] += (
+            aviso += (
                 " Posição da Lua incerta: sem a hora, a Lua pode variar até 6,5° "
                 "para cada lado, e os aspectos dela vêm marcados como incertos."
             )
+        resultado["aviso"] = aviso
 
     return resultado

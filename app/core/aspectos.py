@@ -46,8 +46,8 @@ def _diferenca_circular(a: float, b: float) -> float:
     return d if d <= 180.0 else 360.0 - d
 
 
-def _aplicando(p1_abs: float, p1_speed: float,
-               p2_abs: float, p2_speed: float, alvo: float) -> Optional[bool]:
+def _aplicando(p1_abs: float, p1_speed: Optional[float],
+               p2_abs: float, p2_speed: Optional[float], alvo: float) -> Optional[bool]:
     """
     Determina se o aspecto está aplicando (planetas se aproximando do ângulo exato).
     Compara |sep| atual vs estimativa após pequeno avanço de tempo.

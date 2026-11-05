@@ -340,13 +340,14 @@ def geocode(cidade: str, nacao: str) -> dict:
         raise GeocodingError("Geocodificador ocupado. Tente de novo em instantes.")
     coords, source, indisponivel = None, "", False
     try:
-        for source, provedor in (("geonames", _try_geonames), ("nominatim", _try_nominatim)):
+        for nome, provedor in (("geonames", _try_geonames), ("nominatim", _try_nominatim)):
             try:
                 coords = provedor(cidade, nacao)
             except ProvedorIndisponivel:
                 indisponivel = True
                 continue
             if coords:
+                source = nome
                 break
     finally:
         semaforo.release()

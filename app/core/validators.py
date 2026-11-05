@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import Optional, Tuple
-
+from typing import Optional, Tuple, overload
 
 # Identificadores de sistemas de casas aceitos pelo Kerykeion (subset comum).
 SISTEMAS_CASAS_VALIDOS = ("P", "K", "O", "R", "C", "E", "W", "B", "M", "T")
@@ -55,6 +54,14 @@ def parse_hora(hora: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
         return dt.hour, dt.minute
     except ValueError as exc:
         raise ValueError(f"Hora inválida: '{hora}'. Use o formato HH:MM.") from exc
+
+
+@overload
+def parse_local(local: str) -> Tuple[str, str]: ...
+@overload
+def parse_local(local: None) -> Tuple[None, str]: ...
+@overload
+def parse_local(local: Optional[str]) -> Tuple[Optional[str], str]: ...
 
 
 def parse_local(local: Optional[str]) -> Tuple[Optional[str], str]:

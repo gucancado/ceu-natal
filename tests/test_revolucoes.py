@@ -11,7 +11,6 @@ from app.tools.revolucao_lunar import calcular_revolucao_lunar
 from app.tools.revolucao_solar import calcular_revolucao_solar
 from tests.conftest import ANA, BH
 
-
 LISBOA = {"lat": 38.7223, "lng": -9.1393, "tz_str": "Europe/Lisbon"}
 
 

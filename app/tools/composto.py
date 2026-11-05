@@ -11,13 +11,13 @@ from collections import Counter
 from typing import Optional
 
 from app.core.aspectos import calcular_aspectos
+from app.core.entrada import EntradaNascimento
 from app.core.formatter import (
     elemento_pt,
     formatar_grau,
     qualidade_pt,
     signo_pt,
 )
-from app.core.entrada import EntradaNascimento
 from app.core.kerykeion import coletar_pontos
 from app.core.validators import validar_sistema_casas
 
@@ -159,7 +159,7 @@ def calcular_mapa_composto(
 
 def _sintese_composto(planetas_compostos: dict) -> dict:
     """Distribuição de elementos e detecção de stelliums por signo."""
-    elementos = Counter()
+    elementos: Counter[str] = Counter()
     por_signo: dict = {}
     for nome, p in planetas_compostos.items():
         elementos[p["elemento"]] += 1

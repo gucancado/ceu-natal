@@ -106,7 +106,8 @@ async def main() -> int:
                 print(f"  ERRO: {ref_natal['erro']}")
                 erros += 1
             else:
-                p = ref_natal["planetas"]; a = ref_natal.get("angulos", {})
+                p = ref_natal["planetas"]
+                a = ref_natal.get("angulos", {})
                 print(f"  Sol: {p['sol']['signo']} {p['sol']['grau']} casa {p['sol'].get('casa')}")
                 print(f"  Asc: {a.get('ascendente', {}).get('signo')} {a.get('ascendente', {}).get('grau')}")
                 print(f"  MC : {a.get('meio_do_ceu', {}).get('signo')} {a.get('meio_do_ceu', {}).get('grau')}")

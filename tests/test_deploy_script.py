@@ -70,7 +70,9 @@ def test_poll_sem_resposta_continua_ate_finished(monkeypatch):
 def test_app_web_dry_run_usa_uuid_do_site(monkeypatch):
     monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
     monkeypatch.delenv("COOLIFY_WEB_UUID", raising=False)
-    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    r = subprocess.run(
+        [sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ
+    )
     assert r.returncode == 0
     assert "deploy?uuid=atbazr01ybzciaqfmvnyfdvg" in r.stdout
 
@@ -78,14 +80,18 @@ def test_app_web_dry_run_usa_uuid_do_site(monkeypatch):
 def test_app_web_respeita_env_coolify_web_uuid(monkeypatch):
     monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
     monkeypatch.setenv("COOLIFY_WEB_UUID", "abc123")
-    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    r = subprocess.run(
+        [sys.executable, str(SCRIPT), "--app", "web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ
+    )
     assert r.returncode == 0
     assert "deploy?uuid=abc123" in r.stdout
 
 
 def test_app_invalido_sai_dois(monkeypatch):
     monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
-    r = subprocess.run([sys.executable, str(SCRIPT), "--app", "x", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    r = subprocess.run(
+        [sys.executable, str(SCRIPT), "--app", "x", "--dry-run"], capture_output=True, text=True, cwd=RAIZ
+    )
     assert r.returncode == 2
     assert "--app" in r.stderr
 
@@ -93,6 +99,8 @@ def test_app_invalido_sai_dois(monkeypatch):
 def test_app_igual_web_funciona(monkeypatch):
     monkeypatch.delenv("COOLIFY_TOKEN", raising=False)
     monkeypatch.delenv("COOLIFY_WEB_UUID", raising=False)
-    r = subprocess.run([sys.executable, str(SCRIPT), "--app=web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ)
+    r = subprocess.run(
+        [sys.executable, str(SCRIPT), "--app=web", "--dry-run"], capture_output=True, text=True, cwd=RAIZ
+    )
     assert r.returncode == 0
     assert "deploy?uuid=atbazr01ybzciaqfmvnyfdvg" in r.stdout

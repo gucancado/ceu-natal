@@ -35,13 +35,11 @@ from types import SimpleNamespace
 from typing import Any
 
 import anyio
-
 from mcp.server import Server
 from mcp.server.sse import SseServerTransport
-from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.server.streamable_http import TransportSecuritySettings
-from mcp.types import Tool, ToolAnnotations, TextContent, CallToolResult
-
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
+from mcp.types import CallToolResult, TextContent, Tool, ToolAnnotations
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
