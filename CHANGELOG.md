@@ -16,16 +16,16 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 - Síntese sem casas devolve hemisférios nulos; empate vira "equilibrado".
 - Progressões contam em tempo universal, sem o deslocamento de 1 h quando o horário de verão muda.
 - Geocoder: UF que também é estado dos EUA (AL, MA, MS, MT, PA, SC) não força o Brasil; só cidades, a mais populosa primeiro.
-- Fuso de coordenadas no mar ou na fronteira resolvido por `timezone_at_land`.
+- Fuso de coordenadas no mar ou na fronteira: fallback `timezone_at_land` quando `timezone_at` não resolve.
 - Evicção do cache do geocoder preserva a falha recém-gravada.
 - Cada tool recebe sua própria cópia do schema de pessoa.
 - Site: botão grande com o tamanho de texto certo e estado visível do botão pausar.
 
 ### Adicionado
 
-- Sem hora, a Lua vem com `posicao_incerta` e `signo_pode_mudar`, e os aspectos dela com `incerto`.
+- Sem hora, a Lua vem com `posicao_incerta`, `margem_graus` (metade do movimento diário dela) e `signo_pode_mudar`, e os aspectos dela com `incerto`.
 - Mapa natal com cidade devolve `local_resolvido` (latitude, longitude e fuso).
-- Datas aceitas de 1000 a 3000.
+- Datas aceitas de 1800 a 2399 (faixa da efeméride de Quíron); fora dela, erro claro em vez de erro interno.
 - Teto de chamadas simultâneas ao geocoder (`GEOCODER_MAX_CONCORRENTES`, `GEOCODER_ESPERA_MAX_S`) e cache de falhas com TTL e limite de tamanho.
 - `/health` expõe os limites do `/mapa-rapido`.
 - CI com `ruff`, `mypy` e `pip-audit`; Dependabot para pip, npm e GitHub Actions.

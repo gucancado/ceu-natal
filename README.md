@@ -144,11 +144,12 @@ separado, com imagem Docker própria (`web/Dockerfile`). Para rodar:
   [Kerykeion](https://github.com/g-battaglia/kerykeion) e pyswisseph. Zodíaco tropical.
 - **Latitude acima de 66°:** o cálculo de casas não é confiável perto dos polos. O mapa
   natal sai sem casas nem ângulos, com aviso; trânsitos, progressões e revoluções recusam.
-- **Anos:** datas de 1000 a 3000; revolução solar de 1800 a 2200.
+- **Anos:** datas de 1800 a 2399 (a faixa da efeméride de Quíron); revolução solar de 1800 a 2200.
 - **Horário de verão:** se a hora cai na transição (ambígua ou inexistente), o servidor
   devolve erro pedindo `is_dst` (`true` = horário de verão, `false` = padrão).
-- **Sem hora de nascimento:** cálculo às 12:00 locais; a Lua pode estar até ~6,5° antes ou
-  depois, e o resultado diz quando o signo dela pode mudar.
+- **Sem hora de nascimento:** cálculo às 12:00 locais; a Lua pode estar antes ou depois até
+  metade do movimento diário dela (em geral de 6° a 7,6°, devolvido em `margem_graus`), e o
+  resultado diz quando o signo dela pode mudar.
 - **Limites do endpoint público:** 30 chamadas por minuto por sessão e 600 por minuto no
   total. Nada sobre pessoas é armazenado; veja a
   [política de privacidade](docs/legal/privacidade.md).
