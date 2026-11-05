@@ -9,18 +9,8 @@ import pytest
 from app.core import revolucoes as core_revolucoes
 from app.tools.revolucao_lunar import calcular_revolucao_lunar
 from app.tools.revolucao_solar import calcular_revolucao_solar
-from tests.conftest import BH
+from tests.conftest import ANA, BH
 
-
-GUSTAVO = {
-    "data": "24/07/1989",
-    "hora": "09:20",
-    "local": "Belo Horizonte, MG",
-    "nome": "Gustavo",
-    "lat": BH["lat"],
-    "lng": BH["lng"],
-    "tz_str": BH["tz_str"],
-}
 
 LISBOA = {"lat": 38.7223, "lng": -9.1393, "tz_str": "Europe/Lisbon"}
 
@@ -42,14 +32,14 @@ def geocode_fake(monkeypatch):
 # ─────────────────────────────────────────────────────────────
 class TestValidacoes:
     def test_sem_hora_natal_falha(self, geocode_fake):
-        natal = {k: v for k, v in GUSTAVO.items() if k != "hora"}
+        natal = {k: v for k, v in ANA.items() if k != "hora"}
         with pytest.raises(ValueError, match="hora de nascimento"):
             calcular_revolucao_solar(
                 natal=natal, ano=2026, local_revolucao="Belo Horizonte, MG"
             )
 
     def test_sem_local_natal_falha(self, geocode_fake):
-        natal = {"data": "24/07/1989", "hora": "09:20", "nome": "Gustavo"}
+        natal = {"data": "12/03/1990", "hora": "14:30", "nome": "Ana"}
         with pytest.raises(ValueError, match="local de nascimento"):
             calcular_revolucao_solar(
                 natal=natal, ano=2026, local_revolucao="Belo Horizonte, MG"
@@ -57,32 +47,32 @@ class TestValidacoes:
 
     def test_local_revolucao_vazio_falha(self, geocode_fake):
         with pytest.raises(ValueError, match="local_revolucao"):
-            calcular_revolucao_solar(natal=GUSTAVO, ano=2026, local_revolucao="  ")
+            calcular_revolucao_solar(natal=ANA, ano=2026, local_revolucao="  ")
 
     def test_ano_fora_da_faixa_falha(self, geocode_fake):
         with pytest.raises(ValueError, match="fora da faixa"):
             calcular_revolucao_solar(
-                natal=GUSTAVO, ano=1500, local_revolucao="Belo Horizonte, MG"
+                natal=ANA, ano=1500, local_revolucao="Belo Horizonte, MG"
             )
 
     def test_ano_anterior_ao_nascimento_falha(self, geocode_fake):
-        # Dentro da faixa de efemérides, mas 139 anos antes de a pessoa existir.
+        # Dentro da faixa de efemérides, mas 140 anos antes de a pessoa existir.
         with pytest.raises(ValueError, match="anterior ao nascimento"):
             calcular_revolucao_solar(
-                natal=GUSTAVO, ano=1850, local_revolucao="Belo Horizonte, MG"
+                natal=ANA, ano=1850, local_revolucao="Belo Horizonte, MG"
             )
 
     def test_sistema_casas_invalido_falha(self, geocode_fake):
         with pytest.raises(ValueError, match="sistema_casas"):
             calcular_revolucao_solar(
-                natal=GUSTAVO, ano=2026,
+                natal=ANA, ano=2026,
                 local_revolucao="Belo Horizonte, MG", sistema_casas="Z",
             )
 
     def test_data_referencia_invalida_falha(self, geocode_fake):
         with pytest.raises(ValueError, match="Data inválida"):
             calcular_revolucao_lunar(
-                natal=GUSTAVO, data_referencia="2026-07-24",
+                natal=ANA, data_referencia="2026-03-12",
                 local_revolucao="Belo Horizonte, MG",
             )
 
@@ -94,21 +84,21 @@ class TestRevolucaoSolar:
     @pytest.fixture
     def rs(self, geocode_fake):
         return calcular_revolucao_solar(
-            natal=GUSTAVO, ano=2026, local_revolucao="Belo Horizonte, MG"
+            natal=ANA, ano=2026, local_revolucao="Belo Horizonte, MG"
         )
 
     def test_instante_cai_perto_do_aniversario(self, rs):
         # O retorno solar nunca se afasta mais de ~1 dia da data de nascimento.
         instante = rs["revolucao"]["instante_utc"]
-        assert instante.startswith("2026-07-2")
+        assert instante.startswith("2026-03-1")
         dia = int(instante[8:10])
-        assert 23 <= dia <= 25
+        assert 11 <= dia <= 13
 
     def test_sol_da_revolucao_bate_com_o_sol_natal(self, rs, geocode_fake):
         from app.core.kerykeion import criar_subject
 
         natal = criar_subject(
-            nome="Gustavo", ano=1989, mes=7, dia=24, hora=9, minuto=20,
+            nome="Ana", ano=1990, mes=3, dia=12, hora=14, minuto=30,
             cidade="Belo Horizonte", nacao="MG",
             lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
         )
@@ -187,10 +177,10 @@ class TestLocalMudaSoOsAngulos:
     @pytest.fixture
     def par(self, geocode_fake):
         bh = calcular_revolucao_solar(
-            natal=GUSTAVO, ano=2026, local_revolucao="Belo Horizonte, MG"
+            natal=ANA, ano=2026, local_revolucao="Belo Horizonte, MG"
         )
         lisboa = calcular_revolucao_solar(
-            natal=GUSTAVO, ano=2026, local_revolucao="Lisboa, Portugal"
+            natal=ANA, ano=2026, local_revolucao="Lisboa, Portugal"
         )
         return bh, lisboa
 
@@ -220,7 +210,7 @@ class TestRevolucaoLunar:
     @pytest.fixture
     def rl(self, geocode_fake):
         return calcular_revolucao_lunar(
-            natal=GUSTAVO, data_referencia="01/07/2026",
+            natal=ANA, data_referencia="01/07/2026",
             local_revolucao="Belo Horizonte, MG",
         )
 
@@ -236,7 +226,7 @@ class TestRevolucaoLunar:
         from app.core.kerykeion import criar_subject
 
         natal = criar_subject(
-            nome="Gustavo", ano=1989, mes=7, dia=24, hora=9, minuto=20,
+            nome="Ana", ano=1990, mes=3, dia=12, hora=14, minuto=30,
             cidade="Belo Horizonte", nacao="MG",
             lat=BH["lat"], lng=BH["lng"], tz_str=BH["tz_str"],
         )
@@ -277,7 +267,7 @@ class TestRevolucaoLunar:
 
     def test_destaques_tem_o_mesmo_shape_da_solar(self, rl, geocode_fake):
         rs = calcular_revolucao_solar(
-            natal=GUSTAVO, ano=2026, local_revolucao="Belo Horizonte, MG"
+            natal=ANA, ano=2026, local_revolucao="Belo Horizonte, MG"
         )
         # Um consumidor único precisa servir as duas tools sem branch.
         assert set(rl["destaques"].keys()) == set(rs["destaques"].keys())

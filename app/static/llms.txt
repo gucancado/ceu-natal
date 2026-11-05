@@ -23,7 +23,7 @@
 
 ## Formato de entrada
 
-- data: DD/MM/YYYY, ex.: 24/07/1989 (obrigatória).
+- data: DD/MM/YYYY, ex.: 12/03/1990 (obrigatória).
 - hora: HH:MM, ex.: 09:20. Sem hora, não saem casas nem ângulos.
 - local: "Cidade, UF" ou "Cidade, País", ex.: "Belo Horizonte, MG" ou "Lisboa, Portugal".
 - sistema_casas: opcional, default P (Placidus).
