@@ -125,7 +125,7 @@ Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy ap
 | `PUBLIC_SITE_URL` | `https://github.com/gucancado/ceu-natal` | destino do redirect de `/` e link do site no `/llms.txt` |
 | `PUBLIC_MCP_URL` | `https://astrologia-mcp.gustavocancado.com.br` | URL do MCP exibida no `/llms.txt` |
 | `CORS_ORIGINS` | *(vazio = `PUBLIC_SITE_URL`)* | origens aceitas pelo CORS do `/mapa-rapido`, separadas por vírgula |
-| `GEONAMES_USERNAME` | `gucancado` | conta GeoNames da geocodificação (crie a sua em geonames.org) |
+| `GEONAMES_USERNAME` | *(vazio) — sem ele só o Nominatim é usado* | conta GeoNames da geocodificação (crie a sua, gratuita, em geonames.org) |
 | `NOMINATIM_USER_AGENT` | `ceu-natal-mcp/2.0` | User-Agent enviado ao Nominatim (OSM) |
 | `NOMINATIM_MIN_INTERVAL_S` | `1.0` | intervalo mínimo (s) entre chamadas ao Nominatim |
 | `GEOCODER_MAX_CONCORRENTES` | `4` | teto de chamadas simultâneas aos provedores de geocodificação |

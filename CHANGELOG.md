@@ -43,6 +43,7 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 
 ### Alterado
 
+- Sem `GEONAMES_USERNAME` o geocoder usa só o Nominatim e avisa uma vez no log, em vez de usar a conta GeoNames do mantenedor.
 - `EntradaNascimento` é a entrada única de pessoa/natal de todas as tools.
 - `Settings` e `create_app(settings)` substituem a configuração espalhada no import do servidor.
 - Dependências de runtime em `requirements.in` com lock em `requirements.txt`; desenvolvimento em `requirements-dev.txt`.

@@ -10,12 +10,14 @@ import pytest
 
 
 @pytest.fixture
-def geocoder(tmp_path):
+def geocoder(tmp_path, monkeypatch):
     """
     Geocoder com estado zerado e cache apontando para um arquivo temporário do
     pytest (`configurar`, sem recarregar o módulo). Restaura o caminho no fim.
+    Usa um usuário GeoNames fictício para que o GeoNames entre na cadeia.
     """
     from app.core import geocoder as mod
+    monkeypatch.setattr(mod, "GEONAMES_USERNAME", "usuario-de-teste")
     original = (mod.CACHE_PATH, mod.GEOCODER_MAX_CONCORRENTES, mod.GEOCODER_ESPERA_MAX_S)
     mod.configurar(cache_path=str(tmp_path / "geocode-cache.json"))
     yield mod
@@ -524,3 +526,53 @@ def test_evicao_preserva_a_falha_recem_inserida(geocoder, monkeypatch):
     monkeypatch.setattr(geocoder, "_try_geonames", lambda c, n: pytest.fail("devia vir do cache"))
     with pytest.raises(geocoder.GeocodingError):
         geocoder.geocode("Inexistente", "BR")
+
+
+# ─────────────────────────────────────────────────────────────
+# Sem GEONAMES_USERNAME: só o Nominatim, com um aviso por processo
+# ─────────────────────────────────────────────────────────────
+def _sem_geonames(geocoder, monkeypatch):
+    """Usuário vazio; GeoNames proibido; Nominatim registra as chamadas."""
+    monkeypatch.setattr(geocoder, "GEONAMES_USERNAME", "")
+    monkeypatch.setattr(geocoder, "_try_geonames",
+                        lambda c, n: pytest.fail("GeoNames não devia ser chamado"))
+    chamadas = []
+
+    def fake_nominatim(c, n):
+        chamadas.append((c, n))
+        return (38.72, -9.13)
+
+    monkeypatch.setattr(geocoder, "_try_nominatim", fake_nominatim)
+    monkeypatch.setattr(geocoder, "_resolve_timezone", lambda lat, lng: "Europe/Lisbon")
+    return chamadas
+
+
+def _avisos_sem_geonames(caplog):
+    return [r for r in caplog.records
+            if r.levelname == "WARNING" and "GEONAMES_USERNAME" in r.getMessage()]
+
+
+def test_sem_usuario_geonames_usa_so_o_nominatim(geocoder, monkeypatch):
+    chamadas = _sem_geonames(geocoder, monkeypatch)
+    res = geocoder.geocode("Lisboa", "Portugal")
+    assert res["lat"] == 38.72
+    assert chamadas == [("Lisboa", "Portugal")]
+
+
+def test_sem_usuario_geonames_avisa_uma_vez(geocoder, monkeypatch, caplog):
+    _sem_geonames(geocoder, monkeypatch)
+    with caplog.at_level("WARNING", logger="app.core.geocoder"):
+        geocoder.geocode("Lisboa", "Portugal")
+        geocoder.geocode("Porto", "Portugal")
+    avisos = _avisos_sem_geonames(caplog)
+    assert len(avisos) == 1
+    assert "Nominatim" in avisos[0].getMessage()
+
+
+def test_configurar_rearma_o_aviso_sem_geonames(geocoder, monkeypatch, caplog):
+    _sem_geonames(geocoder, monkeypatch)
+    with caplog.at_level("WARNING", logger="app.core.geocoder"):
+        geocoder.geocode("Lisboa", "Portugal")
+        geocoder.configurar()
+        geocoder.geocode("Porto", "Portugal")
+    assert len(_avisos_sem_geonames(caplog)) == 2
