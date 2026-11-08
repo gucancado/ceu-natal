@@ -1,5 +1,33 @@
 # Relatório de validação — ceu-natal
 
+## 2026-11-08 — 2.2.2 a 2.2.5: reauditoria (`main` @ `c541448`)
+
+O histórico público recomeça na 2.2.2, em commit único. Todos os valores abaixo vêm de
+dados fictícios. Produção conferida com `POST /mcp/` real depois de cada deploy.
+
+| Versão | Checagem | Resultado observado |
+|---|---|---|
+| 2.2.2 | ASC e MC em Placidus, Whole Sign, Equal e Morinus (12/03/1990 14:30, Belo Horizonte) | iguais nos quatro: ASC 108,6349°, MC 30,7876° |
+| 2.2.2 | Sistema `E` | calcula; antes dava erro interno |
+| 2.2.2 | Sinastria com pessoa em Tromsø | casas omitidas, aviso de latitude acima de 66° |
+| 2.2.2 | Nome com 201 caracteres | recusado |
+| 2.2.3 | `GET /sse` e `POST /messages/` | 404; `/health` informa `streamable-http` |
+| 2.2.4 | `POST /mcp` sem barra final | 200, sem redirect; `serverInfo.version` 2.2.4 |
+| 2.2.4 | Velocidade dos nodos verdadeiros | iguais (−0,1038), os dois retrógrados |
+| 2.2.4 | Log do servidor | nenhuma linha com id de sessão |
+| 2.2.4 | `/mapa` ao compartilhar | `og:image`, `og:url`, `og:type` e `twitter:image` presentes |
+| 2.2.5 | ASC em 15/06/1900 12:00 | Rio 171,25° (era 175,69°), Porto Alegre 170,50° (era 163,70°), São Paulo 171,20° |
+| 2.2.5 | Data moderna | ASC inalterado (108,6349°) |
+| 2.2.5 | Suíte completa (WSL), mypy, ruff, CI | 387 passed, sem erros; CI verde |
+
+Decisões:
+
+- Limite de chamadas segue por sessão. Limite por IP bloquearia usuários de Claude e ChatGPT,
+  que saem de poucos IPs compartilhados; o teto global é a proteção contra abuso.
+- A `main` continua sem ruleset, por decisão do mantenedor.
+- Em aberto, de baixa prioridade: fixar actions por SHA, lock com hashes e ajustes pontuais de
+  schema, site e documentação.
+
 ## 2026-11-05 — 2.2.1: dependências (`main` @ `4bbb44d`)
 
 `timezonefinder` 6.5.2 → 8.3.0 (última que roda no Python 3.11; a 9.x exige 3.12)
