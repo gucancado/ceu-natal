@@ -454,9 +454,9 @@ jsonschema-specifications==2025.9.1 \
     --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe \
     --hash=sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d
     # via jsonschema
-kerykeion==5.12.7 \
-    --hash=sha256:f67776d15aa48fbb06ed8e5b304d513c8a9ffe5c9c6caf804e029aeeb851710c \
-    --hash=sha256:f957ea0e475cf3917a4bdad75c1fe2a80a46c692ff9c75f9130479a70dbe3636
+kerykeion==5.12.10 \
+    --hash=sha256:cc390dc6a04a3740cc339f10c4428d6f1a55ae4f0d59a18e6c3c52e5bdd522d0 \
+    --hash=sha256:d79d2727e0625c65f4e97349d74baa9410cdf2fa0c8debf29c54c9eca41ff530
     # via -r requirements.in
 mcp==1.30.0 \
     --hash=sha256:445414625fce5c295faa505bb11bacece661ab6f4028d57c935db57820b7a3e4 \
@@ -697,7 +697,7 @@ pydantic-settings==2.16.2 \
     --hash=sha256:3dc08ffabed2bbd5dc2dd55ead7b78b4e4c5cd776aecd04310db5f1224caaf46 \
     --hash=sha256:8d523e5c129b097686bde019bd6109bff53f4c8c3f63f1ddf9933ffa42e5ab4f
     # via mcp
-pyjwt==2.15.1 \
+pyjwt[crypto]==2.15.1 \
     --hash=sha256:42d59d631f7768a1028a64c7ff581a9bf7519804daf91fc5b6c56e30eec5e193 \
     --hash=sha256:4f259e80cdfb6b3fc18a7de51fd1ef9ec79652f25019bae68975ca2468a34df8
     # via mcp
