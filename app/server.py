@@ -98,6 +98,30 @@ def _log_tool_call(tool: str, status: str, duration_ms: float) -> None:
     }, ensure_ascii=False))
 
 
+# Teto de cada campo de texto: `nome` é ecoado em cada aspecto e `local` vira
+# chave do cache do geocoder, então texto longo amplifica memória e resposta.
+TEXTO_MAX = 200
+
+
+def _tem_texto_longo(valor: Any) -> bool:
+    if isinstance(valor, str):
+        return len(valor) > TEXTO_MAX
+    if isinstance(valor, dict):
+        return any(_tem_texto_longo(v) for v in valor.values())
+    if isinstance(valor, list):
+        return any(_tem_texto_longo(v) for v in valor)
+    return False
+
+
+def _limitar_textos(schema: dict) -> None:
+    """Declara `maxLength` em todo campo de texto do schema, inclusive aninhado."""
+    tipo = schema.get("type")
+    if tipo == "string" or (isinstance(tipo, list) and "string" in tipo):
+        schema.setdefault("maxLength", TEXTO_MAX)
+    for sub in schema.get("properties", {}).values():
+        _limitar_textos(sub)
+
+
 def _resultado_erro(mensagem: str) -> CallToolResult:
     return CallToolResult(
         content=[TextContent(type="text", text=json.dumps({"erro": mensagem}, ensure_ascii=False))],
@@ -442,6 +466,8 @@ TOOLS = [
     })
     for t in TOOLS
 ]
+for _tool in TOOLS:
+    _limitar_textos(_tool.inputSchema)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -689,6 +715,11 @@ class Aplicacao:
                 return _resultado_erro(
                     f"Limite de chamadas atingido. Aguarde {math.ceil(espera)} segundos e tente de novo."
                 )
+            if _tem_texto_longo(arguments):
+                status = "value_error"
+                return _resultado_erro(
+                    f"Texto grande demais: cada campo aceita até {TEXTO_MAX} caracteres."
+                )
             try:
                 resultado = await anyio.to_thread.run_sync(self.dispatch, name, arguments)
             except GeocodingError as exc:
@@ -790,10 +821,14 @@ class Aplicacao:
             if tamanho_declarado > MAPA_RAPIDO_BODY_MAX:
                 status = "body_too_large"
                 return grande
-            bruto = await request.body()
-            if len(bruto) > MAPA_RAPIDO_BODY_MAX:  # upload chunked não traz Content-Length
-                status = "body_too_large"
-                return grande
+            # Lê em pedaços: upload chunked não traz Content-Length.
+            partes = bytearray()
+            async for pedaco in request.stream():
+                partes.extend(pedaco)
+                if len(partes) > MAPA_RAPIDO_BODY_MAX:
+                    status = "body_too_large"
+                    return grande
+            bruto = bytes(partes)
             try:
                 corpo = json.loads(bruto)
             except ValueError:

@@ -121,6 +121,15 @@ class EntradaNascimento:
         )
         return replace(self, lat=lat, lng=lng, tz_str=tz_str)
 
+    @property
+    def casas_confiaveis(self) -> bool:
+        """Hora, local e latitude suportada. Usar em entrada já resolvida."""
+        from app.core.kerykeion import latitude_suporta_casas
+
+        return self.tem_hora and self.tem_local and (
+            self.lat is None or latitude_suporta_casas(self.lat)
+        )
+
     def exigir_casas(self) -> "EntradaNascimento":
         """Entrada resolvida, recusando latitude em que as casas saem erradas.
 

@@ -10,7 +10,7 @@ services:
       - .env
     environment:
       - MCP_SERVER_NAME=${MCP_SERVER_NAME:-ceu-natal}
-      - MCP_SERVER_VERSION=${MCP_SERVER_VERSION:-2.2.1}
+      - MCP_SERVER_VERSION=${MCP_SERVER_VERSION:-2.2.2}
       - GEOCODER_CACHE_PATH=${GEOCODER_CACHE_PATH:-/var/cache/ceu-natal/geocode-cache.json}
     volumes:
       - ceu-natal-cache:/var/cache/ceu-natal

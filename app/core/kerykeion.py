@@ -36,6 +36,10 @@ MOTIVO_LATITUDE_SEM_CASAS = (
 )
 
 
+# A API pública usa "E" para casas iguais; o Kerykeion chama esse sistema de "A".
+_ID_KERYKEION = {"E": "A"}
+
+
 def latitude_suporta_casas(lat: float) -> bool:
     """True quando |lat| <= 66°, faixa em que as casas saem corretas."""
     return abs(lat) <= LATITUDE_MAX_CASAS
@@ -110,7 +114,9 @@ def criar_subject(
             nation=nacao or "XX",
             lat=lat, lng=lng, tz_str=tz_str,
             # `sistema_casas` já passou por `validar_sistema_casas` (subconjunto do Literal).
-            houses_system_identifier=cast("HousesSystemIdentifier", sistema_casas),
+            houses_system_identifier=cast(
+                "HousesSystemIdentifier", _ID_KERYKEION.get(sistema_casas, sistema_casas),
+            ),
             is_dst=is_dst,
             online=False,
         )

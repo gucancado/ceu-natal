@@ -12,7 +12,7 @@ from app.core.validators import validar_sistema_casas
 
 
 def _resumo_pessoa(subject, nome: str, asc_confiavel: bool) -> dict:
-    asc = subject.first_house
+    asc = subject.ascendant
     # Asc só é confiável quando a pessoa tem hora E local — sem hora, o
     # cálculo cai num default de 12:00 que produz um Asc arbitrário.
     return {
@@ -48,9 +48,9 @@ def calcular_sinastria(
     sistema_casas: Optional[str] = None,
 ) -> dict:
     sistema_id = validar_sistema_casas(sistema_casas)
-    entrada_a = EntradaNascimento.de_dict(pessoa_a, rotulo="pessoa_a")
+    entrada_a = EntradaNascimento.de_dict(pessoa_a, rotulo="pessoa_a").resolvida()
     subject_a, nome_a = entrada_a.subject(sistema_id), entrada_a.nome
-    entrada_b = EntradaNascimento.de_dict(pessoa_b, rotulo="pessoa_b")
+    entrada_b = EntradaNascimento.de_dict(pessoa_b, rotulo="pessoa_b").resolvida()
     subject_b, nome_b = entrada_b.subject(sistema_id), entrada_b.nome
 
     pontos_a = coletar_pontos(subject_a)
@@ -60,8 +60,8 @@ def calcular_sinastria(
 
     # Casas só existem com hora E local: sem hora, o cálculo usa 12:00 e as
     # cúspides saem arbitrárias.
-    completo_a = entrada_a.tem_hora and entrada_a.tem_local
-    completo_b = entrada_b.tem_hora and entrada_b.tem_local
+    completo_a = entrada_a.casas_confiaveis
+    completo_b = entrada_b.casas_confiaveis
     ativacoes: list[dict] = []
     if completo_a and completo_b:
         # planetas de A nas casas de B, e vice-versa
@@ -75,10 +75,14 @@ def calcular_sinastria(
         "ativacoes_de_casas": ativacoes,
         "sintese_sinastria": sintese_sinastria(aspectos),
     }
-    incompletos = [n for n, ok in ((nome_a, completo_a), (nome_b, completo_b)) if not ok]
-    if incompletos:
-        resultado["aviso"] = (
-            "Ativações de casas omitidas: hora ou local de nascimento ausente em "
-            f"{' e '.join(incompletos)}."
-        )
+    entradas = (entrada_a, entrada_b)
+    sem_dados = [e.nome for e in entradas if not (e.tem_hora and e.tem_local)]
+    polares = [e.nome for e in entradas if e.tem_hora and e.tem_local and not e.casas_confiaveis]
+    avisos = []
+    if sem_dados:
+        avisos.append(f"Ativações de casas omitidas: hora ou local de nascimento ausente em {' e '.join(sem_dados)}.")
+    if polares:
+        avisos.append(f"Ativações de casas omitidas: latitude acima de 66° em {' e '.join(polares)}.")
+    if avisos:
+        resultado["aviso"] = " ".join(avisos)
     return resultado

@@ -94,10 +94,10 @@ def calcular_mapa_natal(
 
     if incluir_casas:
         angulos = {
-            "ascendente":   formatar_angulo(subject.first_house),
-            "meio_do_ceu":  formatar_angulo(subject.tenth_house),
-            "descendente":  formatar_angulo(subject.seventh_house),
-            "fundo_do_ceu": formatar_angulo(subject.fourth_house),
+            "ascendente":   formatar_angulo(subject.ascendant),
+            "meio_do_ceu":  formatar_angulo(subject.medium_coeli),
+            "descendente":  formatar_angulo(subject.descendant),
+            "fundo_do_ceu": formatar_angulo(subject.imum_coeli),
         }
         casas = formatar_casas(subject)
     else:

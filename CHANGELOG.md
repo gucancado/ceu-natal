@@ -4,6 +4,27 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.2] — 2026-11-08
+
+### Corrigido
+
+- Ascendente, Meio do Céu, Descendente e Fundo do Céu agora são os ângulos reais do mapa em todos os
+  sistemas de casas. Em Whole Sign, Morinus e casas iguais, o servidor devolvia a cúspide da casa.
+  Afeta mapa natal, revoluções, sinastria e mapa composto.
+- O sistema de casas `E` (iguais) dava erro interno em todas as tools.
+- Sinastria e mapa composto omitem casas e ângulos, com aviso, em latitude acima de 66°, como o mapa
+  natal já fazia.
+
+### Segurança
+
+- Cada campo de texto aceita até 200 caracteres, nos schemas e no servidor.
+- `/mapa-rapido` para de ler o corpo assim que ele passa do limite.
+
+### Repositório
+
+- O histórico público recomeça nesta versão: o anterior continha dados pessoais de terceiros. As tags
+  e releases anteriores a 2.2.2 não existem mais neste repositório.
+
 ## [2.2.1] — 2026-11-05
 
 ### Segurança

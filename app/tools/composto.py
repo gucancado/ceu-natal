@@ -91,12 +91,12 @@ def calcular_mapa_composto(
 ) -> dict:
     sistema_id = validar_sistema_casas(sistema_casas)
 
-    entrada_a = EntradaNascimento.de_dict(pessoa_a, rotulo="pessoa_a")
+    entrada_a = EntradaNascimento.de_dict(pessoa_a, rotulo="pessoa_a").resolvida()
     subject_a = entrada_a.subject(sistema_id)
-    entrada_b = EntradaNascimento.de_dict(pessoa_b, rotulo="pessoa_b")
+    entrada_b = EntradaNascimento.de_dict(pessoa_b, rotulo="pessoa_b").resolvida()
     subject_b = entrada_b.subject(sistema_id)
-    completo_a = entrada_a.tem_hora and entrada_a.tem_local
-    completo_b = entrada_b.tem_hora and entrada_b.tem_local
+    completo_a = entrada_a.casas_confiaveis
+    completo_b = entrada_b.casas_confiaveis
 
     # Longitudes de A e B por nome em PT (planetas + pontos sensíveis)
     pos_a = {p["nome"]: p["abs_pos"] for p in coletar_pontos(subject_a)}
@@ -126,10 +126,10 @@ def calcular_mapa_composto(
     # Ângulos: midpoint dos ASCs e MCs (só faz sentido se ambos têm horário+local)
     angulos_compostos = {}
     if completo_a and completo_b:
-        asc_mid = midpoint_longitude(subject_a.first_house.abs_pos,
-                                     subject_b.first_house.abs_pos)
-        mc_mid = midpoint_longitude(subject_a.tenth_house.abs_pos,
-                                    subject_b.tenth_house.abs_pos)
+        asc_mid = midpoint_longitude(subject_a.ascendant.abs_pos,
+                                     subject_b.ascendant.abs_pos)
+        mc_mid = midpoint_longitude(subject_a.medium_coeli.abs_pos,
+                                    subject_b.medium_coeli.abs_pos)
         angulos_compostos = {
             "ascendente":  _formatar_ponto_composto(asc_mid),
             "meio_do_ceu": _formatar_ponto_composto(mc_mid),
@@ -149,14 +149,16 @@ def calcular_mapa_composto(
         "casas": None,  # composto midpoint não tem casas
         "sintese": _sintese_composto(planetas_compostos),
     }
-    incompletos = [
-        e.nome for e, ok in ((entrada_a, completo_a), (entrada_b, completo_b)) if not ok
-    ]
-    if incompletos:
-        resultado["aviso"] = (
-            "Ângulos compostos omitidos: hora ou local de nascimento ausente em "
-            f"{' e '.join(incompletos)}."
-        )
+    entradas = (entrada_a, entrada_b)
+    sem_dados = [e.nome for e in entradas if not (e.tem_hora and e.tem_local)]
+    polares = [e.nome for e in entradas if e.tem_hora and e.tem_local and not e.casas_confiaveis]
+    avisos = []
+    if sem_dados:
+        avisos.append(f"Ângulos compostos omitidos: hora ou local de nascimento ausente em {' e '.join(sem_dados)}.")
+    if polares:
+        avisos.append(f"Ângulos compostos omitidos: latitude acima de 66° em {' e '.join(polares)}.")
+    if avisos:
+        resultado["aviso"] = " ".join(avisos)
     return resultado
 
 
