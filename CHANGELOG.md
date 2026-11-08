@@ -4,6 +4,18 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.6] — 2026-11-08
+
+### Adicionado
+
+- `NOTICE` com os créditos e licenças de terceiros.
+- `sistema_casas` lista as opções válidas em todas as tools, e os campos de pessoa têm descrição.
+- O `healthcheck` e as instruções do servidor informam onde está o código-fonte (AGPL §13).
+
+### Segurança
+
+- `requirements.txt` com hashes, verificados na imagem Docker e na CI.
+
 ## [2.2.5] — 2026-11-08
 
 ### Corrigido

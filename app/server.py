@@ -49,6 +49,7 @@ from app.config import Settings
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.geocoder import GeocodingError
 from app.core.ratelimit import LimitadorTaxa
+from app.core.validators import SISTEMAS_CASAS_VALIDOS
 
 # Teto do corpo do /mapa-rapido (bytes): data, hora e local cabem com folga.
 MAPA_RAPIDO_BODY_MAX = 4096
@@ -141,10 +142,10 @@ _SCHEMA_PESSOA: dict = {
     "type": "object",
     "required": ["data"],
     "properties": {
-        "data":  {"type": "string"},
-        "hora":  {"type": ["string", "null"]},
-        "local": {"type": ["string", "null"]},
-        "nome":  {"type": ["string", "null"]},
+        "data":  {"type": "string", "description": "Data de nascimento no formato DD/MM/YYYY."},
+        "hora":  {"type": ["string", "null"], "description": "Hora de nascimento no formato HH:MM."},
+        "local": {"type": ["string", "null"], "description": "Cidade e UF/país (ex: 'Belo Horizonte, MG')."},
+        "nome":  {"type": ["string", "null"], "description": "Nome da pessoa, só para identificação."},
         "is_dst": {"type": ["boolean", "null"], "description": _DESCRICAO_IS_DST},
     },
 }
@@ -439,8 +440,9 @@ TOOLS: list[Tool] = [
                 "versao":     {"type": "string"},
                 "transporte": {"type": "string"},
                 "proximo_passo": {"type": "string"},
+                "codigo_fonte": {"type": "string"},
             },
-            "required": ["status", "versao", "transporte", "proximo_passo"],
+            "required": ["status", "versao", "transporte", "proximo_passo", "codigo_fonte"],
         },
     ),
 ]
@@ -464,8 +466,16 @@ TOOLS = [
     })
     for t in TOOLS
 ]
+_DESCRICAO_SISTEMA_CASAS = (
+    "Sistema de casas: P (Placidus, default), K (Koch), W (Whole Sign), E (Equal), "
+    "R (Regiomontanus), C (Campanus), O (Porphyrius), B (Alcabitus), M (Morinus), T (Topocentric)."
+)
 for _tool in TOOLS:
     _limitar_textos(_tool.inputSchema)
+    _sistema = _tool.inputSchema.get("properties", {}).get("sistema_casas")
+    if _sistema is not None:
+        _sistema["enum"] = [*SISTEMAS_CASAS_VALIDOS, None]
+        _sistema.setdefault("description", _DESCRICAO_SISTEMA_CASAS)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -497,10 +507,13 @@ def _tools() -> SimpleNamespace:
 
 
 # Só descrevem o servidor: os diretórios rejeitam texto que dite o comportamento do assistente.
+# AGPL §13: quem usa pela rede precisa saber onde obter o código. Um fork troca esta URL.
+CODIGO_FONTE = "https://github.com/gucancado/ceu-natal"
 INSTRUCOES = (
     "O Céu Natal calcula astrologia com as efemérides suíças: mapa natal, sinastria, mapa "
     "composto, trânsitos, progressões e revoluções solar e lunar. O mapa natal precisa da "
-    "data de nascimento em DD/MM/AAAA e, para casas e ângulos, de hora e cidade."
+    "data de nascimento em DD/MM/AAAA e, para casas e ângulos, de hora e cidade. "
+    f"Software livre (AGPL-3.0), com código-fonte em {CODIGO_FONTE}."
 )
 PROXIMO_PASSO = "Servidor conectado. Para calcular um mapa natal são necessários data, hora e cidade de nascimento."
 
@@ -658,7 +671,7 @@ class Aplicacao:
             **REGISTRO,
             "healthcheck": lambda a: {
                 "status": "ok", "versao": settings.server_version, "transporte": TRANSPORTE,
-                "proximo_passo": PROXIMO_PASSO,
+                "proximo_passo": PROXIMO_PASSO, "codigo_fonte": CODIGO_FONTE,
             },
         }
 

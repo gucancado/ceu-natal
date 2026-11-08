@@ -1,5 +1,6 @@
-# Ambiente de desenvolvimento e CI: runtime pinado + testes, lint, tipos e auditoria.
--r requirements.txt
+# Testes, lint, tipos e auditoria. Instale depois do runtime:
+#   pip install --require-hashes -r requirements.txt
+# Sem `-r requirements.txt` aqui: com hashes, o pip exigiria hash em tudo.
 pytest>=9.2.0,<10.0.0
 httpx>=0.27.0,<1.0.0
 ruff<1

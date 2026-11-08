@@ -1,5 +1,5 @@
 # Dependências de runtime. O requirements.txt é gerado a partir daqui:
-#   uv pip compile requirements.in -o requirements.txt --python-version 3.11
+#   uv pip compile requirements.in -o requirements.txt --python-version 3.11 --generate-hashes
 # Dependências de desenvolvimento (testes, lint, tipos, auditoria) ficam em
 # requirements-dev.txt.
 #

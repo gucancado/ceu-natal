@@ -11,6 +11,7 @@ O cálculo usa o pyswisseph (Swiss Ephemeris), que não compila no Windows.
 
   ```bash
   python3.11 -m venv .venv && source .venv/bin/activate
+  pip install --require-hashes -r requirements.txt
   pip install -r requirements-dev.txt
   ruff check .
   mypy app
@@ -31,7 +32,7 @@ O site fica em `web/`: `cd web && pnpm install && pnpm typecheck && pnpm test &&
 
 Dependências de runtime ficam em `requirements.in`, com teto de major; o
 `requirements.txt` é um lock gerado por
-`uv pip compile requirements.in -o requirements.txt --python-version 3.11`.
+`uv pip compile requirements.in -o requirements.txt --python-version 3.11 --generate-hashes`.
 Não edite o lock à mão.
 
 ## Convenções

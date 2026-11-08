@@ -59,7 +59,7 @@ em `/mcp/`. O site de apresentação mora em
 - Testes com Kerykeion passam `lat`/`lng`/`tz_str` direto (sem rede).
 - Dependências de runtime em `requirements.in` (com tetos de major) e lock em
   `requirements.txt`, gerado por
-  `uv pip compile requirements.in -o requirements.txt --python-version 3.11`.
+  `uv pip compile requirements.in -o requirements.txt --python-version 3.11 --generate-hashes`.
   Dependências de desenvolvimento em `requirements-dev.txt`.
 
 ## Testes
@@ -67,7 +67,7 @@ em `/mcp/`. O site de apresentação mora em
 - **Windows:** só a parte que não importa Kerykeion (pyswisseph não compila):
   `python -m pytest tests/test_server.py tests/test_ratelimit.py tests/test_server_json.py tests/test_deploy_script.py tests/test_periodos.py tests/test_validators.py -q`
 - **Linux, WSL ou CI:** suíte completa com
-  `pip install -r requirements-dev.txt`, depois `ruff check .`, `mypy app`
+  `pip install --require-hashes -r requirements.txt`, `pip install -r requirements-dev.txt`, depois `ruff check .`, `mypy app`
   e `python -m pytest -q`.
 - **Site:** `cd web && pnpm install && pnpm typecheck && pnpm test && pnpm build`.
 

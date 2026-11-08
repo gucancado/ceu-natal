@@ -10,7 +10,7 @@ RUN useradd --create-home --shell /usr/sbin/nologin app \
 
 # Só as dependências de runtime, pinadas pelo lockfile.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --require-hashes -r requirements.txt
 
 COPY --chown=app:app . .
 

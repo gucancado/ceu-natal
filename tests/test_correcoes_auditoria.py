@@ -174,6 +174,36 @@ def test_progressoes_usam_o_mesmo_instante_natal():
     assert _datetime_natal_utc(e) == datetime(1900, 6, 15, 14, 52, 40, 800000, tzinfo=timezone.utc)
 
 
+def test_sistema_casas_declara_as_opcoes_em_todas_as_tools():
+    from app.core.validators import SISTEMAS_CASAS_VALIDOS
+    from app.server import TOOLS
+
+    campos = [
+        t.inputSchema["properties"]["sistema_casas"]
+        for t in TOOLS if "sistema_casas" in t.inputSchema["properties"]
+    ]
+    assert len(campos) == 7
+    for campo in campos:
+        assert set(SISTEMAS_CASAS_VALIDOS) | {None} == set(campo["enum"])
+        assert campo["description"]
+
+
+def test_pessoa_descreve_os_campos():
+    from app.server import TOOLS
+
+    pessoa = next(t for t in TOOLS if t.name == "calcular_sinastria").inputSchema["properties"]["pessoa_a"]
+    for campo in ("data", "hora", "local", "nome"):
+        assert pessoa["properties"][campo]["description"]
+
+
+def test_servidor_informa_onde_esta_o_codigo():
+    from app.server import CODIGO_FONTE, INSTRUCOES
+
+    ceu = _ceu()
+    assert CODIGO_FONTE in INSTRUCOES
+    assert ceu.dispatch("healthcheck", {})["codigo_fonte"] == CODIGO_FONTE
+
+
 def test_schemas_declaram_limite_nos_textos():
     from app.server import TOOLS
 

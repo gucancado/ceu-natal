@@ -107,7 +107,7 @@ Rotas: `/mcp/` (MCP Streamable HTTP), `/health`,
 `/tools` (lista de tools; pública quando `MCP_API_KEY` está vazia), `/llms.txt`,
 `/mapa-rapido` (formulário do site) e `/` (redireciona para `PUBLIC_SITE_URL`).
 
-Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy app` e
+Para desenvolver, instale também `requirements-dev.txt` e rode `ruff check .`, `mypy app` e
 `python -m pytest -q`. Detalhes em [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Variáveis de ambiente
@@ -115,7 +115,7 @@ Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy ap
 | Variável | Default | Descrição |
 |----------|---------|-----------|
 | `MCP_SERVER_NAME` | `ceu-natal` | nome devolvido no `initialize` |
-| `MCP_SERVER_VERSION` | `2.2.5` | versão exposta |
+| `MCP_SERVER_VERSION` | `2.2.6` | versão exposta |
 | `MCP_API_KEY` | *(vazio)* | se definida, exige `Authorization: Bearer <chave>`; vazia, libera tudo |
 | `MCP_ALLOWED_HOSTS` | *(vazio)* | hosts aceitos no `/mcp/` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
 | `RATE_LIMIT_SESSION_PER_MIN` | `30` | chamadas de tool por minuto por sessão MCP (0 desliga) |
@@ -164,6 +164,8 @@ falhas de segurança, [SECURITY.md](SECURITY.md).
 [AGPL-3.0-or-later](LICENSE). A AGPL vale também para uso pela rede: quem oferecer este
 servidor como serviço modificado precisa publicar o código. O endpoint público roda
 exatamente o código deste repositório.
+
+Copyright (C) 2026 Gustavo Cançado. Créditos e licenças de terceiros em [NOTICE](NOTICE).
 
 A escolha segue as dependências: o Kerykeion é AGPL-3.0, e o pyswisseph (Swiss Ephemeris)
 é distribuído sob AGPL-3.0 ou sob a licença profissional paga da Astrodienst. Um uso fora

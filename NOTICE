@@ -1,0 +1,31 @@
+Céu Natal
+Copyright (C) 2026 Gustavo Cançado
+Licenciado sob AGPL-3.0-or-later. Veja o arquivo LICENSE.
+Código-fonte: https://github.com/gucancado/ceu-natal
+
+Este projeto usa os componentes e dados de terceiros abaixo.
+
+Swiss Ephemeris (via pyswisseph)
+  Copyright Astrodienst AG.
+  Usado sob a GNU Affero General Public License. https://www.astro.com/swisseph/
+
+Kerykeion
+  Copyright Giacomo Battaglia.
+  Licença AGPL-3.0. https://github.com/g-battaglia/kerykeion
+
+timezonefinder
+  Copyright Jannik Michelfeit.
+  Licença MIT. https://github.com/jannikmi/timezonefinder
+
+timezonefinder-data
+  Contém informações de fronteiras de fuso horário derivadas do OpenStreetMap,
+  disponibilizadas sob a Open Database License (ODbL) v1.0.
+  © Colaboradores do OpenStreetMap. https://www.openstreetmap.org/copyright
+
+geopy
+  Licença MIT. https://github.com/geopy/geopy
+
+Serviços de geocodificação consultados em tempo de execução
+  GeoNames: dados sob CC BY 4.0. https://www.geonames.org/
+  Nominatim: dados © Colaboradores do OpenStreetMap, sob ODbL v1.0.
+  https://www.openstreetmap.org/copyright
