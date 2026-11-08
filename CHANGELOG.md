@@ -4,6 +4,14 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.5] — 2026-11-08
+
+### Corrigido
+
+- Nascimentos anteriores à hora legal do fuso (no Brasil, antes de 1914) usam a hora média local da
+  própria cidade. Antes, todas as cidades do fuso saíam com a hora de São Paulo, o que deslocava o
+  Ascendente em até cerca de 7°.
+
 ## [2.2.4] — 2026-11-08
 
 ### Corrigido

@@ -4,6 +4,7 @@ Wrapper sobre Kerykeion 5.x: cria AstrologicalSubject com lat/lng/tz explícitos
 (online=False) e expõe utilitários para extrair planetas e casas.
 """
 import copy
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Optional, cast
 
 from kerykeion import AstrologicalSubjectFactory
@@ -50,6 +51,20 @@ def exigir_latitude_com_casas(lat: float) -> None:
     """Para técnicas que dependem das casas natais: recusa latitude polar."""
     if not latitude_suporta_casas(lat):
         raise ValueError(f"Casas e ângulos indisponíveis: {MOTIVO_LATITUDE_SEM_CASAS}.")
+
+
+def hora_media_local_utc(local: datetime, lng: float, tz_str: str) -> Optional[datetime]:
+    """Instante UTC (naive) de uma hora anterior à hora legal do fuso; senão None.
+
+    Antes da hora legal cada cidade seguia o próprio meridiano. O tzdata guarda só
+    a hora média local (LMT) da cidade que dá nome ao fuso, então Rio ou Porto
+    Alegre em 1900 sairiam com a hora de São Paulo, de 10 a 19 minutos fora.
+    """
+    import pytz
+
+    if pytz.timezone(tz_str).localize(local, is_dst=False).tzname() != "LMT":
+        return None
+    return local - timedelta(hours=lng / 15)
 
 
 def resolver_coordenadas(
@@ -106,11 +121,18 @@ def criar_subject(
 
     lat, lng, tz_str = resolver_coordenadas(cidade, nacao, lat, lng, tz_str)
 
+    segundo = 0
+    instante = hora_media_local_utc(datetime(ano, mes, dia, hora, minuto), lng, tz_str)
+    if instante is not None:
+        ano, mes, dia = instante.year, instante.month, instante.day
+        hora, minuto, segundo = instante.hour, instante.minute, instante.second
+        tz_str, is_dst = "UTC", None
+
     try:
         return AstrologicalSubjectFactory.from_birth_data(
             name=nome,
             year=ano, month=mes, day=dia,
-            hour=hora, minute=minuto,
+            hour=hora, minute=minuto, seconds=segundo,
             city=cidade or "Unknown",
             nation=nacao or "XX",
             lat=lat, lng=lng, tz_str=tz_str,

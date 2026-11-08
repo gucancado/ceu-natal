@@ -7,7 +7,7 @@ body:
     attributes:
       label: Versão
       description: Campo `versao` do `healthcheck` (ou do `/health`), ou o commit se roda local.
-      placeholder: "2.2.4"
+      placeholder: "2.2.5"
     validations:
       required: true
   - type: input

@@ -32,6 +32,7 @@ from app.core.kerykeion import (
     casas_iter,
     coletar_pontos,
     criar_subject,
+    hora_media_local_utc,
     planetas_iter,
 )
 from app.core.validators import parse_data, validar_sistema_casas
@@ -57,6 +58,12 @@ def _datetime_natal_utc(entrada: EntradaNascimento) -> datetime:
     hora, minuto = entrada.hora_ou_meio_dia()
     # A entrada chega resolvida (`exigir_casas`), então tem fuso.
     assert entrada.tz_str is not None
+    assert entrada.lng is not None
+    medio = hora_media_local_utc(
+        datetime(entrada.ano, entrada.mes, entrada.dia, hora, minuto), entrada.lng, entrada.tz_str,
+    )
+    if medio is not None:
+        return medio.replace(tzinfo=timezone.utc)
     local = datetime(
         entrada.ano, entrada.mes, entrada.dia, hora, minuto,
         tzinfo=ZoneInfo(entrada.tz_str),

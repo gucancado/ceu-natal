@@ -139,6 +139,41 @@ def test_logs_nao_registram_sessao():
     assert logging.getLogger("mcp.server.streamable_http_manager").getEffectiveLevel() == logging.WARNING
 
 
+RIO = {"lat": -22.91, "lng": -43.17}
+
+
+def test_data_antiga_usa_a_hora_media_da_propria_cidade():
+    tz = "America/Sao_Paulo"
+    r = calcular_mapa_natal(data="15/06/1900", hora="12:00", local="Rio", tz_str=tz, **RIO)
+    # 12:00 no meridiano de 43,17° O são 14:52:41 UTC.
+    ref = calcular_mapa_natal(data="15/06/1900", hora="14:53", local="Rio", tz_str="UTC", **RIO)
+    assert r["angulos"]["ascendente"]["posicao_absoluta"] == pytest.approx(
+        ref["angulos"]["ascendente"]["posicao_absoluta"], abs=0.3,
+    )
+
+
+def test_data_com_hora_legal_nao_muda():
+    from datetime import datetime
+
+    from app.core.kerykeion import hora_media_local_utc
+
+    assert hora_media_local_utc(datetime(1990, 3, 12, 14, 30), -43.17, "America/Sao_Paulo") is None
+    assert hora_media_local_utc(datetime(1900, 6, 15, 12, 0), 0.0, "UTC") is None
+
+
+def test_progressoes_usam_o_mesmo_instante_natal():
+    from datetime import datetime, timezone
+
+    from app.core.entrada import EntradaNascimento
+    from app.tools.progressoes import _datetime_natal_utc
+
+    e = EntradaNascimento.de_dict({
+        "data": "15/06/1900", "hora": "12:00", "local": "Rio",
+        "tz_str": "America/Sao_Paulo", **RIO,
+    })
+    assert _datetime_natal_utc(e) == datetime(1900, 6, 15, 14, 52, 40, 800000, tzinfo=timezone.utc)
+
+
 def test_schemas_declaram_limite_nos_textos():
     from app.server import TOOLS
 
