@@ -1,11 +1,11 @@
-FROM node:24-slim AS deps
+FROM node:26-slim AS deps
 WORKDIR /app
 ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
-FROM node:24-slim AS build
+FROM node:26-slim AS build
 WORKDIR /app
 ENV NODE_OPTIONS=--max-old-space-size=2048
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -19,7 +19,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
-FROM node:24-slim AS runtime
+FROM node:26-slim AS runtime
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
