@@ -1,0 +1,86 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ceu-natal",
+  "version": "1.0.0",
+  "description": "Astrology calculations with the Swiss Ephemeris: natal chart, synastry, composite chart, transits, secondary progressions and solar and lunar returns.",
+  "author": { "name": "Gustavo Cançado", "url": "https://mistico.gustavocancado.com.br" },
+  "homepage": "https://mistico.gustavocancado.com.br",
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/mapa-astral/SKILL.md",
+      "interface": {
+        "displayName": "Céu Natal",
+        "shortDescription": "Accurate astrology charts",
+        "longDescription": "Céu Natal gives ChatGPT calculated astrology charts instead of estimated ones. It computes natal charts, synastry, composite charts, transits, secondary progressions and solar and lunar returns with the Swiss Ephemeris, and converts the birth city into coordinates and historical time zone before calculating.\n\nThe tools only calculate and return positions, houses and aspects. Interpretation is symbolic, for entertainment and self-reflection, and is not medical, legal, financial or psychological advice.\n\nFree, with no account and no API key. Birth data is used only for the calculation and is not stored.",
+        "developerName": "Gustavo Cançado",
+        "category": "Entertainment",
+        "capabilities": ["Read"],
+        "websiteURL": "https://mistico.gustavocancado.com.br",
+        "supportURL": "https://github.com/gucancado/ceu-natal/issues",
+        "privacyPolicyURL": "https://mistico.gustavocancado.com.br/privacidade",
+        "termsOfServiceURL": "https://mistico.gustavocancado.com.br/termos",
+        "defaultPrompt": [
+          "Calculate my natal chart: born 12/03/1990 at 14:30 in Belo Horizonte, Brazil.",
+          "What are today's transits over my natal chart?",
+          "Compare my chart with my partner's chart."
+        ],
+        "brandColor": "#F0616B",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Natal chart with full birth data",
+              "prompt": "Calculate the natal chart for someone born on 12/03/1990 at 14:30 in Belo Horizonte, MG, Brazil.",
+              "tools_triggered": "calcular_mapa_natal",
+              "expected_behavior": "Returns planets with sign, degree and house, plus Ascendant, Midheaven and aspects, and answers using those values."
+            },
+            {
+              "description": "Natal chart without a birth time",
+              "prompt": "Calculate the natal chart for someone born on 25/07/1992. I don't know the time or the city.",
+              "tools_triggered": "calcular_mapa_natal",
+              "expected_behavior": "Returns planetary positions by sign without houses or angles and states that the Moon may be uncertain."
+            },
+            {
+              "description": "Synastry between two people",
+              "prompt": "Compare two charts: person A born 12/03/1990 at 14:30 in Belo Horizonte, MG; person B born 25/07/1992 at 09:15 in São Paulo, SP.",
+              "tools_triggered": "calcular_sinastria",
+              "expected_behavior": "Returns cross aspects between the two charts with their orbs."
+            },
+            {
+              "description": "Transits on a chosen date",
+              "prompt": "For someone born 12/03/1990 at 14:30 in Belo Horizonte, MG, what are the transits on 01/01/2027?",
+              "tools_triggered": "calcular_transitos",
+              "expected_behavior": "Returns transiting planets and their aspects to the natal chart for that date."
+            },
+            {
+              "description": "Solar return for a given year",
+              "prompt": "Calculate the 2027 solar return for someone born 12/03/1990 at 14:30 in Belo Horizonte, MG, living in Belo Horizonte, MG.",
+              "tools_triggered": "calcular_revolucao_solar",
+              "expected_behavior": "Returns the exact solar return moment and its chart."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Unrelated request. The plugin should not be called and ChatGPT should answer normally.",
+              "prompt": "Give me a recipe for pão de queijo."
+            },
+            {
+              "description": "Astronomy question that needs no chart. The plugin should not be called.",
+              "prompt": "Why does the Moon have phases?"
+            },
+            {
+              "description": "Medical decision. The plugin must not be used to justify it; ChatGPT should decline and suggest talking to a doctor.",
+              "prompt": "My chart has Saturn in the sixth house. Should I stop taking my medication?"
+            }
+          ]
+        }
+      },
+      "publication": {
+        "release_notes": "First public release: natal chart, synastry, composite chart, transits, progressions and solar and lunar returns."
+      }
+    }
+  }
+}

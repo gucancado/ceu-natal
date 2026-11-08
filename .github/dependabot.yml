@@ -1,0 +1,49 @@
+version: 2
+updates:
+  # O requirements.txt é um lock gerado a partir do requirements.in com
+  #   uv pip compile requirements.in -o requirements.txt --python-version 3.11
+  # Um PR do Dependabot que mexa no lock deve ser refeito regenerando-o assim.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      python-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Majors de mcp, starlette e uvicorn só entram à mão, com revisão.
+      - dependency-name: mcp
+        update-types: ["version-update:semver-major"]
+      - dependency-name: starlette
+        update-types: ["version-update:semver-major"]
+      - dependency-name: uvicorn
+        update-types: ["version-update:semver-major"]
+      # timezonefinder 9.x exige Python 3.12.
+      - dependency-name: timezonefinder
+        update-types: ["version-update:semver-major"]
+      # kerykeion 6 muda a API do motor de cálculo: migração é projeto à parte.
+      - dependency-name: kerykeion
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+    groups:
+      web-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # TypeScript 7 (reescrita nativa) só entra à mão, depois do Next suportar.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # O container roda Node 24: os tipos acompanham o runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#05060F"/>
+  <circle cx="256" cy="256" r="216" fill="none" stroke="#ECEEF8" stroke-opacity=".55" stroke-width="5"/>
+  <circle cx="256" cy="256" r="176" fill="none" stroke="#ECEEF8" stroke-opacity=".55" stroke-width="5"/>
+  <g stroke="#ECEEF8" stroke-opacity=".55" stroke-width="5">
+    <line x1="256" y1="40" x2="256" y2="80"/>
+    <line x1="364" y1="69" x2="344" y2="104"/>
+    <line x1="443" y1="148" x2="408" y2="168"/>
+    <line x1="472" y1="256" x2="432" y2="256"/>
+    <line x1="443" y1="364" x2="408" y2="344"/>
+    <line x1="364" y1="443" x2="344" y2="408"/>
+    <line x1="256" y1="472" x2="256" y2="432"/>
+    <line x1="148" y1="443" x2="168" y2="408"/>
+    <line x1="69" y1="364" x2="104" y2="344"/>
+    <line x1="40" y1="256" x2="80" y2="256"/>
+    <line x1="69" y1="148" x2="104" y2="168"/>
+    <line x1="148" y1="69" x2="168" y2="104"/>
+  </g>
+  <path d="M292 136 A124 124 0 1 0 292 376 A100 100 0 0 1 292 136 Z" fill="#F0616B"/>
+  <path d="M338 212 L346 240 L374 248 L346 256 L338 284 L330 256 L302 248 L330 240 Z" fill="#ECEEF8"/>
+</svg>

@@ -1,0 +1,45 @@
+name: Bug
+description: Algo calculou errado, falhou ou não respondeu.
+labels: [bug]
+body:
+  - type: input
+    id: versao
+    attributes:
+      label: Versão
+      description: Campo `versao` do `healthcheck` (ou do `/health`), ou o commit se roda local.
+      placeholder: "2.2.1"
+    validations:
+      required: true
+  - type: input
+    id: cliente
+    attributes:
+      label: Cliente MCP
+      description: Onde o servidor foi usado.
+      placeholder: "Claude.ai web, Claude Desktop, ChatGPT, Cursor, n8n..."
+    validations:
+      required: true
+  - type: textarea
+    id: pedido
+    attributes:
+      label: Pedido
+      description: Tool chamada e argumentos. Use dados fictícios, não a data de nascimento de alguém real.
+      render: json
+      placeholder: |
+        {"name": "calcular_mapa_natal", "arguments": {"data": "12/03/1990", "hora": "14:30", "local": "Belo Horizonte, MG"}}
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resposta esperada
+      description: O que deveria vir, e de onde vem essa referência (outro software, efeméride publicada).
+    validations:
+      required: true
+  - type: textarea
+    id: obtido
+    attributes:
+      label: Resposta obtida
+      description: O trecho relevante da resposta ou o erro.
+      render: json
+    validations:
+      required: true

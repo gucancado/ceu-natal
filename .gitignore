@@ -1,0 +1,24 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.egg-info/
+dist/
+build/
+.venv/
+.venv-*/
+venv/
+.claude/
+.pytest_cache/
+
+# Validação contém dados pessoais (datas/locais de nascimento)
+# — manter local, não publicar
+scripts/saida/
+scripts/dados_familia.json
+.superpowers/
+.mypy_cache/
+.ruff_cache/
+docs/superpowers/
+# Destino do deploy (host e uuids do Coolify): local, ver scripts/deploy.py
+scripts/deploy.env

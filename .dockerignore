@@ -1,0 +1,12 @@
+web/
+.venv-validacao/
+.git/
+.superpowers/
+docs/superpowers/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+scripts/deploy.env
+scripts/dados_familia.json
+scripts/saida/

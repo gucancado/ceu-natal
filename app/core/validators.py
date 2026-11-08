@@ -1,0 +1,100 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+"""Parse e validação de data, hora, local e sistema de casas."""
+
+from datetime import datetime
+from typing import Optional, Tuple, overload
+
+# Identificadores de sistemas de casas aceitos pelo Kerykeion (subset comum).
+SISTEMAS_CASAS_VALIDOS = ("P", "K", "O", "R", "C", "E", "W", "B", "M", "T")
+
+
+def validar_sistema_casas(valor: Optional[str]) -> str:
+    """Normaliza e valida o identificador de sistema de casas.
+
+    `None` → 'P' (Placidus, default). Strings fora da lista levantam ValueError
+    com mensagem listando todas as opções válidas.
+    """
+    if valor is None:
+        return "P"
+    if not isinstance(valor, str):
+        raise ValueError(
+            f"sistema_casas deve ser string ou null, recebi {type(valor).__name__}."
+        )
+    valor_norm = valor.strip().upper()
+    if valor_norm not in SISTEMAS_CASAS_VALIDOS:
+        opcoes = ", ".join(SISTEMAS_CASAS_VALIDOS)
+        raise ValueError(
+            f"sistema_casas '{valor}' inválido. Use um de: {opcoes}."
+        )
+    return valor_norm
+
+
+# Faixa de anos aceita nas datas de entrada: a efeméride de Quíron distribuída
+# com o Kerykeion cobre só 1800–2399 (as revoluções têm faixa própria, mais
+# estreita, em `periodos`).
+ANO_MINIMO_DATA = 1800
+ANO_MAXIMO_DATA = 2399
+
+
+def parse_data(data: str) -> Tuple[int, int, int]:
+    """DD/MM/YYYY -> (dia, mes, ano). Ano fora de 1800..2399 levanta ValueError."""
+    try:
+        dt = datetime.strptime(data.strip(), "%d/%m/%Y")
+    except ValueError as exc:
+        raise ValueError(f"Data inválida: '{data}'. Use o formato DD/MM/YYYY.") from exc
+    if not ANO_MINIMO_DATA <= dt.year <= ANO_MAXIMO_DATA:
+        raise ValueError(
+            f"Ano {dt.year} fora da faixa suportada ({ANO_MINIMO_DATA} a {ANO_MAXIMO_DATA})."
+        )
+    return dt.day, dt.month, dt.year
+
+
+def parse_hora(hora: Optional[str]) -> Tuple[Optional[int], Optional[int]]:
+    """HH:MM -> (hora, minuto). (None, None) se não informado."""
+    if not hora:
+        return None, None
+    try:
+        dt = datetime.strptime(hora.strip(), "%H:%M")
+        return dt.hour, dt.minute
+    except ValueError as exc:
+        raise ValueError(f"Hora inválida: '{hora}'. Use o formato HH:MM.") from exc
+
+
+@overload
+def parse_local(local: str) -> Tuple[str, str]: ...
+@overload
+def parse_local(local: None) -> Tuple[None, str]: ...
+@overload
+def parse_local(local: Optional[str]) -> Tuple[Optional[str], str]: ...
+
+
+def parse_local(local: Optional[str]) -> Tuple[Optional[str], str]:
+    """
+    'Cidade, UF/País' -> (cidade, nacao).
+
+    Usa apenas a última vírgula como separador, então cidades cujo nome
+    contém vírgula (ex: 'Washington, D.C.') são preservadas:
+      'Washington, D.C., USA' -> ('Washington, D.C.', 'USA')
+
+    Sem vírgula, nacao volta como string vazia — o geocoder decide o que fazer.
+    `None` retorna (None, "") — ausência total de local.
+    String vazia ou só espaços levanta ValueError.
+    """
+    if local is None:
+        return None, ""
+
+    if not local.strip():
+        raise ValueError("Local inválido: string vazia.")
+
+    if "," in local:
+        cidade, nacao = local.rsplit(",", 1)
+        cidade = cidade.strip()
+        nacao = nacao.strip()
+    else:
+        cidade = local.strip()
+        nacao = ""
+
+    if not cidade:
+        raise ValueError(f"Local inválido: '{local}'.")
+
+    return cidade, nacao

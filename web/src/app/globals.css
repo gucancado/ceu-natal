@@ -1,0 +1,163 @@
+@import "tailwindcss";
+@import "@beeads/tokens/theme.css";
+@import "@beeads/ui/styles.css";
+
+/* Tailwind v4 não escaneia node_modules; sem isto as classes dos componentes do @beeads/ui não são geradas. */
+@source "../../node_modules/@beeads/ui/dist/classlist.txt";
+
+/* Breakpoint com valor literal: o do @beeads/tokens gera media query inválida. */
+@theme {
+  --breakpoint-3xl: 1700px;
+}
+
+/* Tema único (escuro, céu profundo): os tokens da marca vivem em :root e sobrescrevem a paleta honey/ink da BeeAds.
+   Vêm depois do .dark do @beeads/tokens (mesma especificidade), então valem também com a classe dark no <html>. */
+:root {
+  color-scheme: dark;
+  --color-bg: #05060F;
+  --color-fg: #ECEEF8;
+  --color-card: rgba(18, 22, 46, 0.72);
+  --color-card-fg: #ECEEF8;
+  --color-muted: #161A33;
+  --color-muted-fg: #9BA2C2;
+  --color-border: rgba(155, 162, 210, 0.2);
+  --color-input: rgba(155, 162, 210, 0.28);
+  --color-primary: #ECEEF8;
+  --color-primary-fg: #05060F;
+  --color-secondary: #161A33;
+  --color-secondary-fg: #ECEEF8;
+  --color-honey: #F0616B;
+  --color-honey-soft: #3A1A24;
+  --color-accent: #F0616B;
+  --color-accent-fg: #05060F;
+  --color-ring: #F0616B;
+  --radius: 0.25rem;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-newsreader), Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  font-family: var(--font-sans);
+  background: transparent;
+  color: var(--color-fg);
+  position: relative;
+}
+
+/* Caixa baixa só nos blocos de marketing (hero, títulos de seção, carta). O texto copiado e o HTML continuam como estão. */
+.caixa-baixa {
+  text-transform: lowercase;
+}
+
+/* Botões herdam a caixa do bloco; código, campos e textos longos nunca mudam de caixa
+   (quem digita a configuração precisa ver "mcpServers", não "mcpservers"). */
+button {
+  text-transform: inherit;
+}
+
+pre,
+code,
+kbd,
+input,
+textarea,
+article {
+  text-transform: none;
+}
+
+/* Nebulosa + campo de estrelas fixos atrás do conteúdo. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body::before {
+  background:
+    radial-gradient(ellipse 60% 45% at 85% 5%, rgba(96, 64, 200, 0.28), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 5% 35%, rgba(40, 90, 200, 0.18), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 70% 95%, rgba(200, 50, 90, 0.14), transparent 70%),
+    radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 90px 140px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 160px 60px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.5px 1.5px at 230px 190px, #fff, transparent),
+    radial-gradient(1px 1px at 300px 100px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 50px 250px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 330px 280px, rgba(255, 255, 255, 0.6), transparent);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 350px 320px, 350px 320px, 350px 320px, 350px 320px, 350px 320px,
+    350px 320px, 350px 320px;
+}
+
+body::after {
+  background:
+    radial-gradient(1.5px 1.5px at 70px 80px, #fff, transparent),
+    radial-gradient(1px 1px at 410px 230px, rgba(200, 210, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 260px 420px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 520px 40px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 600px 360px, rgba(255, 220, 230, 0.9), transparent);
+  background-size: 680px 520px;
+  animation: cintilar 5s ease-in-out infinite alternate;
+}
+
+@keyframes cintilar {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+
+.glifo {
+  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", "Apple Symbols", sans-serif;
+  font-style: normal;
+}
+
+.anel-zodiacal {
+  animation: girar 240s linear infinite;
+}
+
+@keyframes girar {
+  to { rotate: 360deg; }
+}
+
+.cursor-digitacao {
+  animation: piscar 1s steps(1) infinite;
+}
+
+@keyframes piscar {
+  50% { opacity: 0; }
+}
+
+/* Rótulos do botão de copiar: o estado vem do script inline (lib/script-copiar.ts). */
+.copiar-ok,
+.copiar-falha {
+  display: none;
+}
+
+[data-estado] .copiar-rotulo {
+  display: none;
+}
+
+[data-estado="copiado"] .copiar-ok {
+  display: inline-flex;
+}
+
+[data-estado="falhou"] .copiar-falha {
+  display: inline;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

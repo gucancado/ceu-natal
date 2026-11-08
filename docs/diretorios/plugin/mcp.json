@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "ceu-natal": {
+      "type": "streamable-http",
+      "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/"
+    }
+  }
+}
