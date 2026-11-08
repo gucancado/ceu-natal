@@ -12,7 +12,6 @@ export const site = {
   url: semBarraFinal(process.env.NEXT_PUBLIC_SITE_URL || "https://mistico.gustavocancado.com.br"),
   mcpUrl,
   mcpEndpoint: `${mcpUrl}/mcp/`,
-  sseEndpoint: `${mcpUrl}/sse`,
   repoUrl: semBarraFinal(process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/gucancado/ceu-natal"),
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
 } as const;

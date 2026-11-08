@@ -17,7 +17,7 @@ export const n8n: Cliente = {
   ],
   snippet: { linguagem: "text", codigo: site.mcpEndpoint },
   limitacoes: [
-    `Antes da versão 1.104.0 só existe o modo SSE. Nesse caso, use \`${site.sseEndpoint}\`.`,
+    "Antes da versão 1.104.0 só existe o modo SSE, que o Céu Natal não aceita. Atualize o n8n.",
     "Workflows antigos guardam a versão velha do nó, com SSE como padrão. Recrie o nó para pegar o padrão novo.",
     "A documentação oficial do nó ainda descreve só o modo SSE. A interface atual tem os campos acima.",
   ],

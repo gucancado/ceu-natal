@@ -5,7 +5,6 @@
 ## Conectar
 
 - [Endpoint MCP (Streamable HTTP, recomendado)]({mcp_url}/mcp/): use a barra final; sem login no plano gratuito.
-- [Endpoint SSE (legado)]({mcp_url}/sse): handshake MCP via SSE, em descontinuação.
 - [Site]({site_url}): apresentação do projeto.
 - [Guia de conexão no Claude.ai]({site_url}/conectar/claude-ai): passo a passo.
 

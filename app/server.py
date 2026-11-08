@@ -1,11 +1,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Servidor MCP do céu-natal: expõe tools de astrologia por Streamable HTTP (`/mcp/`,
-principal) e SSE (`/sse`, legado).
+Servidor MCP do céu-natal: expõe tools de astrologia por Streamable HTTP (`/mcp/`).
 
 Endpoints:
-  GET  /sse        — abre o canal SSE (handshake MCP, legado)
-  POST /messages/  — canal de mensagens SSE
   POST /mcp        — Streamable HTTP (protocolo MCP >= 2025-03-26)
   GET  /health     — healthcheck público (sem auth)
   GET  /llms.txt   — descrição do servidor para LLMs (público)
@@ -38,7 +35,6 @@ from typing import Any
 
 import anyio
 from mcp.server import Server
-from mcp.server.sse import SseServerTransport
 from mcp.server.streamable_http import TransportSecuritySettings
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.types import CallToolResult, TextContent, Tool, ToolAnnotations
@@ -60,7 +56,7 @@ MAPA_RAPIDO_BODY_MAX = 4096
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
 _PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", _DESAFIO_OPENAI]
 _LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
-TRANSPORTE = "streamable-http+sse"
+TRANSPORTE = "streamable-http"
 
 logger = logging.getLogger("ceu-natal")
 
@@ -687,15 +683,13 @@ class Aplicacao:
             # sem isso o dicionário de sessões do SDK só cresce.
             session_idle_timeout=1800,
         )
-        # Transporte SSE legado + /messages.
-        self.sse_transport = SseServerTransport("/messages/")
 
     # ── MCP ──────────────────────────────────────────────────
     def dispatch(self, name: str, arguments: dict[str, Any]) -> dict:
         return _dispatch(name, arguments, self.registro)
 
     def chave_sessao(self) -> str | None:
-        """Id da sessão MCP (header mcp-session-id) ou None fora de request/SSE legado."""
+        """Id da sessão MCP (header mcp-session-id) ou None fora de request."""
         try:
             request = self.server.request_context.request
         except LookupError:
@@ -743,13 +737,6 @@ class Aplicacao:
     async def lifespan(self, _app: Any) -> AsyncIterator[None]:
         async with self.session_manager.run():
             yield
-
-    async def handle_sse(self, request: Request) -> Response:
-        async with self.sse_transport.connect_sse(
-            request.scope, request.receive, request._send,  # noqa: SLF001
-        ) as (read_stream, write_stream):
-            await self.server.run(read_stream, write_stream, self.server.create_initialization_options())
-        return Response()
 
     # ── HTTP ─────────────────────────────────────────────────
     async def health(self, _: Request) -> JSONResponse:
@@ -899,8 +886,6 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route(_DESAFIO_OPENAI, endpoint=ceu.desafio_openai, methods=["GET"]),
             Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
-            Route("/sse", endpoint=ceu.handle_sse, methods=["GET"]),
-            Mount("/messages/", app=ceu.sse_transport.handle_post_message),
             Mount("/mcp", app=ceu.session_manager.handle_request),
         ],
         middleware=[Middleware(APIKeyMiddleware, api_key=ceu.settings.api_key)],

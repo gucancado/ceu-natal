@@ -1,6 +1,6 @@
 """
 Testes do app Starlette: rotas HTTP públicas e middleware de auth.
-Não exercita o handshake MCP (SSE) — isso requer cliente MCP de verdade.
+Não exercita o handshake MCP — isso requer cliente MCP de verdade.
 
 Cada teste monta a própria aplicação com `create_app(Settings(...))`; nada
 depende de variáveis de ambiente nem de recarregar o módulo.
@@ -68,7 +68,7 @@ def test_settings_do_ambiente_vazio_usa_os_defaults(monkeypatch):
         monkeypatch.delenv(nome, raising=False)
     s = Settings.do_ambiente()
     assert s == Settings()
-    assert (s.server_name, s.server_version, s.api_key) == ("ceu-natal", "2.2.2", "")
+    assert (s.server_name, s.server_version, s.api_key) == ("ceu-natal", "2.2.3", "")
     assert (s.rate_limit_session_per_min, s.rate_limit_global_per_min) == (30, 600)
     assert (s.rate_limit_mapa_rapido_ip_per_min, s.rate_limit_mapa_rapido_global_per_min) == (6, 120)
     assert s.public_site_url == "https://github.com/gucancado/ceu-natal"
@@ -92,7 +92,7 @@ def test_health_publico_sem_auth():
     body = resp.json()
     assert body["status"] == "ok"
     assert body["service"] == "ceu-natal"
-    assert body["transporte"] == "streamable-http+sse"
+    assert body["transporte"] == "streamable-http"
     assert body["auth_required"] is True
     assert body["mapa_rapido"] == {
         "por_ip_por_min": ceu.settings.rate_limit_mapa_rapido_ip_per_min,
@@ -249,7 +249,7 @@ def test_dispatch_listar_aspectos_tipos():
 def test_healthcheck_traz_a_versao_configurada():
     _, ceu = _app(server_version="7.7.7")
     assert ceu.dispatch("healthcheck", {}) == {
-        "status": "ok", "versao": "7.7.7", "transporte": "streamable-http+sse",
+        "status": "ok", "versao": "7.7.7", "transporte": "streamable-http",
         "proximo_passo": PROXIMO_PASSO,
     }
 

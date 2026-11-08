@@ -26,7 +26,7 @@ test("snippets usam o endpoint do site, não URL literal", () => {
   for (const c of clientes)
     if (c.snippet)
       assert.ok(
-        c.snippet.codigo.includes(site.mcpEndpoint) || c.snippet.codigo.includes(site.sseEndpoint),
+        c.snippet.codigo.includes(site.mcpEndpoint),
         c.slug,
       );
 });
@@ -50,10 +50,10 @@ test("host do servidor MCP só entra via site.*, nunca literal", () => {
   // Fonte: nenhum módulo de cliente escreve o host à mão.
   const dir = join(dirname(fileURLToPath(import.meta.url)), "../src/content/clientes");
   for (const f of readdirSync(dir)) assert.ok(!readFileSync(join(dir, f), "utf8").includes(host), f);
-  // Texto renderizado: fora das interpolações de site.mcpEndpoint/sseEndpoint, o host não aparece.
+  // Texto renderizado: fora das interpolações de site.mcpEndpoint, o host não aparece.
   for (const c of clientes)
     for (const s of [c.resumo, ...c.passos, ...c.limitacoes]) {
-      const resto = s.split(site.mcpEndpoint).join("").split(site.sseEndpoint).join("");
+      const resto = s.split(site.mcpEndpoint).join("");
       assert.ok(!resto.includes(host), `${c.slug}: ${s}`);
     }
 });

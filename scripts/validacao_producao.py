@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """
-Script de validação: conecta ao MCP de produção (SSE), executa as tools
+Script de validação: conecta ao MCP de produção (Streamable HTTP), executa as tools
 disponíveis com dados reais e mede tempos.
 
 Uso:
@@ -18,9 +18,9 @@ import time
 from pathlib import Path
 
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 
-URL = "https://astrologia-mcp.gustavocancado.com.br/sse"
+URL = "https://astrologia-mcp.gustavocancado.com.br/mcp/"
 OUT_DIR = Path("scripts/saida")
 DADOS_PATH = Path("scripts/dados_familia.json")
 DADOS_EXEMPLO = Path("scripts/dados_familia.example.json")
@@ -70,7 +70,7 @@ async def main() -> int:
     erros = 0
     tempos_natal: list[float] = []
 
-    async with sse_client(URL) as (read, write):
+    async with streamablehttp_client(URL) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
 

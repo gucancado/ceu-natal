@@ -4,6 +4,13 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.3] — 2026-11-08
+
+### Removido
+
+- Transporte SSE legado (`/sse` e `/messages/`). O servidor aceita só Streamable HTTP em `/mcp/`, que
+  Claude, ChatGPT, Cursor, Antigravity e n8n 1.104 ou mais novo usam.
+
 ## [2.2.2] — 2026-11-08
 
 ### Corrigido

@@ -21,7 +21,7 @@ export const gemini: Cliente = {
   snippet: { linguagem: "json", codigo: JSON.stringify(config, null, 2) },
   limitacoes: [
     "O app do Gemini (gemini.google.com) aceita servidores por URL só nos Estados Unidos, para maiores de 18 anos, com conta Google pessoal e interface em inglês.",
-    "O Antigravity só aceita Streamable HTTP. O endpoint SSE e o campo `httpUrl` do Gemini CLI não funcionam.",
+    "O campo `httpUrl` do Gemini CLI não funciona no Antigravity.",
     "Não reaproveite a chave `url` do Gemini CLI. Use `serverUrl`.",
     "Para um projeto só, o arquivo é `.agents/mcp_config.json` dentro da pasta do projeto.",
   ],

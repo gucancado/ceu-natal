@@ -6,7 +6,7 @@ Orientação para quem (pessoa ou agente) vai mexer neste repositório.
 
 Servidor **MCP** (Model Context Protocol) de astrologia em português: calcula
 mapas, não interpreta, não guarda dados de pessoas. Transporte Streamable HTTP
-em `/mcp/` (recomendado) e SSE legado em `/sse`. O site de apresentação mora em
+em `/mcp/`. O site de apresentação mora em
 `web/` e é um app separado.
 
 ## Stack

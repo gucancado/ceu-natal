@@ -16,7 +16,6 @@ export function gerarLlmsTxt(): string {
     "## Conectar",
     "",
     `- Endpoint MCP (Streamable HTTP): ${site.mcpEndpoint}`,
-    `- Endpoint legado (SSE): ${site.sseEndpoint}`,
     ...clientes.map((c) => `- [Como conectar no ${c.nome}](${site.url}/conectar/${c.slug}): ${c.resumo}`),
     "",
     "## Mapa rápido",

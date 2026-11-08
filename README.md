@@ -103,7 +103,7 @@ pip install -r requirements.txt
 uvicorn app.server:app --port 8000
 ```
 
-Rotas: `/mcp/` (MCP Streamable HTTP), `/sse` e `/messages/` (SSE legado), `/health`,
+Rotas: `/mcp/` (MCP Streamable HTTP), `/health`,
 `/tools` (lista de tools; pública quando `MCP_API_KEY` está vazia), `/llms.txt`,
 `/mapa-rapido` (formulário do site) e `/` (redireciona para `PUBLIC_SITE_URL`).
 
@@ -115,7 +115,7 @@ Para desenvolver, instale `requirements-dev.txt` e rode `ruff check .`, `mypy ap
 | Variável | Default | Descrição |
 |----------|---------|-----------|
 | `MCP_SERVER_NAME` | `ceu-natal` | nome devolvido no `initialize` |
-| `MCP_SERVER_VERSION` | `2.2.2` | versão exposta |
+| `MCP_SERVER_VERSION` | `2.2.3` | versão exposta |
 | `MCP_API_KEY` | *(vazio)* | se definida, exige `Authorization: Bearer <chave>`; vazia, libera tudo |
 | `MCP_ALLOWED_HOSTS` | *(vazio)* | hosts aceitos no `/mcp/` (anti-DNS rebinding), separados por vírgula; vazio = sem validação |
 | `RATE_LIMIT_SESSION_PER_MIN` | `30` | chamadas de tool por minuto por sessão MCP (0 desliga) |

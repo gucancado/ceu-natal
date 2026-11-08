@@ -88,6 +88,16 @@ def test_texto_no_limite_passa(monkeypatch):
     assert estruturado == {"ok": True}
 
 
+def test_transporte_sse_foi_removido():
+    from starlette.testclient import TestClient
+
+    from app.server import create_app
+
+    client = TestClient(create_app())
+    assert client.get("/sse").status_code == 404
+    assert client.post("/messages/", json={}).status_code == 404
+
+
 def test_schemas_declaram_limite_nos_textos():
     from app.server import TOOLS
 

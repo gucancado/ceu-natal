@@ -8,15 +8,11 @@
     "source": "github"
   },
   "websiteUrl": "https://mistico.gustavocancado.com.br",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "remotes": [
     {
       "type": "streamable-http",
       "url": "https://astrologia-mcp.gustavocancado.com.br/mcp/"
-    },
-    {
-      "type": "sse",
-      "url": "https://astrologia-mcp.gustavocancado.com.br/sse"
     }
   ]
 }

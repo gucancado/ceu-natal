@@ -30,7 +30,6 @@ test("site lê defaults e monta os endpoints", () => {
   const site = JSON.parse(saida);
   assert.equal(site.mcpUrl, "https://astrologia-mcp.gustavocancado.com.br");
   assert.equal(site.mcpEndpoint, "https://astrologia-mcp.gustavocancado.com.br/mcp/");
-  assert.equal(site.sseEndpoint, "https://astrologia-mcp.gustavocancado.com.br/sse");
   assert.equal(site.url, "https://mistico.gustavocancado.com.br");
   assert.equal(site.repoUrl, "https://github.com/gucancado/ceu-natal");
 });
