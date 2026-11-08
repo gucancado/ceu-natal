@@ -21,6 +21,11 @@ updates:
       # timezonefinder 9.x exige Python 3.12.
       - dependency-name: timezonefinder
         update-types: ["version-update:semver-major"]
+      # Versões que exigem Python 3.12 (o projeto é 3.11).
+      - dependency-name: numpy
+        versions: [">=2.5"]
+      - dependency-name: timezonefinder-data
+        versions: [">=2"]
       # kerykeion 6 muda a API do motor de cálculo: migração é projeto à parte.
       - dependency-name: kerykeion
         update-types: ["version-update:semver-major"]
@@ -39,6 +44,16 @@ updates:
       # O container roda Node 24: os tipos acompanham o runtime.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: docker
+    directory: /web
+    schedule:
+      interval: weekly
 
   - package-ecosystem: github-actions
     directory: /

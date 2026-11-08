@@ -3,6 +3,7 @@
 Wrapper sobre Kerykeion 5.x: cria AstrologicalSubject com lat/lng/tz explícitos
 (online=False) e expõe utilitários para extrair planetas e casas.
 """
+import copy
 from typing import TYPE_CHECKING, Optional, cast
 
 from kerykeion import AstrologicalSubjectFactory
@@ -148,6 +149,13 @@ def pontos_sensiveis_iter(subject):
         ponto = getattr(subject, attr, None)
         if ponto is None:
             continue
+        if attr == "true_south_lunar_node":
+            # O Kerykeion inverte o sinal da velocidade do nodo sul. Os nodos são
+            # opostos e andam juntos: o sul tem o movimento do norte.
+            norte = subject.true_north_lunar_node
+            ponto = copy.copy(ponto)
+            ponto.speed = norte.speed
+            ponto.retrograde = getattr(norte, "retrograde", None)
         nome_pt = PLANETAS_NOMES_PT.get(ponto.name, attr)
         yield nome_pt, ponto
 

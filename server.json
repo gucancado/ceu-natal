@@ -8,7 +8,7 @@
     "source": "github"
   },
   "websiteUrl": "https://mistico.gustavocancado.com.br",
-  "version": "2.2.3",
+  "version": "2.2.4",
   "remotes": [
     {
       "type": "streamable-http",

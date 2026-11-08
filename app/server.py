@@ -64,6 +64,8 @@ logger = logging.getLogger("ceu-natal")
 def configurar_logging() -> None:
     """Formato de log do processo; sem efeito se o logging já foi configurado."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # O SDK registra o id de cada sessão em INFO; a política de privacidade promete que não há.
+    logging.getLogger("mcp").setLevel(logging.WARNING)
 
 
 # Annotations compartilhadas:
@@ -660,7 +662,9 @@ class Aplicacao:
             },
         }
 
-        self.server = Server(settings.server_name, instructions=INSTRUCOES)
+        self.server = Server(
+            settings.server_name, version=settings.server_version, instructions=INSTRUCOES,
+        )
 
         @self.server.list_tools()
         async def _list_tools() -> list[Tool]:
@@ -868,6 +872,16 @@ class Aplicacao:
         })
 
 
+class _EndpointMcp:
+    """App ASGI: o `Route` trata método como handler de Request, classe como ASGI."""
+
+    def __init__(self, ceu: Any) -> None:
+        self._ceu = ceu
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        await self._ceu.session_manager.handle_request(scope, receive, send)
+
+
 def create_app(settings: Settings | None = None) -> Starlette:
     """Monta a aplicação Starlette; sem `settings`, lê o ambiente.
 
@@ -886,6 +900,9 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route(_DESAFIO_OPENAI, endpoint=ceu.desafio_openai, methods=["GET"]),
             Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
+            # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
+            # redirect sai em http://, levando o corpo em texto puro.
+            Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),
             Mount("/mcp", app=ceu.session_manager.handle_request),
         ],
         middleware=[Middleware(APIKeyMiddleware, api_key=ceu.settings.api_key)],

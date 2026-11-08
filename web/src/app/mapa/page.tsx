@@ -12,7 +12,22 @@ const descricao =
 export const metadata: Metadata = {
   title: { absolute: `${titulo} | ${site.nome}` },
   description: descricao,
-  openGraph: { title: titulo, description: descricao },
+  // Campo a campo: o Next não mescla `openGraph` com o do layout.
+  openGraph: {
+    title: titulo,
+    description: descricao,
+    type: "website",
+    locale: "pt_BR",
+    siteName: site.nome,
+    url: "/mapa",
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: titulo,
+    description: descricao,
+    images: ["/opengraph-image"],
+  },
 };
 
 const perguntas = [

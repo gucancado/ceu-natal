@@ -51,8 +51,11 @@ def test_is_dst_lido_do_dict():
 
 def test_tem_local_por_cidade_ou_por_lat_lng():
     assert EntradaNascimento.de_dict({"data": "12/03/1990", "local": "Recife, PE"}).tem_local
-    assert EntradaNascimento.de_dict({"data": "12/03/1990", "lat": 1.0, "lng": 2.0}).tem_local
-    assert not EntradaNascimento.de_dict({"data": "12/03/1990", "lat": 1.0}).tem_local
+    assert EntradaNascimento.de_dict(
+        {"data": "12/03/1990", "lat": 1.0, "lng": 2.0, "tz_str": "UTC"}
+    ).tem_local
+    with pytest.raises(ValueError, match="juntos"):
+        EntradaNascimento.de_dict({"data": "12/03/1990", "lat": 1.0})
     assert not EntradaNascimento.de_dict({"data": "12/03/1990"}).tem_local
 
 

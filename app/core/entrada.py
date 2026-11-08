@@ -27,6 +27,28 @@ from app.core.validators import parse_data, parse_hora, parse_local
 NOME_PADRAO = "Anônimo"
 
 
+def _validar_coordenadas(
+    lat: Optional[float], lng: Optional[float], tz_str: Optional[str], cidade: Optional[str],
+) -> None:
+    """Coordenadas explícitas vêm completas e válidas; incompletas com cidade vão ao geocoder."""
+    if lat is None and lng is None and tz_str is None:
+        return
+    if lat is None or lng is None or tz_str is None:
+        if cidade:
+            return
+        raise ValueError("Informe lat, lng e tz_str juntos, ou use o campo local.")
+    if isinstance(lat, bool) or isinstance(lng, bool) or not (
+        isinstance(lat, (int, float)) and isinstance(lng, (int, float))
+    ):
+        raise ValueError("lat e lng devem ser números.")
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        raise ValueError("lat deve estar entre -90 e 90, e lng entre -180 e 180.")
+    import pytz
+
+    if not isinstance(tz_str, str) or tz_str not in pytz.all_timezones_set:
+        raise ValueError("Fuso horário desconhecido em tz_str.")
+
+
 @dataclass(frozen=True)
 class EntradaNascimento:
     nome: str
@@ -89,6 +111,7 @@ class EntradaNascimento:
         dia, mes, ano = parse_data(data)
         h, m = parse_hora(hora)
         cidade, nacao = parse_local(local)
+        _validar_coordenadas(lat, lng, tz_str, cidade)
         return cls(
             nome=nome or NOME_PADRAO,
             dia=dia, mes=mes, ano=ano,

@@ -98,6 +98,47 @@ def test_transporte_sse_foi_removido():
     assert client.post("/messages/", json={}).status_code == 404
 
 
+def test_post_mcp_sem_barra_nao_redireciona():
+    from starlette.testclient import TestClient
+
+    from app.server import create_app
+
+    with TestClient(create_app(), follow_redirects=False) as client:
+        assert client.post("/mcp", json={}).status_code != 307
+
+
+def test_initialize_informa_a_versao_do_servidor():
+    ceu = _ceu()
+    assert ceu.server.version == ceu.settings.server_version
+
+
+def test_nodo_sul_anda_com_o_nodo_norte():
+    pontos = _natal("P")["pontos_sensiveis"]
+    norte, sul = pontos["nodo_norte_verdadeiro"], pontos["nodo_sul_verdadeiro"]
+    assert sul["velocidade"] == norte["velocidade"]
+    assert sul["retrogrado"] == norte["retrogrado"]
+
+
+@pytest.mark.parametrize("extra", [
+    {"lat": 10.0, "lng": 20.0},
+    {"lat": 91.0, "lng": 0.0, "tz_str": "UTC"},
+    {"lat": 0.0, "lng": 1e300, "tz_str": "UTC"},
+    {"lat": 0.0, "lng": 0.0, "tz_str": "Marte/Base"},
+])
+def test_coordenadas_invalidas_sao_recusadas(extra):
+    with pytest.raises(ValueError):
+        calcular_mapa_natal(data="12/03/1990", hora="14:30", **extra)
+
+
+def test_logs_nao_registram_sessao():
+    import logging
+
+    from app.server import configurar_logging
+
+    configurar_logging()
+    assert logging.getLogger("mcp.server.streamable_http_manager").getEffectiveLevel() == logging.WARNING
+
+
 def test_schemas_declaram_limite_nos_textos():
     from app.server import TOOLS
 

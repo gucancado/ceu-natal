@@ -1,6 +1,10 @@
 web/
 .venv-validacao/
 .git/
+.github/
+tests/
+docs/
+.env*
 .superpowers/
 docs/superpowers/
 .pytest_cache/

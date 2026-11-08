@@ -12,6 +12,9 @@ const csp = [
   "font-src 'self'",
   `connect-src 'self' ${site.mcpUrl}`,
   "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
 ].join("; ");
 
 const nextConfig: NextConfig = {

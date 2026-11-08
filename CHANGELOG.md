@@ -4,6 +4,29 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [2.2.4] — 2026-11-08
+
+### Corrigido
+
+- `POST /mcp` sem a barra final funciona direto, sem redirect para `http://`.
+- `initialize` informa a versão do servidor, não a do SDK.
+- O nodo sul verdadeiro tem o mesmo movimento do nodo norte; antes vinha com o sinal invertido e
+  errava `aplicando` nos aspectos com ele.
+- Coordenadas explícitas incompletas ou fora da faixa, e fuso desconhecido, são recusados. Antes,
+  `lat` e `lng` sem `tz_str` calculavam em (0, 0, UTC) sem aviso.
+- Os logs não registram mais o id da sessão MCP, como a política de privacidade promete.
+- `/mapa` volta a ter imagem e dados completos ao ser compartilhado.
+
+### Adicionado
+
+- Registro do que já estava no ar sem entrada aqui: campo `proximo_passo`, títulos nas tools e rota
+  `/.well-known/openai-apps-challenge`.
+
+### Segurança
+
+- CSP com `object-src`, `base-uri` e `form-action`; resposta sem o header `Server`.
+- A imagem Docker não leva testes, documentação nem arquivos `.env`.
+
 ## [2.2.3] — 2026-11-08
 
 ### Removido
