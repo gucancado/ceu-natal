@@ -2,7 +2,7 @@ import { planeta, signos } from "@/lib/glifos";
 
 export function Carta() {
   return (
-    <section aria-labelledby="carta-titulo" className="caixa-baixa mx-auto max-w-[72rem] px-6">
+    <section aria-labelledby="carta-titulo" className="mx-auto max-w-[72rem] px-6">
       <div className="border-t border-border py-24">
         <p aria-hidden="true" className="glifo flex flex-wrap gap-x-4 font-mono text-sm tracking-[0.3em] text-muted-fg">
           {signos.join(" ")}

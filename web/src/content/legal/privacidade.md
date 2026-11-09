@@ -10,7 +10,7 @@ faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.
 Quem decide como os dados são tratados (o "controlador", na LGPD) é:
 
 - **Gustavo Cançado**, pessoa física, Belo Horizonte/MG.
-- Contato: gustavo.azvd@gmail.com
+- Contato: gustavo.azvd [arroba] gmail.com
 
 ## 2. O que o serviço faz com os dados que o seu assistente de IA envia
 
@@ -70,7 +70,7 @@ Pela LGPD, art. 18, você pode pedir:
 - informação sobre com quem os dados são compartilhados;
 - revogação de consentimento, quando ele for a base do tratamento.
 
-Para exercer qualquer direito, escreva para gustavo.azvd@gmail.com. Como o
+Para exercer qualquer direito, escreva para gustavo.azvd [arroba] gmail.com. Como o
 serviço não armazena dados de nascimento e não tem conta, talvez não haja
 dado seu para localizar. Nesse caso, responderemos explicando isso.
 

@@ -53,4 +53,4 @@ lei permite.
 ## 8. Mudanças e contato
 
 Se estes termos mudarem, a versão e a data no topo serão atualizadas.
-Dúvidas: escreva para gustavo.azvd@gmail.com.
+Dúvidas: escreva para gustavo.azvd [arroba] gmail.com.

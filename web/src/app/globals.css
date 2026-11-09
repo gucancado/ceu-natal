@@ -48,14 +48,15 @@ body {
   position: relative;
 }
 
-/* Caixa baixa só nos blocos de marketing (hero, títulos de seção, carta). O texto copiado e o HTML continuam como estão. */
-.caixa-baixa {
+/* Todo o texto visível em caixa baixa. O HTML, o <title> e o texto copiado continuam como estão. */
+html {
   text-transform: lowercase;
 }
 
-/* Botões herdam a caixa do bloco; código, campos e textos longos nunca mudam de caixa
+/* Botões herdam a caixa da página; código, campos e textos para copiar nunca mudam de caixa
    (quem digita a configuração precisa ver "mcpServers", não "mcpservers"). */
-button {
+button,
+select {
   text-transform: inherit;
 }
 
@@ -64,8 +65,13 @@ code,
 kbd,
 input,
 textarea,
-article {
+.texto-literal {
   text-transform: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  text-transform: lowercase;
 }
 
 /* Nebulosa + campo de estrelas fixos atrás do conteúdo. */

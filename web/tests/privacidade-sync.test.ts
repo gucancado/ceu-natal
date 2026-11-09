@@ -19,7 +19,8 @@ test("política do site é idêntica à canônica", (t) => {
 
 test("política traz o email de contato em texto, nas duas ocorrências", () => {
   const texto = fs.readFileSync(path.resolve(__dirname, "../src/content/legal/privacidade.md"), "utf8");
-  assert.ok(texto.includes(`Contato: ${contato.email}`));
-  assert.ok(texto.includes(`escreva para ${contato.email}`));
+  assert.ok(texto.includes(`Contato: ${contato.legivel}`));
+  assert.ok(texto.includes(`escreva para ${contato.legivel}`));
   assert.ok(!texto.includes("rodapé"));
+  assert.ok(!texto.includes("@"), "o endereço inteiro não pode ir para o HTML");
 });

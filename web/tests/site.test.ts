@@ -34,6 +34,8 @@ test("site lê defaults e monta os endpoints", () => {
   assert.equal(site.repoUrl, "https://github.com/gucancado/ceu-natal");
 });
 
-test("contato.email é um endereço em texto", () => {
-  assert.match(contato.email, /^[^@\s]+@[^@\s]+\.[^@\s]+$/);
+test("contato não traz o endereço inteiro", () => {
+  assert.ok(!JSON.stringify(contato).includes("@"));
+  assert.ok(contato.legivel.startsWith(contato.usuario));
+  assert.ok(contato.legivel.endsWith(contato.dominio));
 });

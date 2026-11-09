@@ -13,10 +13,8 @@ recente.
 
 ## Como reportar
 
-Não abra issue pública para uma vulnerabilidade. Use um destes canais:
-
-- **GitHub:** aba *Security* do repositório → *Report a vulnerability* (relato privado).
-- **Email:** gustavo.azvd@gmail.com, com "ceu-natal segurança" no assunto.
+Não abra issue pública para uma vulnerabilidade. Use o relato privado do GitHub:
+aba *Security* do repositório → *Report a vulnerability*.
 
 Inclua a versão (ou o commit), os passos para reproduzir e o impacto que você
 espera. Se tiver uma correção, descreva-a no relato em vez de abrir PR público.

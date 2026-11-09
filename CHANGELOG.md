@@ -4,6 +4,17 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/); versões seguem o
 [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Alterado
+
+- O site inteiro aparece em caixa baixa; código, campos e textos para copiar mantêm a caixa original.
+
+### Segurança
+
+- O e-mail de contato não vai mais inteiro para o HTML nem para os documentos do repositório.
+- Vulnerabilidades passam a ser relatadas pelo relato privado do GitHub.
+
 ## [2.2.6] — 2026-11-08
 
 ### Adicionado

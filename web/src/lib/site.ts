@@ -16,8 +16,13 @@ export const site = {
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
 } as const;
 
-// Contato do controlador (LGPD): escrito em texto no rodapé e na política, sem depender de JavaScript.
-export const contato = { email: "gustavo.azvd@gmail.com" } as const;
+// Contato do controlador (LGPD). O endereço inteiro nunca vai para o HTML, para não alimentar robôs de spam:
+// a forma legível funciona sem JavaScript e o link monta o mailto no clique (ver script-email.ts).
+export const contato = {
+  usuario: "gustavo.azvd",
+  dominio: "gmail.com",
+  legivel: "gustavo.azvd [arroba] gmail.com",
+} as const;
 
 // Frase da home: vai no <title> e na imagem de compartilhamento (OG).
 export const fraseHome = "mapa astral calculado dentro do seu chat";

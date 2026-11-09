@@ -13,7 +13,7 @@ export function CaixaPrompt({ texto, rotulo, alturaMax }: { texto: string; rotul
       <p
         id={id}
         tabIndex={alturaMax ? 0 : undefined}
-        className={`whitespace-pre-wrap p-4 font-mono text-sm leading-[1.6] [overflow-wrap:anywhere] ${
+        className={`texto-literal whitespace-pre-wrap p-4 font-mono text-sm leading-[1.6] [overflow-wrap:anywhere] ${
           alturaMax ? "max-h-[28rem] overflow-y-auto" : ""
         }`}
       >
