@@ -1,6 +1,6 @@
 # Termos de uso — Céu Natal
 
-Versão 1 — 2026-11-03 — vale para o serviço gratuito sem conta
+Versão 2 — 2026-11-09 — vale para o serviço gratuito sem conta
 
 Estes termos dizem como você pode usar o Céu Natal. Usar o serviço significa
 concordar com eles.
@@ -53,4 +53,4 @@ lei permite.
 ## 8. Mudanças e contato
 
 Se estes termos mudarem, a versão e a data no topo serão atualizadas.
-Dúvidas: escreva para gustavo.azvd [arroba] gmail.com.
+Dúvidas: fale comigo pelos canais em https://gustavocancado.com.br.

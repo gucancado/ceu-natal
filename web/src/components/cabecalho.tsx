@@ -7,7 +7,6 @@ const linkNav = `${foco} text-muted-fg transition-colors hover:text-fg`;
 const ancoras = [
   { href: "/mapa", rotulo: "Mapa astral grátis" },
   { href: "/#conectar", rotulo: "Conectar" },
-  { href: "/#planos", rotulo: "Planos" },
 ];
 
 export function Cabecalho() {

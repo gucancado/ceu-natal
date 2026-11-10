@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Cabecalho } from "@/components/cabecalho";
+import { EstrelasCadentes } from "@/components/estrelas-cadentes";
 import { Rodape } from "@/components/rodape";
 import { newsreader, plexMono } from "@/lib/fontes";
 import { descricaoSite, site } from "@/lib/site";
 import { scriptCopiar } from "@/lib/script-copiar";
-import { scriptEmail } from "@/lib/script-email";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={`dark ${newsreader.variable} ${plexMono.variable}`}>
       <body className="text-base leading-[1.6]">
         <script dangerouslySetInnerHTML={{ __html: scriptCopiar }} />
-        <script dangerouslySetInnerHTML={{ __html: scriptEmail }} />
+        <EstrelasCadentes />
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-bg focus:px-3 focus:py-2 focus:outline-2 focus:outline-honey"

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { LinkEmail } from "@/components/link-email";
-import { contato, site } from "@/lib/site";
+import { site } from "@/lib/site";
 
 const linkRodape =
   "rounded-sm text-muted-fg underline-offset-4 transition-colors hover:text-fg hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -32,8 +31,12 @@ export function Rodape() {
           </ul>
         </nav>
         <div className="text-muted-fg md:text-right">
-          <p>fiz em belo horizonte. gustavo cançado</p>
-          <LinkEmail className={`${linkRodape} block font-mono text-sm`}>{contato.legivel}</LinkEmail>
+          <p>
+            autor:{" "}
+            <a href={site.autorUrl} className={`${linkRodape} underline`}>
+              gustavo cançado
+            </a>
+          </p>
         </div>
       </div>
     </footer>

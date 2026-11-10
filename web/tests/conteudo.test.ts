@@ -3,7 +3,6 @@ import assert from "node:assert/strict";
 import { tools } from "../src/content/tools";
 import { prompts } from "../src/content/prompts";
 import { faq } from "../src/content/faq";
-import { planos } from "../src/content/planos";
 
 test("9 tools, prompts do hero com tools existentes, 5 FAQ", () => {
   assert.equal(tools.length, 9);
@@ -17,7 +16,6 @@ test("9 tools, prompts do hero com tools existentes, 5 FAQ", () => {
   assert.ok(faq.some((f) => f.resposta.includes("/privacidade")));
 });
 
-test("plano grátis cita o Gemini e a FAQ não fala em cancelar", () => {
-  assert.ok(planos[0].paraQuem.includes("Gemini"));
+test("a FAQ não fala em cancelar", () => {
   assert.ok(faq.every((f) => !/cancel/i.test(`${f.pergunta} ${f.resposta}`)));
 });

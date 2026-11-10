@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { contato, semBarraFinal } from "../src/lib/site";
+import { semBarraFinal } from "../src/lib/site";
 
 test("semBarraFinal tira uma ou mais barras finais", () => {
   assert.equal(semBarraFinal("https://x.y/"), "https://x.y");
@@ -32,10 +32,5 @@ test("site lê defaults e monta os endpoints", () => {
   assert.equal(site.mcpEndpoint, "https://astrologia-mcp.gustavocancado.com.br/mcp/");
   assert.equal(site.url, "https://mistico.gustavocancado.com.br");
   assert.equal(site.repoUrl, "https://github.com/gucancado/ceu-natal");
-});
-
-test("contato não traz o endereço inteiro", () => {
-  assert.ok(!JSON.stringify(contato).includes("@"));
-  assert.ok(contato.legivel.startsWith(contato.usuario));
-  assert.ok(contato.legivel.endsWith(contato.dominio));
+  assert.equal(site.autorUrl, "https://gustavocancado.com.br");
 });

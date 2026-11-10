@@ -1,10 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { LinkEmail } from "@/components/link-email";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
 import { site } from "@/lib/site";
-
-const assunto = `${site.nome} para astrólogos`;
 
 export function Profissionais() {
   return (
@@ -23,9 +20,9 @@ export function Profissionais() {
           consentimento lgpd registrado.
         </p>
         <p>
-          <LinkEmail assunto={assunto} className="text-honey underline underline-offset-4">
+          <a href={site.autorUrl} className="text-honey underline underline-offset-4">
             me escreve, quero ouvir como você trabalha
-          </LinkEmail>
+          </a>
         </p>
       </div>
     </Secao>

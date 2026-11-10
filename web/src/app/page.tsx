@@ -5,10 +5,8 @@ import { Comparacao } from "@/components/comparacao";
 import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
 import { JsonLd } from "@/components/json-ld";
-import { Planos } from "@/components/planos";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Profissionais } from "@/components/profissionais";
-import { Prova } from "@/components/prova";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
 import { tituloHome } from "@/lib/site";
@@ -24,7 +22,6 @@ export default function Home() {
       <JsonLd />
       <Hero />
       <Carta />
-      <Prova />
       <Comparacao />
       <Secao id="conectar" titulo="como conectar" simbolo={planeta.jupiter}>
         {/* Sem JavaScript, cada cartão é um link para o guia completo. */}
@@ -33,7 +30,6 @@ export default function Home() {
         </Suspense>
       </Secao>
       <Ferramentas />
-      <Planos />
       <Profissionais />
     </>
   );

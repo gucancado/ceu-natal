@@ -69,7 +69,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
           );
         })}
       </ul>
-      <div id="passo-a-passo" className="mt-10">
+      <div id="passo-a-passo" className={atual ? "mt-10" : undefined}>
         {atual ? (
           <div className="rounded-md border border-border p-6 md:p-8">
             <h3 ref={titulo} tabIndex={-1} className="flex items-center gap-3 font-display text-2xl font-medium focus:outline-none">
@@ -83,9 +83,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
               guia completo
             </Link>
           </div>
-        ) : (
-          <p className="text-muted-fg">me diz qual ia você usa que eu te mostro o passo a passo.</p>
-        )}
+        ) : null}
       </div>
     </div>
   );

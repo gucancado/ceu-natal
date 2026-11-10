@@ -13,15 +13,8 @@ export const site = {
   mcpUrl,
   mcpEndpoint: `${mcpUrl}/mcp/`,
   repoUrl: semBarraFinal(process.env.NEXT_PUBLIC_REPO_URL || "https://github.com/gucancado/ceu-natal"),
+  autorUrl: "https://gustavocancado.com.br",
   limites: { porSessaoPorMin: 30, globalPorMin: 600 },
-} as const;
-
-// Contato do controlador (LGPD). O endereço inteiro nunca vai para o HTML, para não alimentar robôs de spam:
-// a forma legível funciona sem JavaScript e o link monta o mailto no clique (ver script-email.ts).
-export const contato = {
-  usuario: "gustavo.azvd",
-  dominio: "gmail.com",
-  legivel: "gustavo.azvd [arroba] gmail.com",
 } as const;
 
 // Frase da home: vai no <title> e na imagem de compartilhamento (OG).

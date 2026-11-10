@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
 // Só a variante usada no site: o Badge "outline" do DS com border-border, font-normal e text-muted-fg
-// (o resultado que o tailwind-merge dava para as classes que planos e profissionais passavam).
+// (o resultado que o tailwind-merge dava para as classes que a seção de profissionais passa).
 export function Badge({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
