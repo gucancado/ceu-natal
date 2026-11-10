@@ -30,14 +30,6 @@ export function Rodape() {
             </li>
           </ul>
         </nav>
-        <div className="text-muted-fg md:text-right">
-          <p>
-            autor:{" "}
-            <a href={site.autorUrl} className={`${linkRodape} underline`}>
-              gustavo cançado
-            </a>
-          </p>
-        </div>
       </div>
     </footer>
   );
