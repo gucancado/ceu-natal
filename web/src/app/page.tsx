@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Carta } from "@/components/carta";
-import { Comparacao } from "@/components/comparacao";
+import { Comecar } from "@/components/comecar";
 import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
 import { JsonLd } from "@/components/json-ld";
@@ -21,8 +21,8 @@ export default function Home() {
     <>
       <JsonLd />
       <Hero />
+      <Comecar />
       <Carta />
-      <Comparacao />
       <Secao id="conectar" titulo="como conectar" simbolo={planeta.jupiter}>
         {/* Sem JavaScript, cada cartão é um link para o guia completo. */}
         <Suspense fallback={<PlataformasGrade inicial={null} />}>

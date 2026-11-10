@@ -1,15 +1,12 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { Copiar } from "@/components/copiar";
 import { AnelZodiacal } from "@/components/anel-zodiacal";
 import { RotadorPrompts } from "@/components/rotador-prompts";
-import { promptSetup } from "@/content/setup";
 import { site } from "@/lib/site";
 
 export function Hero() {
   return (
     <section aria-labelledby="hero-titulo" className="mx-auto max-w-[72rem] overflow-x-clip px-6">
-      <div className="grid items-center gap-12 py-12 md:py-20 lg:grid-cols-12 lg:gap-12">
+      {/* Ocupa a tela abaixo do cabeçalho (5rem), para a seção seguinte começar na segunda dobra. */}
+      <div className="grid min-h-[calc(100svh-5rem)] content-center items-center gap-12 py-12 md:py-20 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-6">
           <h1
             id="hero-titulo"
@@ -17,17 +14,6 @@ export function Hero() {
           >
             conecte sua IA favorita e faça análises astrológicas muito mais precisas.
           </h1>
-          <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
-            é grátis e sem cadastro. copie o prompt, cole no claude, no chatgpt, no gemini ou no cursor, e a própria ia
-            te guia na conexão.
-          </p>
-          {/* Fonte monoespaçada é larga: abaixo de 360 px, o botão só cabe com letra e margem menores. */}
-          <div className="mt-8 flex flex-wrap gap-3 max-[359px]:[&_a]:px-3 max-[359px]:[&_a]:text-sm max-[359px]:[&_button]:px-3 max-[359px]:[&_button]:text-sm">
-            <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole na sua IA" variant="outline" size="lg" />
-            <Link href="/mapa" className={buttonVariants({ size: "lg", variant: "outline" })}>
-              Fazer meu mapa astral grátis
-            </Link>
-          </div>
           <p className="mt-6 text-muted-fg">
             autor:{" "}
             <a
