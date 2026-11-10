@@ -74,14 +74,16 @@ textarea::placeholder {
   text-transform: lowercase;
 }
 
-/* Campo de estrelas fixo atrás do conteúdo. */
+/* Campo de estrelas fixo atrás do conteúdo. Desliza devagar para a esquerda; cada camada anda exatamente
+   um ladrilho por ciclo, então o laço não dá salto. A sobra de 700px cobre o deslocamento (maior ladrilho: 680px). */
 body::before,
 body::after {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: 0 -700px 0 0;
   z-index: -1;
   pointer-events: none;
+  will-change: transform;
 }
 
 body::before {
@@ -94,6 +96,7 @@ body::before {
     radial-gradient(1px 1px at 50px 250px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1px 1px at 330px 280px, rgba(255, 255, 255, 0.6), transparent);
   background-size: 350px 320px;
+  animation: deriva-perto 150s linear infinite;
 }
 
 body::after {
@@ -104,12 +107,22 @@ body::after {
     radial-gradient(1px 1px at 520px 40px, #fff, transparent),
     radial-gradient(1.5px 1.5px at 600px 360px, rgba(255, 220, 230, 0.9), transparent);
   background-size: 680px 520px;
-  animation: cintilar 5s ease-in-out infinite alternate;
+  animation:
+    cintilar 5s ease-in-out infinite alternate,
+    deriva-longe 400s linear infinite;
 }
 
 @keyframes cintilar {
   from { opacity: 0.25; }
   to { opacity: 1; }
+}
+
+@keyframes deriva-perto {
+  to { transform: translateX(-350px); }
+}
+
+@keyframes deriva-longe {
+  to { transform: translateX(-680px); }
 }
 
 /* Estrelas cadentes: visíveis em 2% do período; no resto do tempo, opacidade 0 (ver estrelas-cadentes.tsx). */

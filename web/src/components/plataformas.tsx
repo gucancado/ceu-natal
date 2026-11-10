@@ -20,6 +20,9 @@ const logoDe: Record<string, Logo> = {
 
 function IconeLogo({ slug }: { slug: string }) {
   const l = logos[logoDe[slug] ?? "claude"];
+  // Marcação estática do próprio repositório (content/logo-manus.ts), sem dado de usuário.
+  if ("svg" in l)
+    return <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0" dangerouslySetInnerHTML={{ __html: l.svg }} />;
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0 fill-current">
       <path d={l.d} />
