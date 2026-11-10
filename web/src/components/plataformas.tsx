@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { GuiaCorpo } from "@/components/guia";
-import { cliente, clientes } from "@/content/clientes";
+import { cliente, clientesDaGrade } from "@/content/clientes";
 import { logos, type Logo } from "@/content/logos";
 
 const logoDe: Record<string, Logo> = {
@@ -13,6 +13,7 @@ const logoDe: Record<string, Logo> = {
   "claude-code": "claude",
   chatgpt: "openai",
   gemini: "gemini",
+  manus: "manus",
   cursor: "cursor",
   n8n: "n8n",
 };
@@ -48,8 +49,8 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
 
   return (
     <div>
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {clientes.map((c) => {
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {clientesDaGrade.map((c) => {
           const ativo = c.slug === aberto;
           return (
             <li key={c.slug}>

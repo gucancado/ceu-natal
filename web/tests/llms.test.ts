@@ -8,13 +8,13 @@ import { tools } from "../src/content/tools";
 import { gerarLlmsFull, gerarLlmsTxt } from "../src/lib/llms";
 import { site } from "../src/lib/site";
 
-test("llms.txt: título, endpoint, 9 tools, 7 guias e privacidade", () => {
+test("llms.txt: título, endpoint, 9 tools, 8 guias e privacidade", () => {
   const txt = gerarLlmsTxt();
   assert.ok(txt.startsWith("# Céu Natal\n"));
   assert.ok(txt.includes(site.mcpEndpoint));
   assert.equal(tools.length, 9);
   for (const t of tools) assert.ok(txt.includes(t.nome), t.nome);
-  assert.equal(clientes.length, 7);
+  assert.equal(clientes.length, 8);
   for (const c of clientes) assert.ok(txt.includes(`${site.url}/conectar/${c.slug}`), c.slug);
   assert.ok(txt.includes(`${site.url}/privacidade`));
   assert.ok(txt.includes(String(site.limites.porSessaoPorMin)));

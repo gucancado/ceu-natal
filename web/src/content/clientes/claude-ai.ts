@@ -3,7 +3,7 @@ import { confira, type Cliente } from "./tipos";
 
 export const claudeAi: Cliente = {
   slug: "claude-ai",
-  nome: "Claude.ai",
+  nome: "Claude",
   resumo: "No claude.ai, o Céu Natal entra como conector personalizado, sem login e sem chave.",
   planoMinimo:
     "Funciona em todos os planos. No Free, o limite é de 1 conector personalizado. No Team e no Enterprise, quem adiciona o conector é o administrador.",
@@ -19,6 +19,8 @@ export const claudeAi: Cliente = {
   ],
   snippet: { linguagem: "text", codigo: site.mcpEndpoint },
   limitacoes: [
+    "No Claude Desktop, siga os mesmos passos em **Customize** > **Connectors**.",
+    `No Claude Code, rode \`claude mcp add --transport http --scope user ceu-natal ${site.mcpEndpoint}\` no terminal.`,
     "O conector se liga por conversa, pelo **+** > **Connectors**.",
     "Para mudar o conector, remova e adicione de novo.",
     `Com o Claude em português, os menus podem aparecer traduzidos ${confira}.`,

@@ -3,16 +3,23 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { cliente, clientes } from "../src/content/clientes";
+import { cliente, clientes, clientesDaGrade } from "../src/content/clientes";
 import { site } from "../src/lib/site";
 import { partesTextoGuia } from "../src/lib/texto-guia";
 
-test("7 clientes com slugs únicos, passos e pelo menos 1 fonte", () => {
+test("a home mostra um botão só para o Claude e o Manus depois do Gemini", () => {
+  assert.deepEqual(
+    clientesDaGrade.map((c) => c.nome),
+    ["Claude", "ChatGPT", "Gemini", "Manus", "Cursor", "n8n"],
+  );
+});
+
+test("8 clientes com slugs únicos, passos e pelo menos 1 fonte", () => {
   assert.deepEqual(
     clientes.map((c) => c.slug),
-    ["claude-ai", "claude-desktop", "claude-code", "chatgpt", "gemini", "cursor", "n8n"],
+    ["claude-ai", "claude-desktop", "claude-code", "chatgpt", "gemini", "manus", "cursor", "n8n"],
   );
-  assert.equal(new Set(clientes.map((c) => c.slug)).size, 7);
+  assert.equal(new Set(clientes.map((c) => c.slug)).size, 8);
   for (const c of clientes) {
     assert.ok(c.nome && c.resumo && c.planoMinimo, c.slug);
     assert.ok(c.passos.length > 0, c.slug);
