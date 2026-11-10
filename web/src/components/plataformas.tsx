@@ -58,8 +58,8 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
                 onClick={(e) => alternar(e, c.slug)}
                 aria-expanded={ativo}
                 aria-controls="passo-a-passo"
-                className={`flex h-full items-center gap-3 rounded-md border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  ativo ? "border-honey bg-card text-fg" : "border-border text-fg hover:border-fg/40"
+                className={`flex h-full items-center gap-3 rounded-md p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  ativo ? "bg-card text-honey" : "text-fg hover:bg-card"
                 }`}
               >
                 <IconeLogo slug={c.slug} />
@@ -71,7 +71,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
       </ul>
       <div id="passo-a-passo" className={atual ? "mt-10" : undefined}>
         {atual ? (
-          <div className="rounded-md border border-border p-6 md:p-8">
+          <div className="rounded-md bg-card p-6 md:p-8">
             <h3 ref={titulo} tabIndex={-1} className="flex items-center gap-3 font-display text-2xl font-medium focus:outline-none">
               <IconeLogo slug={atual.slug} />
               {atual.nome}
