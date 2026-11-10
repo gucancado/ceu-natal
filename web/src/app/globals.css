@@ -96,7 +96,7 @@ body::before {
     radial-gradient(1px 1px at 50px 250px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1px 1px at 330px 280px, rgba(255, 255, 255, 0.6), transparent);
   background-size: 350px 320px;
-  animation: deriva-perto 150s linear infinite;
+  animation: deriva-perto 75s linear infinite;
 }
 
 body::after {
@@ -109,7 +109,7 @@ body::after {
   background-size: 680px 520px;
   animation:
     cintilar 5s ease-in-out infinite alternate,
-    deriva-longe 400s linear infinite;
+    deriva-longe 200s linear infinite;
 }
 
 @keyframes cintilar {
