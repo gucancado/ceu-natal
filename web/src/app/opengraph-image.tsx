@@ -34,8 +34,6 @@ export default function OpengraphImage() {
         <div
           style={{
             display: "flex",
-            borderTop: `2px solid ${cor.destaque}`,
-            paddingTop: 24,
             fontSize: 28,
             color: cor.destaque,
           }}

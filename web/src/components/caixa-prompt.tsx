@@ -6,7 +6,7 @@ export function CaixaPrompt({ texto, rotulo, alturaMax }: { texto: string; rotul
   const id = useId();
   return (
     <div className="rounded-md border border-border bg-muted">
-      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-2">
+      <div className="flex items-center justify-between gap-4 px-4 py-2">
         <span className="font-mono text-sm text-muted-fg">{rotulo}</span>
         <Copiar texto={texto} alvoId={id} />
       </div>

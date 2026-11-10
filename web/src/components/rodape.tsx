@@ -13,7 +13,7 @@ const paginas = [
 export function Rodape() {
   return (
     <footer className="mx-auto max-w-[72rem] px-6">
-      <div className="flex flex-col gap-6 border-t border-border py-12 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-6 py-12 md:flex-row md:items-start md:justify-between">
         <nav aria-label="Rodapé">
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {paginas.map((p) => (

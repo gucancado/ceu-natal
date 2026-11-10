@@ -41,12 +41,12 @@ export function Comparacao() {
     <Secao id="comparacao" titulo="por que eu criei isso" simbolo={planeta.mercurio}>
       <div className="max-w-[60rem]">
         <p className="mb-10 max-w-[36rem] text-lg text-muted-fg">pedi meu mapa pra várias ias. cada uma me deu um céu diferente. é isso que muda:</p>
-        <div aria-hidden="true" className="hidden grid-cols-[12rem_1fr_1fr] gap-8 border-b border-border pb-3 font-mono text-sm text-muted-fg md:grid">
+        <div aria-hidden="true" className="hidden grid-cols-[12rem_1fr_1fr] gap-8 pb-3 font-mono text-sm text-muted-fg md:grid">
           <span />
           <span>só a ia</span>
           <span className="text-honey">a ia com o céu natal</span>
         </div>
-        <dl className="divide-y divide-border">
+        <dl>
           {linhas.map((l) => (
             <div key={l.tema} className="grid gap-3 py-5 md:grid-cols-[12rem_1fr_1fr] md:gap-8">
               <dt className="font-display text-lg font-medium">{l.tema}</dt>

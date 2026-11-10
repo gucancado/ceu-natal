@@ -13,7 +13,7 @@ export function Hero() {
         <div className="lg:col-span-6">
           <h1
             id="hero-titulo"
-            className="font-display text-[40px] font-medium leading-[1.1] tracking-tight md:text-[48px]"
+            className="font-display text-[30px] font-medium leading-[1.15] tracking-tight md:text-[40px]"
           >
             conecte sua IA favorita e faça análises astrológicas muito mais precisas.
           </h1>
@@ -21,7 +21,8 @@ export function Hero() {
             é grátis e sem cadastro. copie o prompt, cole no claude, no chatgpt, no gemini ou no cursor, e a própria ia
             te guia na conexão.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          {/* Fonte monoespaçada é larga: abaixo de 360 px, o botão só cabe com letra e margem menores. */}
+          <div className="mt-8 flex flex-wrap gap-3 max-[359px]:[&_a]:px-3 max-[359px]:[&_a]:text-sm max-[359px]:[&_button]:px-3 max-[359px]:[&_button]:text-sm">
             <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole na sua IA" variant="outline" size="lg" />
             <Link href="/mapa" className={buttonVariants({ size: "lg", variant: "outline" })}>
               Fazer meu mapa astral grátis

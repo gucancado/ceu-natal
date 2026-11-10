@@ -103,7 +103,7 @@ export default function PaginaMapa() {
         <FormMapa />
       </div>
 
-      <section aria-labelledby="perguntas-titulo" className="mt-24 max-w-[44rem] border-t border-border pt-16">
+      <section aria-labelledby="perguntas-titulo" className="mt-24 max-w-[44rem] pt-16">
         <h2 id="perguntas-titulo" className="flex items-baseline gap-4 font-display text-3xl font-normal italic">
           <span aria-hidden="true" className="glifo not-italic text-honey">
             {planeta.lua}

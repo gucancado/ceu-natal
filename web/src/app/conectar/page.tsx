@@ -13,7 +13,7 @@ export default function PaginaConectar() {
       <h1 className="font-display text-4xl font-medium leading-[1.15] tracking-tight md:text-5xl">
         Como conectar o Céu Natal
       </h1>
-      <ul className="mt-10 max-w-[36rem] divide-y divide-border border-y border-border">
+      <ul className="mt-10 max-w-[36rem]">
         {clientes.map((c) => (
           <li key={c.slug} className="py-5">
             <Link

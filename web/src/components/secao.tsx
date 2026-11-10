@@ -10,7 +10,7 @@ type SecaoProps = {
 export function Secao({ id, titulo, simbolo, children }: SecaoProps) {
   return (
     <section id={id} aria-labelledby={`${id}-titulo`} className="mx-auto max-w-[72rem] px-6">
-      <div className="border-t border-border py-24">
+      <div className="py-24">
         <h2 id={`${id}-titulo`} className="flex items-baseline gap-4 font-display text-4xl font-normal italic">
           {simbolo ? (
             <span aria-hidden="true" className="glifo not-italic text-honey">

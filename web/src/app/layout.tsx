@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cabecalho } from "@/components/cabecalho";
 import { EstrelasCadentes } from "@/components/estrelas-cadentes";
 import { Rodape } from "@/components/rodape";
-import { newsreader, plexMono } from "@/lib/fontes";
+import { jetbrainsMono } from "@/lib/fontes";
 import { descricaoSite, site } from "@/lib/site";
 import { scriptCopiar } from "@/lib/script-copiar";
 import "./globals.css";
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // Tema único escuro: a classe fica fixa no HTML, sem provedor de tema no cliente.
-    <html lang="pt-BR" className={`dark ${newsreader.variable} ${plexMono.variable}`}>
+    <html lang="pt-BR" className={`dark ${jetbrainsMono.variable}`}>
       <body className="text-base leading-[1.6]">
         <script dangerouslySetInnerHTML={{ __html: scriptCopiar }} />
         <EstrelasCadentes />
