@@ -1,5 +1,5 @@
-// Foto da Lua na fase de agora (NASA, rota /lua-de-hoje). O fundo preto da foto some com mix-blend-mode:
-// screen sobre o céu, e a parte escura da Lua fica invisível, como no céu de verdade. A travessia fica em
+// Foto da Lua na fase de agora (NASA, rota /lua-de-hoje), recortada no disco e opaca: tapa o Sol e as
+// estrelas que passam atrás, inclusive na parte escura, como no céu de verdade. A travessia fica em
 // globals.css: o invólucro anda na horizontal e a foto na vertical, o que desenha um arco. Se a foto
 // falhar, a imagem quebrada com alt vazio não aparece.
 export function Lua({ className = "" }: { className?: string }) {

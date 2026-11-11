@@ -7,7 +7,6 @@ import { Sol } from "@/components/sol";
 // Primeira dobra: só os pedidos de exemplo, com a Lua cruzando o céu no sentido contrário às estrelas.
 export function Hero() {
   return (
-    // Sem `isolate`: o mix-blend-mode da Lua precisa misturar com o céu da página, não com um grupo vazio.
     <section aria-label="exemplos de pedidos" className="relative overflow-hidden">
       {/* O Sol vem antes no DOM: fica atrás da Lua quando os dois se cruzam. */}
       <Sol className="absolute left-0 top-[3%] size-[16px] md:size-[22px]" />

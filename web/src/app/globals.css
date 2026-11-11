@@ -174,13 +174,13 @@ body::after {
 .lua {
   display: block;
   transform: translateX(68vw);
-  /* A foto tem fundo preto: em "screen", o preto vira o próprio céu. Fica no invólucro porque o
-     transform dele isola a mistura dos filhos. */
-  mix-blend-mode: screen;
   animation: lua-horizontal 150s linear -55s infinite;
 }
 
+/* Opaca e recortada no disco (raio ~41% da foto, com folga para o perigeu): a Lua tapa o Sol e as estrelas,
+   inclusive na parte escura. */
 .lua-foto {
+  clip-path: circle(44%);
   transform: translateY(3rem);
   animation: lua-vertical 150s -55s infinite;
 }
@@ -190,8 +190,7 @@ body::after {
 .sol {
   display: block;
   transform: translateX(16vw);
-  mix-blend-mode: screen;
-  /* Pequeno e com halo, para ler como estrela. O brilho fica no invólucro: na foto, o clip-path cortaria o halo. */
+  /* Opaco: tapa as estrelas; a Lua, depois no DOM, tapa o Sol. Pequeno e com halo, para ler como estrela. O brilho fica no invólucro: na foto, o clip-path cortaria o halo. */
   filter: drop-shadow(0 0 4px rgba(255, 214, 160, 0.9)) drop-shadow(0 0 12px rgba(255, 170, 90, 0.55));
   animation: lua-horizontal 300s linear -200s infinite;
 }

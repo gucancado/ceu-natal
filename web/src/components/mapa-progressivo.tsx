@@ -227,12 +227,13 @@ export function MapaProgressivo() {
             <CampoNumero id="nasc-ano" rotulo="ano" valor={ano} max={4} placeholder="aaaa" aoMudar={setAno} campoRef={refAno} proximo={refHora} autoComplete="bday-year" />
           </div>
         </fieldset>
-        <div className="grid grid-cols-[8rem_1fr] gap-3">
-          <div className="grid gap-2">
+        {/* No celular, hora e cidade empilham: o campo de hora nativo tem largura mínima própria e invadia a cidade. */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[8rem_1fr]">
+          <div className="grid min-w-0 max-w-[10rem] gap-2 sm:max-w-none">
             <Label htmlFor="nasc-hora">hora</Label>
-            <Input ref={refHora} id="nasc-hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+            <Input ref={refHora} id="nasc-hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="w-full min-w-0" />
           </div>
-          <div className="grid gap-2">
+          <div className="grid min-w-0 gap-2">
             <Label htmlFor="nasc-cidade">cidade</Label>
             <CampoCidade id="nasc-cidade" valor={cidade} aoMudar={setCidade} aoConfirmar={setCidadeOk} />
           </div>
@@ -247,7 +248,7 @@ export function MapaProgressivo() {
           <p className="text-lg">copie e cole na sua ia. o mapa calculado já vai dentro do pedido.</p>
           <div className="relative rounded-md bg-card">
             <div className="absolute right-3 top-3 z-10">
-              <Copiar texto={prompt} rotulo="copiar prompt" copiado="copiado" variant="default" size="sm" alvoId={idPrompt} />
+              <Copiar texto={prompt} rotulo="copiar" copiado="copiado" variant="default" size="sm" alvoId={idPrompt} />
             </div>
             <div
               id={idPrompt}
