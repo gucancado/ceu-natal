@@ -1,6 +1,7 @@
-// Prompt em markdown do formulário da home: cresce conforme a pessoa preenche os dados.
-// Só dados → string, sem React.
+// Prompt em markdown do formulário da home: o mapa vem primeiro, as instruções para a IA depois.
+// Cresce conforme a pessoa preenche os dados. Só dados → string, sem React.
 import { passosConexao } from "../content/setup";
+import { glifoPonto } from "./glifos";
 import { aspecto, grauMinuto, nome, orientacoesIa, signo, type MapaRapido, type Ponto } from "./mapa-texto";
 import { site } from "./site";
 
@@ -22,18 +23,20 @@ function linhaPonto(chave: string, p: Ponto): string {
   const partes = [`${p.grau} ${signo(p.signo)}`];
   if (typeof p.casa === "number") partes.push(`casa ${p.casa}`);
   if (p.retrogrado) partes.push("retrógrado");
-  return `- **${nome(chave)}:** ${partes.join(", ")}`;
+  const g = glifoPonto[chave];
+  return `- ${g ? `${g} ` : ""}**${nome(chave)}:** ${partes.join(", ")}`;
 }
 
 const temItens = (o?: Record<string, unknown> | null): o is Record<string, Ponto> => !!o && Object.keys(o).length > 0;
 
 function secoesMapa(m: MapaRapido): string[] {
-  const linhas = ["### Planetas", ...Object.entries(m.planetas).map(([k, p]) => linhaPonto(k, p))];
+  const linhas: string[] = [];
+  if (temItens(m.angulos)) {
+    linhas.push("### Ângulos", ...Object.entries(m.angulos).map(([k, p]) => linhaPonto(k, p)), "");
+  }
+  linhas.push("### Planetas", ...Object.entries(m.planetas).map(([k, p]) => linhaPonto(k, p)));
   if (temItens(m.pontos_sensiveis)) {
     linhas.push("", "### Pontos sensíveis", ...Object.entries(m.pontos_sensiveis).map(([k, p]) => linhaPonto(k, p)));
-  }
-  if (temItens(m.angulos)) {
-    linhas.push("", "### Ângulos", ...Object.entries(m.angulos).map(([k, p]) => linhaPonto(k, p)));
   }
   if (temItens(m.casas)) {
     linhas.push(
@@ -55,27 +58,20 @@ function secoesMapa(m: MapaRapido): string[] {
 }
 
 export function promptMapa(d: DadosPrompt): string {
-  const temData = d.dia && d.mes;
-  const data = temData ? `${dois(d.dia)}/${dois(d.mes)}${d.ano.length === 4 ? `/${d.ano}` : ""}` : "";
+  const temData = !!(d.dia && d.mes);
+  const anoOk = d.ano.length === 4;
+  const data = temData ? `${dois(d.dia)}/${dois(d.mes)}${anoOk ? `/${d.ano}` : " (ainda sem o ano)"}` : "data ainda não informada";
   const cidade = d.cidade.trim();
   const temCasas = !!d.mapa && temItens(d.mapa.casas);
-  const falta = [
-    !(temData && d.ano.length === 4) && "a data completa",
-    !d.hora && "a hora",
-    !cidade && "a cidade",
-  ].filter(Boolean) as string[];
+  const falta = [!(temData && anoOk) && "a data completa", !d.hora && "a hora", !cidade && "a cidade"].filter(
+    Boolean,
+  ) as string[];
 
   const linhas = [
-    `# Meu mapa astral com o ${site.nome}`,
+    "# Meu mapa natal",
     "",
-    `O ${site.nome} é um servidor MCP gratuito que calcula astrologia com as efemérides suíças. Endereço: ${site.mcpEndpoint} (sem login e sem chave).`,
+    `**Nascimento:** ${[data, d.hora || "sem hora", cidade || "sem cidade"].join(", ")}`,
     "",
-    "## Meus dados de nascimento",
-    `- **Data:** ${data || "ainda não informei"}${temData && d.ano.length !== 4 ? " (ainda sem o ano)" : ""}`,
-    `- **Hora:** ${d.hora || "ainda não informei"}`,
-    `- **Cidade:** ${cidade || "ainda não informei"}`,
-    "",
-    "## Meu mapa natal",
   ];
 
   if (d.mapa) {
@@ -87,7 +83,7 @@ export function promptMapa(d: DadosPrompt): string {
     linhas.push(...secoesMapa(d.mapa));
   } else if (d.solPelaData) {
     linhas.push(
-      `- **Sol:** ${d.solPelaData.signo} (pelo dia e mês${d.solPelaData.cuspide ? "; a data está na troca de signo e o ano confirma" : ""})`,
+      `- ${glifoPonto.sol} **Sol:** ${d.solPelaData.signo} (pelo dia e mês${d.solPelaData.cuspide ? "; a data está na troca de signo e o ano confirma" : ""})`,
     );
   } else {
     linhas.push("_Ainda não calculado._");
@@ -95,7 +91,13 @@ export function promptMapa(d: DadosPrompt): string {
 
   linhas.push(
     "",
-    "## O que eu quero",
+    "---",
+    "",
+    "## Instruções para a IA",
+    "",
+    `O mapa acima foi calculado pelo ${site.nome}, um servidor MCP gratuito que calcula astrologia com as efemérides suíças. Endereço: ${site.mcpEndpoint} (sem login e sem chave).`,
+    "",
+    "### O que eu quero",
     `1. Se as ferramentas do ${site.nome} já estiverem disponíveis nesta conversa, use-as para conferir e completar o mapa.`,
     `2. Se não, me passe numa única mensagem todos os passos para conectar o ${site.nome} neste aplicativo, com o link direto e os valores prontos para copiar. ${passosConexao.chatgpt} ${passosConexao.claude} ${passosConexao.outros}`,
     "3. Enquanto isso, interprete o mapa acima: me dê uma leitura curta e sugira o que mais posso pedir, como trânsitos, sinastria ou revolução solar.",
@@ -103,8 +105,7 @@ export function promptMapa(d: DadosPrompt): string {
   if (falta.length > 0) {
     linhas.push(`4. Ainda falta ${falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Me peça numa única pergunta.`);
   }
-
-  // O primeiro item de orientacoesIa() é o título em caixa alta do texto puro; aqui vira um ## próprio.
-  linhas.push("", `## Para a IA: sobre o ${site.nome}`, ...orientacoesIa().slice(1), "");
+  // O primeiro item de orientacoesIa() é o título em caixa alta do texto puro; aqui vira um ### próprio.
+  linhas.push("", `### Sobre o ${site.nome}`, ...orientacoesIa().slice(1), "");
   return linhas.join("\n");
 }

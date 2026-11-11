@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { promptMapa } from "../src/lib/prompt-mapa";
 import { dataValida, signoSolar } from "../src/lib/signo-solar";
+import { glifoPonto } from "../src/lib/glifos";
 import { site } from "../src/lib/site";
 import type { MapaRapido } from "../src/lib/mapa-texto";
 
@@ -26,12 +27,13 @@ const vazio = { dia: "", mes: "", ano: "", hora: "", cidade: "", solPelaData: nu
 
 test("prompt só com dia e mês: sol pela data e pede o que falta", () => {
   const p = promptMapa({ ...vazio, dia: "5", mes: "8", solPelaData: { signo: "Leão", cuspide: false } });
-  assert.ok(p.startsWith(`# Meu mapa astral com o ${site.nome}`));
-  assert.ok(p.includes("- **Data:** 05/08 (ainda sem o ano)"));
-  assert.ok(p.includes("- **Sol:** Leão (pelo dia e mês)"));
+  assert.ok(p.startsWith("# Meu mapa natal\n\n**Nascimento:** 05/08 (ainda sem o ano), sem hora, sem cidade"));
+  assert.ok(p.includes(`- ${glifoPonto.sol} **Sol:** Leão (pelo dia e mês)`));
+  // Mapa primeiro, instruções depois.
+  assert.ok(p.indexOf("**Sol:**") < p.indexOf("## Instruções para a IA"));
   assert.ok(p.includes("Ainda falta a data completa, a hora e a cidade."));
   assert.ok(p.includes(site.mcpEndpoint));
-  assert.ok(p.includes("## Para a IA: sobre o Céu Natal"));
+  assert.ok(p.includes("### Sobre o Céu Natal"));
 });
 
 test("prompt com o mapa completo: seções em markdown e nada faltando", () => {
@@ -47,7 +49,8 @@ test("prompt com o mapa completo: seções em markdown e nada faltando", () => {
     ],
   };
   const p = promptMapa({ ...vazio, dia: "15", mes: "05", ano: "1990", hora: "14:30", cidade: "Belo Horizonte, MG", mapa });
-  assert.ok(p.includes("- **Sol:** 24°10' Touro, casa 9"));
+  assert.ok(p.includes(`- ${glifoPonto.sol} **Sol:** 24°10' Touro, casa 9`));
+  assert.ok(p.includes(`- AC **Ascendente:** 3°02' Virgem`));
   assert.ok(p.includes("### Ângulos"));
   assert.ok(p.includes("### Cúspides das casas (Placidus)"));
   assert.ok(p.includes("- Sol trígono Lua (orbe 1°30')"));

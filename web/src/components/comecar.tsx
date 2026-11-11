@@ -1,6 +1,5 @@
 import { MapaProgressivo } from "@/components/mapa-progressivo";
 import { MarcaRotativa } from "@/components/marca-rotativa";
-import { site } from "@/lib/site";
 
 // Segunda dobra: o título com as marcas e o mapa que se revela conforme a pessoa preenche os dados.
 export function Comecar() {
@@ -12,15 +11,6 @@ export function Comecar() {
         </h1>
         <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
           grátis e sem cadastro. estou em fase beta e quero testar =]
-        </p>
-        <p className="mt-3 text-muted-fg">
-          autor:{" "}
-          <a
-            href={site.autorUrl}
-            className="rounded-sm underline underline-offset-4 transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            gustavo cançado
-          </a>
         </p>
         <div className="mt-12">
           <MapaProgressivo />
