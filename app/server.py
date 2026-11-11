@@ -11,6 +11,7 @@ Endpoints:
                       para PUBLIC_SITE_URL, limite por IP)
   POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
                       CORS, limite por IP; grava em CONTATOS_PATH)
+  GET  /estatisticas — números agregados de uso (público; ESTATISTICAS_PATH)
 
 Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
@@ -48,8 +49,10 @@ from starlette.responses import JSONResponse, PlainTextResponse, RedirectRespons
 from starlette.routing import Mount, Route
 
 from app.config import Settings
+from app.core import geocoder
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.contatos import RegistroContatos, normalizar_contato
+from app.core.estatisticas import Estatisticas, normalizar_app
 from app.core.geocoder import GeocodingError
 from app.core.ratelimit import LimitadorTaxa
 from app.core.validators import SISTEMAS_CASAS_VALIDOS
@@ -62,7 +65,9 @@ CONTATO_POR_IP_POR_MIN = 3
 CONTATO_GLOBAL_POR_MIN = 60
 # Caminhos que dispensam a chave de API.
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
-_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", _DESAFIO_OPENAI]
+_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatisticas", _DESAFIO_OPENAI]
+# Por quanto tempo a resposta de /estatisticas fica em memória (segundos).
+ESTATISTICAS_CACHE_S = 60
 _LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
 TRANSPORTE = "streamable-http"
 
@@ -673,6 +678,10 @@ class Aplicacao:
         )
         self.limitador_contato = LimitadorTaxa(CONTATO_POR_IP_POR_MIN, CONTATO_GLOBAL_POR_MIN)
         self.contatos = RegistroContatos(settings.contatos_path) if settings.contatos_path else None
+        self.estatisticas = Estatisticas(settings.estatisticas_path) if settings.estatisticas_path else None
+        if self.estatisticas is not None:
+            geocoder.ao_resolver = self.estatisticas.registrar_lugar
+        self._resumo_cache: tuple[float, dict] | None = None
         self.llms_txt = _LLMS_TXT_PATH.read_text(encoding="utf-8").format(
             mcp_url=settings.public_mcp_url, site_url=settings.public_site_url,
         )
@@ -724,6 +733,28 @@ class Aplicacao:
             return None
         return request.headers.get("mcp-session-id")
 
+    def app_cliente(self) -> str:
+        """Nome do app de IA (clientInfo.name do initialize), normalizado."""
+        try:
+            params = self.server.request_context.session.client_params
+        except (LookupError, AttributeError):
+            return "desconhecido"
+        return normalizar_app(params.clientInfo.name if params else None)
+
+    def registrar_uso(
+        self, origem: str, ferramenta: str, status: str, duracao_ms: float,
+        app: str = "site", unico: tuple[str, str | None] | None = None,
+    ) -> None:
+        """Soma a chamada nas estatísticas; falha aqui nunca afeta a resposta."""
+        if self.estatisticas is None:
+            return
+        try:
+            self.estatisticas.registrar_chamada(origem, ferramenta, app, status, duracao_ms)
+            if unico is not None:
+                self.estatisticas.registrar_unico(*unico)
+        except Exception:  # noqa: BLE001
+            logger.warning("falha ao registrar estatística", exc_info=True)
+
     async def call_tool(self, name: str, arguments: dict[str, Any]):
         """Marshaller: cronometra, roda o cálculo em threadpool, loga e trata erros."""
         inicio = time.monotonic()
@@ -758,6 +789,10 @@ class Aplicacao:
         finally:
             duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
             _log_tool_call(name, status, duracao_ms)
+            self.registrar_uso(
+                "mcp", name if name in self.registro else "desconhecida", status, duracao_ms,
+                app=self.app_cliente(), unico=("mcp", self.chave_sessao()),
+            )
 
     @contextlib.asynccontextmanager
     async def lifespan(self, _app: Any) -> AsyncIterator[None]:
@@ -872,7 +907,11 @@ class Aplicacao:
                 return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
             return JSONResponse(resultado, headers=cors)
         finally:
-            _log_tool_call("mapa_rapido", status, round((time.monotonic() - inicio) * 1000, 1))
+            duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
+            _log_tool_call("mapa_rapido", status, duracao_ms)
+            self.registrar_uso(
+                "site", "mapa_rapido", status, duracao_ms, unico=("site", _ip_cliente(request)),
+            )
 
     async def contato(self, request: Request) -> Response:
         """Guarda um e-mail ou telefone para avisos; o log não registra o contato."""
@@ -926,6 +965,18 @@ class Aplicacao:
         finally:
             _log_tool_call("contato", status, round((time.monotonic() - inicio) * 1000, 1))
 
+    async def estatisticas_endpoint(self, _: Request) -> JSONResponse:
+        """Números agregados de uso para a página de status; sem cidades nem nomes."""
+        if self.estatisticas is None:
+            return JSONResponse({"erro": "Estatísticas desligadas."}, status_code=503)
+        agora = time.monotonic()
+        if self._resumo_cache is None or agora - self._resumo_cache[0] > ESTATISTICAS_CACHE_S:
+            resumo = await anyio.to_thread.run_sync(self.estatisticas.resumo)
+            self._resumo_cache = (agora, resumo)
+        return JSONResponse(
+            self._resumo_cache[1], headers={"Cache-Control": f"public, max-age={ESTATISTICAS_CACHE_S}"},
+        )
+
     async def listar_tools_http(self, _: Request) -> JSONResponse:
         """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
         payload_tools = []
@@ -975,6 +1026,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
+            Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
             # redirect sai em http://, levando o corpo em texto puro.
             Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),

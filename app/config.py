@@ -43,6 +43,9 @@ class Settings:
     # Arquivo JSONL dos contatos deixados no site (volume persistente).
     # Vazio = o /contato responde que o cadastro está indisponível.
     contatos_path: str = ""
+    # SQLite das estatísticas de uso (volume persistente). Vazio = desligado e
+    # /estatisticas responde 503.
+    estatisticas_path: str = ""
 
     def __post_init__(self) -> None:
         # Normaliza também quando o objeto é construído à mão (testes).
@@ -86,4 +89,5 @@ class Settings:
             ),
             cors_origins=_lista(env("CORS_ORIGINS", "")),
             contatos_path=env("CONTATOS_PATH", p.contatos_path).strip(),
+            estatisticas_path=env("ESTATISTICAS_PATH", p.estatisticas_path).strip(),
         )

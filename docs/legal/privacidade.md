@@ -1,6 +1,6 @@
 # Política de privacidade — Céu Natal
 
-Versão 5 — 2026-11-11 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 6 — 2026-11-11 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o servidor MCP do Céu Natal
 faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
@@ -27,7 +27,8 @@ Os formulários de mapa do site enviam os mesmos dados (data,
 hora e cidade) direto do seu navegador para o servidor, com o mesmo
 tratamento: o cálculo é feito, o resultado volta para a sua tela e nada é
 guardado. Para limitar abusos, o servidor conta os pedidos por endereço IP
-só na memória, por alguns minutos; o IP não vai para os logs.
+só na memória, por alguns minutos; o IP não vai para os logs nem para as
+estatísticas (seção 3).
 
 **Contato para novidades (opcional).** Na página inicial, você pode deixar um
 e-mail ou um telefone para receber novidades do Céu Natal. Só faz isso quem
@@ -53,6 +54,16 @@ quiser, e o mapa funciona sem ele.
   nunca são registradas, e não há identificador de sessão nos logs. Os logs
   ficam guardados por no máximo **90 dias**. O contato para novidades não vai
   para os logs.
+- **Estatísticas de uso.** Contagens por dia: quantas chamadas cada
+  ferramenta recebeu, de qual app de IA (o nome que o app informa ao
+  conectar), com qual resultado e em quanto tempo; quantos cálculos por país;
+  e quantas cidades diferentes já foram calculadas. Para contar pessoas
+  únicas por dia, o servidor guarda um resumo criptográfico (hash) do IP de
+  quem usa o site, ou do identificador da conversa no MCP, misturado a um
+  valor aleatório que vale só naquele dia. Ao virar o dia, os resumos e o
+  valor aleatório são apagados e sobra só o número; não dá para voltar do
+  resumo ao IP. Os totais, sem nomes de cidade, aparecem na página de
+  status do site.
 - **Contatos para novidades.** E-mail ou telefone e a data do cadastro, só de
   quem deixou o contato no site (seção 2).
 - **Cookies.** Não usamos nenhum.

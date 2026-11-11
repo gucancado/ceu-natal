@@ -10,6 +10,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from typing import Optional, Tuple
 
 from geopy.geocoders import Nominatim
@@ -150,6 +151,21 @@ def _throttle_nominatim() -> None:
         if espera > 0:
             time.sleep(espera)
         _last_nominatim = time.monotonic()
+
+
+# Chamado a cada cidade resolvida com (cidade, país ISO ou None); o servidor
+# liga aqui as estatísticas. Falha no gancho nunca derruba o cálculo.
+ao_resolver: Optional[Callable[[str, Optional[str]], None]] = None
+
+
+def _avisar_resolvida(cidade: str, nacao: str) -> None:
+    gancho = ao_resolver
+    if gancho is None:
+        return
+    try:
+        gancho(cidade, _country_iso(nacao))
+    except Exception:  # noqa: BLE001
+        logger.warning("falha ao registrar estatística de lugar", exc_info=True)
 
 
 def _log_geocode(cidade: str, nacao: str, source: str, cache_hit: bool) -> None:
@@ -358,6 +374,7 @@ def geocode(cidade: str, nacao: str) -> dict:
     if entrada is not None:
         if not entrada.get("erro"):
             _log_geocode(cidade, nacao, source="cache", cache_hit=True)
+            _avisar_resolvida(cidade, nacao)
             return entrada
         if not _falha_expirada(entrada, time.time()):
             _log_geocode(cidade, nacao, source="cache_falha", cache_hit=True)
@@ -398,4 +415,5 @@ def geocode(cidade: str, nacao: str) -> dict:
     resultado = {"lat": lat, "lng": lng, "tz_str": tz_str}
     _guardar(cache_key, resultado)
     _log_geocode(cidade, nacao, source=source, cache_hit=False)
+    _avisar_resolvida(cidade, nacao)
     return resultado

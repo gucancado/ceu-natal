@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PainelUso } from "@/components/painel-uso";
+import { lerEstatisticas } from "@/lib/estatisticas";
 import { lerSaude } from "@/lib/saude";
 import { site } from "@/lib/site";
 
@@ -6,12 +8,12 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Status",
-  description: "Se o servidor do Céu Natal está no ar agora.",
+  description: "Se o servidor do Céu Natal está no ar agora e quanto ele é usado.",
   robots: { index: false, follow: false },
 };
 
 export default async function Status() {
-  const s = await lerSaude(site.mcpUrl);
+  const [s, e] = await Promise.all([lerSaude(site.mcpUrl), lerEstatisticas(site.mcpUrl)]);
   return (
     <article className="mx-auto max-w-[72rem] px-6 py-16 md:py-24">
       <h1 className="font-display text-4xl font-medium leading-[1.15] tracking-tight md:text-5xl">Status</h1>
@@ -37,6 +39,7 @@ export default async function Status() {
           a página para ver de novo.
         </p>
       </div>
+      {e ? <PainelUso e={e} /> : null}
     </article>
   );
 }
