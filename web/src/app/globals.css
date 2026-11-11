@@ -167,21 +167,39 @@ body::after {
   font-style: normal;
 }
 
-/* Lua da primeira dobra: cruza da esquerda para a direita (as estrelas vão para a esquerda), num arco
-   leve. Começa no meio do caminho (atraso negativo). Sem animação, fica parada à direita do texto. */
+/* Lua da primeira dobra: cruza da esquerda para a direita (as estrelas vão para a esquerda) num arco.
+   O invólucro anda na horizontal em velocidade constante; a foto sobe desacelerando e desce acelerando
+   (quadrática), e a soma dos dois desenha uma parábola. Os dois têm o mesmo período e o mesmo atraso
+   negativo, para começar no meio do caminho. Sem animação, fica parada à direita do texto. */
 .lua {
-  transform: translate(68vw, 1.5rem);
-  /* A foto tem fundo preto: em "screen", o preto vira o próprio céu. */
+  display: block;
+  transform: translateX(68vw);
+  /* A foto tem fundo preto: em "screen", o preto vira o próprio céu. Fica no invólucro porque o
+     transform dele isola a mistura dos filhos. */
   mix-blend-mode: screen;
-  animation: atravessar 150s linear -55s infinite;
+  animation: lua-horizontal 150s linear -55s infinite;
 }
 
-@keyframes atravessar {
-  0% { transform: translate(-20vw, 6rem); }
-  25% { transform: translate(12.5vw, 1.5rem); }
-  50% { transform: translate(45vw, 0); }
-  75% { transform: translate(77.5vw, 1.5rem); }
-  100% { transform: translate(110vw, 6rem); }
+.lua-foto {
+  transform: translateY(3rem);
+  animation: lua-vertical 150s -55s infinite;
+}
+
+@keyframes lua-horizontal {
+  from { transform: translateX(-20vw); }
+  to { transform: translateX(110vw); }
+}
+
+@keyframes lua-vertical {
+  0% {
+    transform: translateY(min(36vh, 18rem));
+    animation-timing-function: cubic-bezier(0.5, 1, 0.89, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.11, 0, 0.5, 0);
+  }
+  100% { transform: translateY(min(36vh, 18rem)); }
 }
 
 /* Cada revelação do formulário entra com fade. Sem animação, já aparece no estado final. */
