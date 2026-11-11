@@ -9,7 +9,7 @@ const dados = {
   operatingSystem: "Web",
   offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
   url: site.url,
-  softwareHelp: `${site.url}/conectar`,
+  softwareHelp: `${site.url}/#conectar`,
   license: "https://www.gnu.org/licenses/agpl-3.0.html",
   inLanguage: "pt-BR",
 };

@@ -8,7 +8,7 @@ import { site } from "../lib/site";
 export const passosConexao = {
   chatgpt: `No ChatGPT: abra https://chatgpt.com/plugins, clique em Adicionar > Adicionar servidor MCP personalizado, coloque o nome ${site.nome}, cole o endereço, escolha Sem autenticação, marque Entendo e quero continuar, clique em Criar como plugin e depois em Conectar ${site.nome}.`,
   claude: `No Claude: abra https://claude.ai/customize/connectors, clique em + Add > Add custom connector, coloque o nome ${site.nome}, cole o endereço, escolha No sign in e clique em Add. Depois ligue o conector na conversa em + > Connectors.`,
-  outros: `Nos outros aplicativos, os passos estão em ${site.url}/conectar.`,
+  outros: `Nos outros aplicativos, os passos estão em ${site.url}/#conectar.`,
 };
 
 export const promptSetup = [

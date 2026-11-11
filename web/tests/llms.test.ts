@@ -15,7 +15,7 @@ test("llms.txt: título, endpoint, 9 tools, 8 guias e privacidade", () => {
   assert.equal(tools.length, 9);
   for (const t of tools) assert.ok(txt.includes(t.nome), t.nome);
   assert.equal(clientes.length, 8);
-  for (const c of clientes) assert.ok(txt.includes(`${site.url}/conectar/${c.slug}`), c.slug);
+  for (const c of clientes) assert.ok(txt.includes(`${site.url}/?cliente=${c.slug}#conectar`), c.slug);
   assert.ok(txt.includes(`${site.url}/privacidade`));
   assert.ok(txt.includes(String(site.limites.porSessaoPorMin)));
   assert.ok(txt.includes(String(site.limites.globalPorMin)));

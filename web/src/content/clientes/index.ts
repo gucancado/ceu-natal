@@ -13,7 +13,7 @@ export type { Cliente } from "./tipos";
 
 export const clientes: Cliente[] = [claudeAi, claudeDesktop, claudeCode, chatgpt, gemini, manus, cursor, n8n];
 
-// Botões da home: um só para o Claude. Os guias do Desktop e do Code seguem em /conectar.
+// Botões da home: um só para o Claude. Desktop e Code abrem por /?cliente=claude-desktop (ou claude-code).
 export const clientesDaGrade = clientes.filter((c) => c !== claudeDesktop && c !== claudeCode);
 
 export function cliente(slug: string): Cliente | undefined {

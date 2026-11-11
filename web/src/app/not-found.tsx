@@ -21,7 +21,7 @@ export default function NaoEncontrada() {
           </Link>
         </li>
         <li>
-          <Link href="/conectar" className="text-honey underline underline-offset-4">
+          <Link href="/#conectar" className="text-honey underline underline-offset-4">
             Ver como conectar
           </Link>
         </li>

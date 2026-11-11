@@ -214,9 +214,7 @@ export function MapaProgressivo() {
         ? "confira o ano: vale de 1800 a 2100."
         : hora && !cidadeOk && dataOk
           ? "escolha a cidade na lista para sair o ascendente."
-          : !comecou
-            ? "digite o dia e o mês e veja o que o céu já conta."
-            : null;
+          : null;
 
   return (
     <div className="grid gap-12">
@@ -302,7 +300,9 @@ function FormContato() {
 
   return (
     <form onSubmit={enviar} className="grid max-w-[30rem] gap-3">
-      <Label htmlFor="contato">se quiser receber atualizações, informe seu telefone ou e-mail</Label>
+      <Label htmlFor="contato" className="leading-[1.5]">
+        vou continuar desenvolvendo, então se quiser receber atualizações, deixe aqui seu telefone ou e-mail
+      </Label>
       <div className="flex gap-3">
         <Input
           id="contato"
@@ -323,12 +323,9 @@ function FormContato() {
         ) : estado.tipo === "erro" ? (
           <span className="text-fg">{estado.mensagem}</span>
         ) : (
-          <>
-            é opcional e fica separado dos dados de nascimento.{" "}
-            <Link href="/privacidade" className="underline underline-offset-4 hover:text-fg">
-              privacidade
-            </Link>
-          </>
+          <Link href="/privacidade" className="underline underline-offset-4 hover:text-fg">
+            privacidade
+          </Link>
         )}
       </p>
     </form>

@@ -185,9 +185,11 @@ body::after {
   animation: lua-vertical 150s -55s infinite;
 }
 
+/* De totalmente fora pela esquerda (-100% da própria largura) a totalmente fora pela direita (100vw):
+   some de um lado e volta pelo outro, sem aparecer pela metade em tela estreita. */
 @keyframes lua-horizontal {
-  from { transform: translateX(-20vw); }
-  to { transform: translateX(110vw); }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100vw); }
 }
 
 @keyframes lua-vertical {

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { GuiaPassos } from "@/components/guia";
@@ -23,7 +22,7 @@ function IconeLogo({ slug }: { slug: string }) {
   return <LogoMarca logo={logoDe[slug] ?? "claude"} />;
 }
 
-// Cada cartão é um link para o guia completo; com JavaScript, abre o passo a passo aqui mesmo.
+// Cada cartão abre o passo a passo aqui mesmo; sem JavaScript, o link recarrega a home com ?cliente=.
 export function PlataformasGrade({ inicial }: { inicial: string | null }) {
   const [aberto, setAberto] = useState<string | null>(inicial);
   const atual = aberto ? cliente(aberto) : undefined;
@@ -51,7 +50,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
           return (
             <li key={c.slug}>
               <a
-                href={`/conectar/${c.slug}`}
+                href={`/?cliente=${c.slug}#conectar`}
                 onClick={(e) => alternar(e, c.slug)}
                 aria-expanded={ativo}
                 aria-controls="passo-a-passo"
@@ -76,9 +75,6 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
             <div className="mt-6">
               <GuiaPassos c={atual} />
             </div>
-            <Link href={`/conectar/${atual.slug}`} className="mt-8 inline-block text-honey underline underline-offset-4">
-              guia completo
-            </Link>
           </div>
         ) : null}
       </div>

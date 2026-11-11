@@ -20,6 +20,14 @@ const csp = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // As páginas de guia (/conectar e /conectar/<ia>) saíram do ar. Links antigos, inclusive os que as IAs já
+  // conhecem, caem na seção "como conectar" da home, com o guia daquela IA aberto.
+  async redirects() {
+    return [
+      { source: "/conectar", destination: "/#conectar", permanent: true },
+      { source: "/conectar/:cliente", destination: "/?cliente=:cliente#conectar", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

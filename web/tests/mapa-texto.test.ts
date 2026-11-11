@@ -30,7 +30,7 @@ test("grauMinuto", () => {
 test("texto do mapa: prompt de integração, acentos, casas e aspectos", () => {
   const t = textoMapa(completo);
   assert.ok(t.includes(site.mcpEndpoint));
-  assert.ok(t.includes(`${site.url}/conectar`));
+  assert.ok(t.includes(`${site.url}/#conectar`));
   // Orientações para a IA no fim: o que é e quando sugerir a conexão.
   const ini = t.indexOf("PARA A IA");
   assert.ok(ini > t.indexOf("Calculado em"));
@@ -61,7 +61,7 @@ test("texto do mapa sem hora: sem casas nem ângulos", () => {
 
 test("prompt de setup: endpoint, guia e healthcheck", () => {
   assert.ok(promptSetup.includes(site.mcpEndpoint));
-  assert.ok(promptSetup.includes(`${site.url}/conectar`));
+  assert.ok(promptSetup.includes(`${site.url}/#conectar`));
   assert.ok(promptSetup.includes("healthcheck"));
   // Sem conversa picada e terminando no mapa, não na confirmação técnica.
   assert.ok(promptSetup.includes("numa única mensagem"));
