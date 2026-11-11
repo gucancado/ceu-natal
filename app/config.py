@@ -34,11 +34,15 @@ class Settings:
     public_mcp_url: str = "https://astrologia-mcp.gustavocancado.com.br"
     # Mapa rápido do site: limite por IP (o formulário roda no navegador da
     # pessoa, então o IP é dela; os IPs compartilhados de Anthropic/OpenAI não
-    # passam aqui).
-    rate_limit_mapa_rapido_ip_per_min: int = 6
+    # passam aqui). O formulário da home recalcula a cada campo preenchido
+    # (data, depois hora e cidade), por isso a folga.
+    rate_limit_mapa_rapido_ip_per_min: int = 12
     rate_limit_mapa_rapido_global_per_min: int = 120
     # Origens aceitas pelo CORS do /mapa-rapido. Vazio = só public_site_url.
     cors_origins: tuple[str, ...] = ()
+    # Arquivo JSONL dos contatos deixados no site (volume persistente).
+    # Vazio = o /contato responde que o cadastro está indisponível.
+    contatos_path: str = ""
 
     def __post_init__(self) -> None:
         # Normaliza também quando o objeto é construído à mão (testes).
@@ -53,7 +57,7 @@ class Settings:
 
     @property
     def cors_efetivos(self) -> tuple[str, ...]:
-        """Origens do CORS do /mapa-rapido; padrão: só o site."""
+        """Origens do CORS do /mapa-rapido e do /contato; padrão: só o site."""
         return self.cors_origins or (self.public_site_url,)
 
     @classmethod
@@ -81,4 +85,5 @@ class Settings:
                 env("RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN", p.rate_limit_mapa_rapido_global_per_min)
             ),
             cors_origins=_lista(env("CORS_ORIGINS", "")),
+            contatos_path=env("CONTATOS_PATH", p.contatos_path).strip(),
         )

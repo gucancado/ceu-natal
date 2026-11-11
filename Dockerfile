@@ -3,10 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Usuário sem privilégios para rodar o servidor. O diretório do cache do
-# geocoder (GEOCODER_CACHE_PATH, volume no docker-compose) pertence a ele.
+# geocoder (GEOCODER_CACHE_PATH, volume no docker-compose) e o dos contatos
+# (CONTATOS_PATH, volume persistente em produção) pertencem a ele.
 RUN useradd --create-home --shell /usr/sbin/nologin app \
-    && mkdir -p /var/cache/ceu-natal \
-    && chown app:app /var/cache/ceu-natal
+    && mkdir -p /var/cache/ceu-natal /var/lib/ceu-natal \
+    && chown app:app /var/cache/ceu-natal /var/lib/ceu-natal
 
 # Só as dependências de runtime, pinadas pelo lockfile.
 COPY requirements.txt .

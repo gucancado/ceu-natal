@@ -1,22 +1,29 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { Copiar } from "@/components/copiar";
-import { promptSetup } from "@/content/setup";
+import { MapaProgressivo } from "@/components/mapa-progressivo";
+import { MarcaRotativa } from "@/components/marca-rotativa";
+import { site } from "@/lib/site";
 
+// Segunda dobra: o título com as marcas e o mapa que se revela conforme a pessoa preenche os dados.
 export function Comecar() {
   return (
-    <section aria-label="como começar" className="mx-auto max-w-[72rem] px-6">
-      <div className="py-12 md:py-20">
-        <p className="max-w-[34rem] text-lg leading-[1.5]">
-          é grátis e sem cadastro. copie o prompt, cole no claude, no chatgpt, no gemini ou no cursor, e a própria ia te
-          guia na conexão.
+    <section aria-labelledby="comecar-titulo" className="mx-auto max-w-[72rem] px-6">
+      <div className="py-16 md:py-24">
+        <h1 id="comecar-titulo" className="max-w-[40rem] font-display text-[30px] font-medium leading-[1.2] tracking-tight md:text-[40px]">
+          faça análises astrológicas precisas na sua conta do <MarcaRotativa />
+        </h1>
+        <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
+          grátis e sem cadastro. estou em fase beta e quero testar =]
         </p>
-        {/* Fonte monoespaçada é larga: abaixo de 360 px, o botão só cabe com letra e margem menores. */}
-        <div className="mt-8 flex flex-wrap gap-3 max-[359px]:[&_a]:px-3 max-[359px]:[&_a]:text-sm max-[359px]:[&_button]:px-3 max-[359px]:[&_button]:text-sm">
-          <Copiar texto={promptSetup} rotulo="Copiar prompt para começar" copiado="Copiado. Cole na sua IA" variant="outline" size="lg" />
-          <Link href="/mapa" className={buttonVariants({ size: "lg", variant: "outline" })}>
-            Fazer meu mapa astral grátis
-          </Link>
+        <p className="mt-3 text-muted-fg">
+          autor:{" "}
+          <a
+            href={site.autorUrl}
+            className="rounded-sm underline underline-offset-4 transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            gustavo cançado
+          </a>
+        </p>
+        <div className="mt-12">
+          <MapaProgressivo />
         </div>
       </div>
     </section>

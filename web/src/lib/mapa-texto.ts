@@ -1,8 +1,8 @@
 // Mapa natal (JSON do /mapa-rapido) → texto para colar no assistente. Só dados → string.
 import { site } from "./site";
 
-type Ponto = { signo: string; grau: string; retrogrado?: boolean; casa?: number | null };
-type Aspecto = { planeta_a: string; planeta_b: string; tipo: string; orbe: number };
+export type Ponto = { signo: string; grau: string; retrogrado?: boolean; casa?: number | null };
+export type Aspecto = { planeta_a: string; planeta_b: string; tipo: string; orbe: number };
 
 export type MapaRapido = {
   nascimento: { data: string; hora?: string | null; local?: string | null };
@@ -32,9 +32,9 @@ const ASPECTOS: Record<string, string> = {
   semi_sextil: "semissextil", semi_quadratura: "semiquadratura",
 };
 
-const signo = (s: string) => SIGNOS[s] ?? s;
-const nome = (n: string) => NOMES[n] ?? n.replace(/_/g, " ");
-const aspecto = (t: string) => ASPECTOS[t] ?? t.replace(/_/g, " ");
+export const signo = (s: string) => SIGNOS[s] ?? s;
+export const nome = (n: string) => NOMES[n] ?? n.replace(/_/g, " ");
+export const aspecto = (t: string) => ASPECTOS[t] ?? t.replace(/_/g, " ");
 
 export function grauMinuto(decimal: number): string {
   const total = Math.round(Math.abs(decimal) * 60);

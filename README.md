@@ -131,6 +131,7 @@ Para desenvolver, instale também `requirements-dev.txt` e rode `ruff check .`, 
 | `GEOCODER_MAX_CONCORRENTES` | `4` | teto de chamadas simultâneas aos provedores de geocodificação |
 | `GEOCODER_ESPERA_MAX_S` | `3.0` | espera máxima (s) por uma vaga nesse teto; depois, erro |
 | `GEOCODER_CACHE_PATH` | `<tmp>/ceu-natal-geocode-cache.json` | cache persistente de coordenadas; no Docker, volume em `/var/cache/ceu-natal` |
+| `CONTATOS_PATH` | vazio (desliga o `/contato`) | arquivo JSONL dos contatos para novidades deixados no site; em produção, `/var/lib/ceu-natal/contatos.jsonl` (volume persistente) |
 
 ## Site (`web/`)
 

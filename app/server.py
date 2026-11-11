@@ -9,6 +9,8 @@ Endpoints:
   GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
   POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
                       para PUBLIC_SITE_URL, limite por IP)
+  POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
+                      CORS, limite por IP; grava em CONTATOS_PATH)
 
 Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
@@ -47,15 +49,20 @@ from starlette.routing import Mount, Route
 
 from app.config import Settings
 from app.core.aspectos import listar_tipos_aspectos
+from app.core.contatos import RegistroContatos, normalizar_contato
 from app.core.geocoder import GeocodingError
 from app.core.ratelimit import LimitadorTaxa
 from app.core.validators import SISTEMAS_CASAS_VALIDOS
 
 # Teto do corpo do /mapa-rapido (bytes): data, hora e local cabem com folga.
 MAPA_RAPIDO_BODY_MAX = 4096
+# Teto do corpo do /contato (bytes) e limites por IP e global, por minuto.
+CONTATO_BODY_MAX = 1024
+CONTATO_POR_IP_POR_MIN = 3
+CONTATO_GLOBAL_POR_MIN = 60
 # Caminhos que dispensam a chave de API.
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
-_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", _DESAFIO_OPENAI]
+_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", _DESAFIO_OPENAI]
 _LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
 TRANSPORTE = "streamable-http"
 
@@ -664,6 +671,8 @@ class Aplicacao:
             settings.rate_limit_mapa_rapido_ip_per_min,
             settings.rate_limit_mapa_rapido_global_per_min,
         )
+        self.limitador_contato = LimitadorTaxa(CONTATO_POR_IP_POR_MIN, CONTATO_GLOBAL_POR_MIN)
+        self.contatos = RegistroContatos(settings.contatos_path) if settings.contatos_path else None
         self.llms_txt = _LLMS_TXT_PATH.read_text(encoding="utf-8").format(
             mcp_url=settings.public_mcp_url, site_url=settings.public_site_url,
         )
@@ -865,6 +874,58 @@ class Aplicacao:
         finally:
             _log_tool_call("mapa_rapido", status, round((time.monotonic() - inicio) * 1000, 1))
 
+    async def contato(self, request: Request) -> Response:
+        """Guarda um e-mail ou telefone para avisos; o log não registra o contato."""
+        cors = self._cabecalhos_cors(request)
+        if request.method == "OPTIONS":
+            return Response(status_code=204, headers=cors)
+
+        inicio = time.monotonic()
+        status = "ok"
+        try:
+            if self.contatos is None:
+                status = "indisponivel"
+                return JSONResponse(
+                    {"erro": "O cadastro de contatos está indisponível no momento."},
+                    status_code=503, headers=cors,
+                )
+            permitido, espera = self.limitador_contato.tentar(_ip_cliente(request))
+            if not permitido:
+                status = "rate_limited"
+                return JSONResponse(
+                    {"erro": f"Muitos pedidos. Aguarde {math.ceil(espera)} segundos e tente de novo."},
+                    status_code=429, headers={**cors, "Retry-After": str(math.ceil(espera))},
+                )
+            partes = bytearray()
+            async for pedaco in request.stream():
+                partes.extend(pedaco)
+                if len(partes) > CONTATO_BODY_MAX:
+                    status = "body_too_large"
+                    return JSONResponse({"erro": "Corpo grande demais."}, status_code=413, headers=cors)
+            try:
+                corpo = json.loads(bytes(partes))
+            except ValueError:
+                corpo = None
+            bruto = corpo.get("contato") if isinstance(corpo, dict) else None
+            try:
+                if not isinstance(bruto, str):
+                    raise ValueError("Informe um e-mail ou um telefone com DDD.")
+                tipo, contato = normalizar_contato(bruto)
+            except ValueError as exc:
+                status = "value_error"
+                return JSONResponse({"erro": str(exc)}, status_code=400, headers=cors)
+            try:
+                novo = await anyio.to_thread.run_sync(self.contatos.registrar, tipo, contato)
+            except OSError:
+                status = "internal_error"
+                logger.exception("erro ao gravar contato")
+                return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
+            if not novo:
+                status = "repetido"
+            return JSONResponse({"ok": True, "tipo": tipo}, headers=cors)
+        finally:
+            _log_tool_call("contato", status, round((time.monotonic() - inicio) * 1000, 1))
+
     async def listar_tools_http(self, _: Request) -> JSONResponse:
         """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
         payload_tools = []
@@ -913,6 +974,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route(_DESAFIO_OPENAI, endpoint=ceu.desafio_openai, methods=["GET"]),
             Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
+            Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
             # redirect sai em http://, levando o corpo em texto puro.
             Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),

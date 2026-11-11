@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { GuiaCorpo } from "@/components/guia";
 import { cliente, clientesDaGrade } from "@/content/clientes";
-import { logos, type Logo } from "@/content/logos";
+import { LogoMarca } from "@/components/logo-marca";
+import type { Logo } from "@/content/logos";
 
 const logoDe: Record<string, Logo> = {
   "claude-ai": "claude",
@@ -19,15 +20,7 @@ const logoDe: Record<string, Logo> = {
 };
 
 function IconeLogo({ slug }: { slug: string }) {
-  const l = logos[logoDe[slug] ?? "claude"];
-  // Marcação estática do próprio repositório (content/logo-manus.ts), sem dado de usuário.
-  if ("svg" in l)
-    return <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0" dangerouslySetInnerHTML={{ __html: l.svg }} />;
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-7 shrink-0 fill-current">
-      <path d={l.d} />
-    </svg>
-  );
+  return <LogoMarca logo={logoDe[slug] ?? "claude"} />;
 }
 
 // Cada cartão é um link para o guia completo; com JavaScript, abre o passo a passo aqui mesmo.

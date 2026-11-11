@@ -96,7 +96,7 @@ body::before {
     radial-gradient(1px 1px at 50px 250px, rgba(255, 255, 255, 0.5), transparent),
     radial-gradient(1px 1px at 330px 280px, rgba(255, 255, 255, 0.6), transparent);
   background-size: 350px 320px;
-  animation: deriva-perto 75s linear infinite;
+  animation: deriva-perto 37.5s linear infinite;
 }
 
 body::after {
@@ -109,7 +109,7 @@ body::after {
   background-size: 680px 520px;
   animation:
     cintilar 5s ease-in-out infinite alternate,
-    deriva-longe 200s linear infinite;
+    deriva-longe 100s linear infinite;
 }
 
 @keyframes cintilar {
@@ -167,12 +167,32 @@ body::after {
   font-style: normal;
 }
 
-.anel-zodiacal {
-  animation: girar 240s linear infinite;
+/* Lua da primeira dobra: cruza da esquerda para a direita (as estrelas vão para a esquerda), num arco
+   leve. Começa no meio do caminho (atraso negativo). Sem animação, fica parada à direita do texto. */
+.lua {
+  transform: translate(68vw, 1.5rem);
+  filter: drop-shadow(0 0 28px rgba(255, 248, 230, 0.28));
+  animation: atravessar 150s linear -55s infinite;
 }
 
-@keyframes girar {
-  to { rotate: 360deg; }
+@keyframes atravessar {
+  0% { transform: translate(-20vw, 6rem); }
+  25% { transform: translate(12.5vw, 1.5rem); }
+  50% { transform: translate(45vw, 0); }
+  75% { transform: translate(77.5vw, 1.5rem); }
+  100% { transform: translate(110vw, 6rem); }
+}
+
+/* Cada revelação do formulário entra com fade. Sem animação, já aparece no estado final. */
+.revelar {
+  animation: revelar 700ms ease-out both;
+}
+
+@keyframes revelar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 .cursor-digitacao {

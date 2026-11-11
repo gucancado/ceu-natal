@@ -42,6 +42,7 @@ def test_settings_do_ambiente_le_todas_as_variaveis(monkeypatch):
         "RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN": "3",
         "RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN": "30",
         "CORS_ORIGINS": "https://a.test/, https://b.test",
+        "CONTATOS_PATH": " /dados/contatos.jsonl ",
     }
     for nome, valor in env.items():
         monkeypatch.setenv(nome, valor)
@@ -57,6 +58,7 @@ def test_settings_do_ambiente_le_todas_as_variaveis(monkeypatch):
         rate_limit_mapa_rapido_ip_per_min=3,
         rate_limit_mapa_rapido_global_per_min=30,
         cors_origins=("https://a.test", "https://b.test"),
+        contatos_path="/dados/contatos.jsonl",
     )
 
 
@@ -70,7 +72,7 @@ def test_settings_do_ambiente_vazio_usa_os_defaults(monkeypatch):
     assert s == Settings()
     assert (s.server_name, s.server_version, s.api_key) == ("ceu-natal", "2.2.6", "")
     assert (s.rate_limit_session_per_min, s.rate_limit_global_per_min) == (30, 600)
-    assert (s.rate_limit_mapa_rapido_ip_per_min, s.rate_limit_mapa_rapido_global_per_min) == (6, 120)
+    assert (s.rate_limit_mapa_rapido_ip_per_min, s.rate_limit_mapa_rapido_global_per_min) == (12, 120)
     assert s.public_site_url == "https://github.com/gucancado/ceu-natal"
     assert s.public_mcp_url == "https://astrologia-mcp.gustavocancado.com.br"
     assert s.cors_efetivos == (s.public_site_url,)
