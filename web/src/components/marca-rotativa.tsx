@@ -16,7 +16,9 @@ const marcas: { nome: string; logo: Logo; cor: string; degrade?: string }[] = [
 const TROCA_MS = 2600;
 
 // Troca a marca com fade. Leitores de tela leem a lista inteira, parada.
-export function MarcaRotativa() {
+// `emLinha`: dentro de uma frase; as marcas se empilham na mesma célula de grid, então a largura é a da
+// maior e o texto em volta não pula na troca. Sem ela, a marca ocupa a própria linha.
+export function MarcaRotativa({ emLinha = false }: { emLinha?: boolean }) {
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -27,12 +29,12 @@ export function MarcaRotativa() {
   return (
     <>
       <span className="sr-only">{marcas.map((m) => m.nome).join(", ").replace(/, ([^,]*)$/, " ou $1")}</span>
-      <span aria-hidden="true" className="relative block h-[1.3em]">
+      <span aria-hidden="true" className={emLinha ? "inline-grid align-bottom" : "relative block h-[1.3em]"}>
         {marcas.map((m, n) => (
           <span
             key={m.nome}
             style={{ color: m.cor }}
-            className={`absolute inset-0 flex items-center gap-[0.35em] transition-all duration-700 ease-out ${
+            className={`${emLinha ? "[grid-area:1/1]" : "absolute inset-0"} flex items-center gap-[0.35em] transition-all duration-700 ease-out ${
               n === i ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
             }`}
           >

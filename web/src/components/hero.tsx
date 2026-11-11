@@ -1,5 +1,6 @@
 import { Autor } from "@/components/autor";
 import { Lua } from "@/components/lua";
+import { MarcaRotativa } from "@/components/marca-rotativa";
 import { RotadorPrompts } from "@/components/rotador-prompts";
 
 // Primeira dobra: só os pedidos de exemplo, com a Lua cruzando o céu no sentido contrário às estrelas.
@@ -11,6 +12,9 @@ export function Hero() {
       {/* Ocupa a tela abaixo do cabeçalho (5rem), para a seção seguinte começar na segunda dobra. */}
       <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-[72rem] place-items-center px-6 py-16">
         <div className="w-full max-w-[42rem]">
+          <p className="mb-8 text-center text-sm text-muted-fg md:text-base">
+            mcp grátis para cálculos astrológicos com <MarcaRotativa emLinha />
+          </p>
           <RotadorPrompts />
           <Autor className="mt-10" />
         </div>
