@@ -1,4 +1,4 @@
-// Foto do Sol de hoje (NASA SDO, rota /sol-de-hoje), menor e mais lenta que a Lua, atrás dela. Mesma
+// Foto do Sol de hoje (NASA SDO, rota /sol-de-hoje), do tamanho de uma estrela, mais lenta que a Lua, atrás dela. Mesma
 // travessia em arco (globals.css, .sol); o recorte circular tira a legenda que a NASA grava no canto.
 export function Sol({ className = "" }: { className?: string }) {
   return (
