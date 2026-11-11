@@ -13,13 +13,13 @@ export const gemini: Cliente = {
   semLogin: true,
   confianca: "media",
   passos: [
-    "Abra o Antigravity (app, IDE ou o CLI `agy`). Ele substituiu o Gemini CLI, que parou de atender contas individuais em junho de 2026.",
-    "Abra o arquivo de configuração global `~/.gemini/config/mcp_config.json`. No IDE, o caminho até ele é o menu **…** do painel do Agent > **MCP Servers** > **Manage MCP Servers** > **View raw config**. No app, **Settings** > **Customizations** > **Installed MCP Servers** mostra os servidores instalados; para um servidor próprio, edite o arquivo de configuração direto.",
-    "Cole o bloco abaixo e salve. O campo da URL é `serverUrl`.",
-    "No CLI, `/mcp` abre o MCP Manager, que mostra o status e recarrega os servidores.",
+    "O app do Gemini ainda não aceita conectores no Brasil. Use o Antigravity, do Google (app, IDE ou CLI `agy`).",
+    "Cole o bloco abaixo em `~/.gemini/config/mcp_config.json` e salve.",
   ],
   snippet: { linguagem: "json", codigo: JSON.stringify(config, null, 2) },
   limitacoes: [
+    "O Antigravity substituiu o Gemini CLI, que parou de atender contas individuais em junho de 2026.",
+    "No IDE, o arquivo abre pelo menu **…** do painel do Agent > **MCP Servers** > **Manage MCP Servers** > **View raw config**. No CLI, `/mcp` mostra o status e recarrega os servidores.",
     "O app do Gemini (gemini.google.com) aceita servidores por URL só nos Estados Unidos, para maiores de 18 anos, com conta Google pessoal e interface em inglês.",
     "O campo `httpUrl` do Gemini CLI não funciona no Antigravity.",
     "Não reaproveite a chave `url` do Gemini CLI. Use `serverUrl`.",

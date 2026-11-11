@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Carta } from "@/components/carta";
 import { Comecar } from "@/components/comecar";
 import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
 import { JsonLd } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
-import { Profissionais } from "@/components/profissionais";
 import { Secao } from "@/components/secao";
 import { planeta } from "@/lib/glifos";
 import { tituloHome } from "@/lib/site";
@@ -22,7 +20,6 @@ export default function Home() {
       <JsonLd />
       <Hero />
       <Comecar />
-      <Carta />
       <Secao id="conectar" titulo="como conectar" simbolo={planeta.jupiter}>
         {/* Sem JavaScript, cada cartão é um link para o guia completo. */}
         <Suspense fallback={<PlataformasGrade inicial={null} />}>
@@ -30,7 +27,6 @@ export default function Home() {
         </Suspense>
       </Secao>
       <Ferramentas />
-      <Profissionais />
     </>
   );
 }

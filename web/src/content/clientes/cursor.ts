@@ -11,13 +11,13 @@ export const cursor: Cliente = {
   semLogin: true,
   confianca: "alta",
   passos: [
-    "Abra ou crie o arquivo `~/.cursor/mcp.json`, que vale para todos os projetos. Para um projeto só, use `.cursor/mcp.json` na pasta do projeto.",
-    "Cole o bloco abaixo e salve. Se o arquivo já tiver outros servidores, acrescente só a entrada `ceu-natal` dentro de `mcpServers`.",
-    `Pela interface, os servidores ficam na página **Customize**, na barra lateral. Versões recentes também têm **Cursor Settings** > **Tools & MCP** > **New MCP Server**, que abre o mesmo arquivo ${confira}.`,
+    "Cole o bloco abaixo em `~/.cursor/mcp.json` e salve.",
     "Confira em **Customize** se o Céu Natal aparece habilitado.",
   ],
   snippet: { linguagem: "json", codigo: JSON.stringify(config, null, 2) },
   limitacoes: [
+    "Se o arquivo já tiver outros servidores, acrescente só a entrada `ceu-natal` dentro de `mcpServers`. Para um projeto só, use `.cursor/mcp.json` na pasta do projeto.",
+    `Pela interface, versões recentes têm **Cursor Settings** > **Tools & MCP** > **New MCP Server**, que abre o mesmo arquivo ${confira}.`,
     "Se não conectar, veja os logs no painel **Output** > **MCP Logs**.",
     "O Cursor reconhece o tipo de conexão pela chave `url`. Não precisa de campo `type`.",
   ],

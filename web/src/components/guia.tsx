@@ -6,7 +6,28 @@ import { verificadoEm } from "@/content/setup";
 
 export const avisoConfianca = `Este guia foi verificado em ${verificadoEm}; a interface deste app muda com frequência.`;
 
-// Corpo comum ao painel da aba e à página do cliente.
+// Versão curta, para o painel da home: só os passos, o link direto e o que copiar.
+export function GuiaPassos({ c }: { c: Cliente }) {
+  return (
+    <div className="max-w-[36rem] space-y-6">
+      <ol className="list-decimal space-y-3 pl-6 marker:font-mono marker:text-honey">
+        {c.passos.map((p) => (
+          <li key={p} className="pl-1">
+            <TextoGuia texto={p} />
+          </li>
+        ))}
+      </ol>
+      {c.snippet ? <BlocoCodigo codigo={c.snippet.codigo} /> : null}
+      {c.abrir ? (
+        <a href={c.abrir.url} target="_blank" rel="noopener" className={buttonVariants({ variant: "default", size: "lg" })}>
+          {c.abrir.rotulo}
+        </a>
+      ) : null}
+    </div>
+  );
+}
+
+// Corpo completo, da página de cada cliente.
 export function GuiaCorpo({ c, Titulo }: { c: Cliente; Titulo: "h2" | "h3" }) {
   return (
     <div className="max-w-[36rem] space-y-6">

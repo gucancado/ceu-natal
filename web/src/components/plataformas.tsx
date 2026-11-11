@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type MouseEvent } from "react";
-import { GuiaCorpo } from "@/components/guia";
+import { GuiaPassos } from "@/components/guia";
 import { cliente, clientesDaGrade } from "@/content/clientes";
 import { LogoMarca } from "@/components/logo-marca";
 import type { Logo } from "@/content/logos";
@@ -74,7 +74,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
               {atual.nome}
             </h3>
             <div className="mt-6">
-              <GuiaCorpo c={atual} Titulo="h3" />
+              <GuiaPassos c={atual} />
             </div>
             <Link href={`/conectar/${atual.slug}`} className="mt-8 inline-block text-honey underline underline-offset-4">
               guia completo

@@ -171,7 +171,8 @@ body::after {
    leve. Começa no meio do caminho (atraso negativo). Sem animação, fica parada à direita do texto. */
 .lua {
   transform: translate(68vw, 1.5rem);
-  filter: drop-shadow(0 0 28px rgba(255, 248, 230, 0.28));
+  /* A foto tem fundo preto: em "screen", o preto vira o próprio céu. */
+  mix-blend-mode: screen;
   animation: atravessar 150s linear -55s infinite;
 }
 

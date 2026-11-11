@@ -7,8 +7,8 @@ export function Comecar() {
   return (
     <section aria-labelledby="comecar-titulo" className="mx-auto max-w-[72rem] px-6">
       <div className="py-16 md:py-24">
-        <h1 id="comecar-titulo" className="max-w-[40rem] font-display text-[30px] font-medium leading-[1.2] tracking-tight md:text-[40px]">
-          faça análises astrológicas precisas na sua conta do <MarcaRotativa />
+        <h1 id="comecar-titulo" className="max-w-[48rem] font-display text-[30px] font-medium leading-[1.2] tracking-tight md:text-[40px]">
+          faça análises astrológicas precisas direto nas suas conversas com o <MarcaRotativa />
         </h1>
         <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
           grátis e sem cadastro. estou em fase beta e quero testar =]

@@ -8,11 +8,7 @@ export const claudeCode: Cliente = {
   planoMinimo: "Qualquer conta que use o Claude Code.",
   semLogin: true,
   confianca: "alta",
-  passos: [
-    "No terminal, rode o comando abaixo.",
-    "Confira com `claude mcp list`. O Céu Natal deve aparecer como `✔ Connected`.",
-    "Dentro de uma sessão, `/mcp` mostra o status dos servidores.",
-  ],
+  passos: ["Rode o comando abaixo no terminal.", "Confira com `claude mcp list`."],
   snippet: {
     linguagem: "bash",
     codigo: `claude mcp add --transport http --scope user ceu-natal ${site.mcpEndpoint}`,

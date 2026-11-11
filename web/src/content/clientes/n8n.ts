@@ -9,11 +9,8 @@ export const n8n: Cliente = {
   semLogin: true,
   confianca: "alta",
   passos: [
-    "No workflow, adicione um nó **AI Agent** com um modelo de chat.",
-    "No conector **Tool** do AI Agent, adicione o sub-nó **MCP Client Tool**.",
-    `Em **Endpoint**, cole \`${site.mcpEndpoint}\`.`,
-    "Em **Server Transport**, escolha **HTTP Streamable**. Em **Authentication**, **None**. Em **Tools to Include**, **All**.",
-    "Rode o agente. As ferramentas do Céu Natal ficam disponíveis para o modelo.",
+    "Num nó **AI Agent**, adicione a ferramenta **MCP Client Tool**.",
+    `**Endpoint** \`${site.mcpEndpoint}\`, **Server Transport** **HTTP Streamable**, **Authentication** **None**.`,
   ],
   snippet: { linguagem: "text", codigo: site.mcpEndpoint },
   limitacoes: [

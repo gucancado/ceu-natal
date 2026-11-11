@@ -11,11 +11,9 @@ export const claudeAi: Cliente = {
   confianca: "alta",
   abrir: { rotulo: "Abrir os conectores do Claude", url: "https://claude.ai/customize/connectors" },
   passos: [
-    "Abra `claude.ai/customize/connectors` (menu **Customize** > **Connectors**).",
-    "Clique em **+ Add** e depois em **Add custom connector**.",
-    `Dê um nome, por exemplo \`Céu Natal\`, e cole a URL do servidor: \`${site.mcpEndpoint}\`.`,
-    "Em **Authentication**, escolha **No sign in** e clique em **Add**.",
-    "Numa conversa, clique no **+** no canto inferior esquerdo da caixa de mensagem, abra **Connectors** e ligue o Céu Natal.",
+    "Em **Customize** > **Connectors**, clique em **+ Add** > **Add custom connector**.",
+    `Nome \`Céu Natal\`, URL \`${site.mcpEndpoint}\`, **No sign in**. Clique em **Add**.`,
+    "Na conversa, ligue o Céu Natal em **+** > **Connectors**.",
   ],
   snippet: { linguagem: "text", codigo: site.mcpEndpoint },
   limitacoes: [
