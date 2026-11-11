@@ -185,6 +185,23 @@ body::after {
   animation: lua-vertical 150s -55s infinite;
 }
 
+/* Sol: o mesmo arco da Lua, com o dobro do período (mais lento), menor e um pouco apagado, atrás dela.
+   O atraso diferente põe o Sol em outro trecho do céu. Sem animação, fica parado à esquerda do texto. */
+.sol {
+  display: block;
+  transform: translateX(16vw);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: lua-horizontal 300s linear -200s infinite;
+}
+
+.sol-foto {
+  transform: translateY(5rem);
+  /* O disco ocupa ~94% da foto; o recorte tira a legenda da NASA no canto. */
+  clip-path: circle(46.5%);
+  animation: lua-vertical 300s -200s infinite;
+}
+
 /* De totalmente fora pela esquerda (-100% da própria largura) a totalmente fora pela direita (100vw):
    some de um lado e volta pelo outro, sem aparecer pela metade em tela estreita. */
 @keyframes lua-horizontal {
@@ -253,4 +270,10 @@ body::after {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Dica de formato nos campos (dd, mm, aaaa, cidade): bem apagada, para não parecer campo já preenchido.
+   Fora de @layer, vence o placeholder:text-muted-fg do Input. */
+.campo-dica::placeholder {
+  color: color-mix(in srgb, var(--color-muted-fg) 50%, transparent);
 }

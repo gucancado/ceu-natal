@@ -72,7 +72,8 @@ export function CampoCidade({ id, valor, aoMudar, aoConfirmar }: Props) {
         aria-expanded={aberta}
         aria-controls={idLista}
         aria-activedescendant={ativa >= 0 ? `${idLista}-${ativa}` : undefined}
-        placeholder="belo horizonte, mg"
+        placeholder="digite sua cidade"
+        className="campo-dica"
         maxLength={120}
         autoComplete="off"
         value={valor}

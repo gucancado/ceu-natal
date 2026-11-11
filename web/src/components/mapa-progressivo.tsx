@@ -89,7 +89,7 @@ function CampoNumero({
         maxLength={max}
         value={valor}
         onChange={mudar}
-        className="tabular"
+        className="tabular campo-dica"
       />
     </div>
   );
@@ -222,9 +222,9 @@ export function MapaProgressivo() {
         <fieldset className="grid gap-3">
           <legend className="mb-3 text-lg">quando você nasceu?</legend>
           <div className="grid grid-cols-[4.5rem_4.5rem_6rem] gap-3">
-            <CampoNumero id="nasc-dia" rotulo="dia" valor={dia} max={2} placeholder="15" aoMudar={setDia} proximo={refMes} autoComplete="bday-day" />
-            <CampoNumero id="nasc-mes" rotulo="mês" valor={mes} max={2} placeholder="05" aoMudar={setMes} campoRef={refMes} proximo={refAno} autoComplete="bday-month" />
-            <CampoNumero id="nasc-ano" rotulo="ano" valor={ano} max={4} placeholder="1990" aoMudar={setAno} campoRef={refAno} proximo={refHora} autoComplete="bday-year" />
+            <CampoNumero id="nasc-dia" rotulo="dia" valor={dia} max={2} placeholder="dd" aoMudar={setDia} proximo={refMes} autoComplete="bday-day" />
+            <CampoNumero id="nasc-mes" rotulo="mês" valor={mes} max={2} placeholder="mm" aoMudar={setMes} campoRef={refMes} proximo={refAno} autoComplete="bday-month" />
+            <CampoNumero id="nasc-ano" rotulo="ano" valor={ano} max={4} placeholder="aaaa" aoMudar={setAno} campoRef={refAno} proximo={refHora} autoComplete="bday-year" />
           </div>
         </fieldset>
         <div className="grid grid-cols-[8rem_1fr] gap-3">
@@ -308,7 +308,8 @@ function FormContato() {
           id="contato"
           type="text"
           autoComplete="email"
-          placeholder="voce@exemplo.com ou (31) 99999-0000"
+          placeholder="telefone ou e-mail"
+          className="campo-dica"
           maxLength={254}
           value={valor}
           onChange={(e) => setValor(e.target.value)}
