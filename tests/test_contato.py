@@ -132,3 +132,13 @@ def test_listar_pula_linha_corrompida(tmp_path):
     caminho.write_text('{"contato": "a@b.com"}\nlixo\n[1]\n', encoding="utf-8")
     assert RegistroContatos(str(caminho)).listar() == [{"contato": "a@b.com"}]
     assert RegistroContatos(str(tmp_path / "nada.jsonl")).listar() == []
+
+
+def test_remover_contato(tmp_path):
+    caminho = tmp_path / "c.jsonl"
+    reg = RegistroContatos(str(caminho))
+    reg.registrar("email", "a@b.com")
+    reg.registrar("email", "c@d.com")
+    assert reg.remover("a@b.com") is True
+    assert reg.remover("a@b.com") is False
+    assert [c["contato"] for c in reg.listar()] == ["c@d.com"]

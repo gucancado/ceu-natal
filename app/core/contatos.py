@@ -7,6 +7,7 @@ linha JSON por contato. Nada de dados de nascimento: o formulário envia o
 contato num pedido separado do cálculo.
 """
 import json
+import os
 import re
 import threading
 from datetime import datetime, timezone
@@ -68,6 +69,28 @@ class RegistroContatos:
             }
             with self.caminho.open("a", encoding="utf-8") as arquivo:
                 arquivo.write(json.dumps(registro, ensure_ascii=False) + "\n")
+            return True
+
+    def remover(self, contato: str) -> bool:
+        """Tira o contato do arquivo (troca atômica); devolve False se não estava."""
+        with self._trava:
+            if not self.caminho.exists():
+                return False
+            linhas = self.caminho.read_text(encoding="utf-8").splitlines(keepends=True)
+            restantes = []
+            for linha in linhas:
+                try:
+                    item = json.loads(linha)
+                except ValueError:
+                    restantes.append(linha)
+                    continue
+                if not (isinstance(item, dict) and item.get("contato") == contato):
+                    restantes.append(linha)
+            if len(restantes) == len(linhas):
+                return False
+            temporario = self.caminho.with_name(self.caminho.name + ".tmp")
+            temporario.write_text("".join(restantes), encoding="utf-8")
+            os.replace(temporario, self.caminho)
             return True
 
     def listar(self) -> list[dict]:

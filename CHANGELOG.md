@@ -11,6 +11,7 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 - Estatísticas agregadas de uso (`ESTATISTICAS_PATH`, rota pública `/estatisticas`): chamadas por ferramenta, app de IA, país e dia, pessoas únicas por dia com hash de sal diário, e o painel de uso na página de status.
 - Rota administrativa `GET /contatos` (Bearer `CONTATOS_ADMIN_TOKEN`) para listar os contatos cadastrados.
 - Histórico dos mapas do formulário do site (`HISTORICO_PATH`): data, hora e cidade guardadas com um id anônimo do navegador e ligadas ao contato; rota administrativa `GET /historico`. O MCP continua sem guardar dados de nascimento.
+- Exclusão administrativa (`DELETE /contatos` e `DELETE /historico`, alvo no corpo JSON) para atender pedidos de apagar dados.
 
 ### Alterado
 

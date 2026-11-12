@@ -97,6 +97,37 @@ class Historico:
                 (contato, visitante, self._agora_iso()),
             )
 
+    # ── exclusão (pedidos da seção "Seus direitos" da política) ──
+    def apagar_contato(self, contato: str) -> dict:
+        """Tira os vínculos do contato e os mapas dos navegadores só dele.
+
+        Navegador ligado também a outro contato fica com os mapas: eles podem
+        ser da outra pessoa.
+        """
+        with self._trava:
+            visitantes = [v for (v,) in self._con.execute(
+                "SELECT visitante FROM vinculos WHERE contato = ?", (contato,),
+            ).fetchall()]
+            self._con.execute("DELETE FROM vinculos WHERE contato = ?", (contato,))
+            mapas = 0
+            for v in visitantes:
+                outros = self._con.execute(
+                    "SELECT COUNT(*) FROM vinculos WHERE visitante = ?", (v,),
+                ).fetchone()[0]
+                if not outros:
+                    mapas += self._con.execute("DELETE FROM mapas WHERE visitante = ?", (v,)).rowcount
+        return {"visitantes": len(visitantes), "mapas": mapas}
+
+    def apagar_mapa(self, mapa_id: str) -> int:
+        with self._trava:
+            return self._con.execute("DELETE FROM mapas WHERE id = ?", (mapa_id,)).rowcount
+
+    def apagar_visitante(self, visitante: str) -> dict:
+        with self._trava:
+            mapas = self._con.execute("DELETE FROM mapas WHERE visitante = ?", (visitante,)).rowcount
+            vinculos = self._con.execute("DELETE FROM vinculos WHERE visitante = ?", (visitante,)).rowcount
+        return {"mapas": mapas, "vinculos": vinculos}
+
     def _mapas_de(self, visitantes: list[str]) -> list[dict]:
         if not visitantes:
             return []

@@ -16,6 +16,8 @@ Endpoints:
   GET  /contatos   — lista os contatos cadastrados com os mapas de cada um
                       (Bearer CONTATOS_ADMIN_TOKEN; sem o token configurado, 404)
   GET  /historico  — histórico de cada navegador no site (mesmo token)
+  DELETE /contatos, /historico — apagam contato (com os mapas dele), mapa ou
+                      navegador; o alvo vai no corpo JSON, nunca na URL (mesmo token)
 
 Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
@@ -1008,11 +1010,25 @@ class Aplicacao:
             return JSONResponse({"erro": "Token inválido ou ausente."}, status_code=401)
         return None
 
+    @staticmethod
+    async def _corpo_admin(request: Request) -> dict:
+        try:
+            corpo = json.loads(await request.body() or b"{}")
+        except ValueError:
+            return {}
+        return corpo if isinstance(corpo, dict) else {}
+
     async def listar_contatos(self, request: Request) -> JSONResponse:
-        """Contatos para novidades com os mapas de cada um (rota administrativa)."""
+        """Contatos para novidades com os mapas de cada um (rota administrativa).
+
+        DELETE com {"contato": "..."} apaga o contato e os mapas dos navegadores
+        ligados só a ele (o contato vai no corpo: a URL entra no log de acesso).
+        """
         negado = self._negar_admin(request)
         if negado is not None:
             return negado
+        if request.method == "DELETE":
+            return await self.apagar_contato(request)
         if self.contatos is None:
             return JSONResponse({"erro": "O cadastro de contatos está desligado."}, status_code=503)
         registros = await anyio.to_thread.run_sync(self.contatos.listar)
@@ -1025,13 +1041,42 @@ class Aplicacao:
             headers={"Cache-Control": "no-store"},
         )
 
+    async def apagar_contato(self, request: Request) -> JSONResponse:
+        if self.contatos is None:
+            return JSONResponse({"erro": "O cadastro de contatos está desligado."}, status_code=503)
+        bruto = (await self._corpo_admin(request)).get("contato")
+        try:
+            if not isinstance(bruto, str):
+                raise ValueError("Informe o contato a apagar.")
+            _, contato = normalizar_contato(bruto)
+        except ValueError as exc:
+            return JSONResponse({"erro": str(exc)}, status_code=400)
+        removido = await anyio.to_thread.run_sync(self.contatos.remover, contato)
+        historico = (
+            await anyio.to_thread.run_sync(self.historico.apagar_contato, contato)
+            if self.historico is not None else {"visitantes": 0, "mapas": 0}
+        )
+        return JSONResponse({"contato_removido": removido, **historico})
+
     async def listar_historico(self, request: Request) -> JSONResponse:
-        """Histórico de uso de cada navegador no site (rota administrativa)."""
+        """Histórico de uso de cada navegador no site (rota administrativa).
+
+        DELETE com {"mapa": id} apaga um mapa; com {"visitante": id}, todos os
+        mapas e vínculos daquele navegador.
+        """
         negado = self._negar_admin(request)
         if negado is not None:
             return negado
         if self.historico is None:
             return JSONResponse({"erro": "O histórico está desligado."}, status_code=503)
+        if request.method == "DELETE":
+            corpo = await self._corpo_admin(request)
+            mapa, visitante = id_valido(corpo.get("mapa")), id_valido(corpo.get("visitante"))
+            if mapa:
+                return JSONResponse({"mapas": await anyio.to_thread.run_sync(self.historico.apagar_mapa, mapa)})
+            if visitante:
+                return JSONResponse(await anyio.to_thread.run_sync(self.historico.apagar_visitante, visitante))
+            return JSONResponse({"erro": "Informe mapa ou visitante (UUID)."}, status_code=400)
         visitantes = await anyio.to_thread.run_sync(self.historico.por_visitante)
         return JSONResponse(
             {"total": len(visitantes), "visitantes": visitantes}, headers={"Cache-Control": "no-store"},
@@ -1099,8 +1144,8 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
             Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET"]),
-            Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET"]),
-            Route("/historico", endpoint=ceu.listar_historico, methods=["GET"]),
+            Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET", "DELETE"]),
+            Route("/historico", endpoint=ceu.listar_historico, methods=["GET", "DELETE"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
             # redirect sai em http://, levando o corpo em texto puro.
             Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),

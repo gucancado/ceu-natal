@@ -104,3 +104,34 @@ def test_vinculo_repetido_nao_duplica(tmp_path):
     h.vincular("a@b.com", NAV)
     h.vincular("a@b.com", NAV)
     assert h.do_contato("a@b.com") == {"visitantes": [NAV], "mapas": []}
+
+
+def test_apagar_contato_leva_os_mapas_so_dele(tmp_path, monkeypatch):
+    client, ceu = _app(tmp_path, monkeypatch)
+    outro_nav = "44444444-4444-4444-8444-444444444444"
+    _mapa(client, data="01/02/1990", visitante=NAV, mapa=MAPA)
+    _mapa(client, data="05/06/1985", visitante=outro_nav, mapa=OUTRO_MAPA)
+    for contato, nav in (("a@b.com", NAV), ("a@b.com", outro_nav), ("c@d.com", outro_nav)):
+        client.post("/contato", json={"contato": contato, "visitante": nav}, headers={"Origin": SITE})
+    auth = {"Authorization": f"Bearer {TOKEN}"}
+
+    assert client.request("DELETE", "/contatos", json={"contato": "a@b.com"}).status_code == 401
+    r = client.request("DELETE", "/contatos", json={"contato": "A@B.com"}, headers=auth)
+    assert r.json() == {"contato_removido": True, "visitantes": 2, "mapas": 1}
+    # O navegador compartilhado com c@d.com mantém o mapa.
+    restantes = client.get("/contatos", headers=auth).json()["contatos"]
+    assert [c["contato"] for c in restantes] == ["c@d.com"]
+    assert [m["id"] for m in restantes[0]["mapas"]] == [OUTRO_MAPA]
+    assert client.request("DELETE", "/contatos", json={}, headers=auth).status_code == 400
+
+
+def test_apagar_mapa_e_visitante(tmp_path, monkeypatch):
+    client, ceu = _app(tmp_path, monkeypatch)
+    _mapa(client, data="01/02/1990", visitante=NAV, mapa=MAPA)
+    _mapa(client, data="05/06/1985", visitante=NAV, mapa=OUTRO_MAPA)
+    auth = {"Authorization": f"Bearer {TOKEN}"}
+    assert client.request("DELETE", "/historico", json={"mapa": MAPA}, headers=auth).json() == {"mapas": 1}
+    r = client.request("DELETE", "/historico", json={"visitante": NAV}, headers=auth)
+    assert r.json() == {"mapas": 1, "vinculos": 0}
+    assert ceu.historico.por_visitante() == []
+    assert client.request("DELETE", "/historico", json={"mapa": "x"}, headers=auth).status_code == 400
