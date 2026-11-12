@@ -243,6 +243,9 @@ export function MapaProgressivo() {
         </p>
       </form>
 
+      {/* Contato logo depois dos dados de nascimento, antes do prompt. Fica fora do <form> acima: formulário não se aninha. */}
+      <FormContato />
+
       {comecou ? (
         <div className="revelar grid max-w-[52rem] gap-4">
           <p className="text-lg">copie e cole na sua ia. o mapa calculado já vai dentro do pedido.</p>
@@ -263,8 +266,6 @@ export function MapaProgressivo() {
           </div>
         </div>
       ) : null}
-
-      <FormContato />
     </div>
   );
 }
