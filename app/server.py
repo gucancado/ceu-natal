@@ -8,12 +8,14 @@ Endpoints:
   GET  /llms.txt   — descrição do servidor para LLMs (público)
   GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
   POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
-                      para PUBLIC_SITE_URL, limite por IP)
+                      para PUBLIC_SITE_URL, limite por IP; com HISTORICO_PATH,
+                      guarda o mapa ligado ao id do navegador)
   POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
                       CORS, limite por IP; grava em CONTATOS_PATH)
   GET  /estatisticas — números agregados de uso (público; ESTATISTICAS_PATH)
-  GET  /contatos   — lista os contatos cadastrados (Bearer CONTATOS_ADMIN_TOKEN;
-                      sem o token configurado, 404)
+  GET  /contatos   — lista os contatos cadastrados com os mapas de cada um
+                      (Bearer CONTATOS_ADMIN_TOKEN; sem o token configurado, 404)
+  GET  /historico  — histórico de cada navegador no site (mesmo token)
 
 Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
@@ -33,6 +35,7 @@ import json
 import logging
 import math
 import time
+import uuid
 from collections.abc import AsyncIterator, Callable
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,6 +59,7 @@ from app.core.aspectos import listar_tipos_aspectos
 from app.core.contatos import RegistroContatos, normalizar_contato
 from app.core.estatisticas import Estatisticas, normalizar_app
 from app.core.geocoder import GeocodingError
+from app.core.historico import Historico, id_valido
 from app.core.ratelimit import LimitadorTaxa
 from app.core.validators import SISTEMAS_CASAS_VALIDOS
 
@@ -69,7 +73,7 @@ CONTATO_GLOBAL_POR_MIN = 60
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
 _PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatisticas", _DESAFIO_OPENAI]
 # Rotas com autenticação própria: o APIKeyMiddleware não as trata.
-_AUTH_PROPRIA = ["/contatos"]
+_AUTH_PROPRIA = ["/contatos", "/historico"]
 # Por quanto tempo a resposta de /estatisticas fica em memória (segundos).
 ESTATISTICAS_CACHE_S = 60
 _LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
@@ -686,6 +690,7 @@ class Aplicacao:
         if self.estatisticas is not None:
             geocoder.ao_resolver = self.estatisticas.registrar_lugar
         self._resumo_cache: tuple[float, dict] | None = None
+        self.historico = Historico(settings.historico_path) if settings.historico_path else None
         self.llms_txt = _LLMS_TXT_PATH.read_text(encoding="utf-8").format(
             mcp_url=settings.public_mcp_url, site_url=settings.public_site_url,
         )
@@ -849,7 +854,7 @@ class Aplicacao:
         return {"Vary": "Origin"}
 
     async def mapa_rapido(self, request: Request) -> Response:
-        """Mapa natal para o formulário do site: data, hora e local; nada é guardado."""
+        """Mapa natal para o formulário do site; com HISTORICO_PATH, o mapa fica guardado."""
         cors = self._cabecalhos_cors(request)
         if request.method == "OPTIONS":
             return Response(status_code=204, headers=cors)
@@ -909,6 +914,7 @@ class Aplicacao:
                 status = "internal_error"
                 logger.exception("erro inesperado em mapa_rapido")
                 return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
+            self.guardar_mapa_site(corpo, argumentos, resultado)
             return JSONResponse(resultado, headers=cors)
         finally:
             duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
@@ -916,6 +922,23 @@ class Aplicacao:
             self.registrar_uso(
                 "site", "mapa_rapido", status, duracao_ms, unico=("site", _ip_cliente(request)),
             )
+
+    def guardar_mapa_site(self, corpo: dict, argumentos: dict, resultado: dict) -> None:
+        """Conta o mapa (uma vez por id) e guarda data, hora e local no histórico."""
+        # Sem id do navegador (versão antiga da página em cache), cada chamada vira um mapa.
+        mapa_id = id_valido(corpo.get("mapa")) or str(uuid.uuid4())
+        visitante = id_valido(corpo.get("visitante"))
+        try:
+            if self.estatisticas is not None:
+                self.estatisticas.registrar_mapa_site(mapa_id)
+            if self.historico is not None:
+                resolvido = resultado.get("local_resolvido") if isinstance(resultado, dict) else None
+                self.historico.registrar_mapa(
+                    mapa_id, visitante, argumentos["data"], argumentos.get("hora"),
+                    argumentos.get("local"), resolvido if isinstance(resolvido, dict) else None,
+                )
+        except Exception:  # noqa: BLE001
+            logger.warning("falha ao guardar mapa do site", exc_info=True)
 
     async def contato(self, request: Request) -> Response:
         """Guarda um e-mail ou telefone para avisos; o log não registra o contato."""
@@ -963,26 +986,55 @@ class Aplicacao:
                 status = "internal_error"
                 logger.exception("erro ao gravar contato")
                 return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
+            visitante = id_valido(corpo.get("visitante")) if isinstance(corpo, dict) else None
+            if visitante and self.historico is not None:
+                try:
+                    await anyio.to_thread.run_sync(self.historico.vincular, contato, visitante)
+                except Exception:  # noqa: BLE001
+                    logger.warning("falha ao ligar contato ao navegador", exc_info=True)
             if not novo:
                 status = "repetido"
             return JSONResponse({"ok": True, "tipo": tipo}, headers=cors)
         finally:
             _log_tool_call("contato", status, round((time.monotonic() - inicio) * 1000, 1))
 
-    async def listar_contatos(self, request: Request) -> JSONResponse:
-        """Contatos para novidades, só com o Bearer CONTATOS_ADMIN_TOKEN."""
+    def _negar_admin(self, request: Request) -> JSONResponse | None:
+        """Resposta de erro se o pedido não traz o Bearer CONTATOS_ADMIN_TOKEN."""
         token = self.settings.contatos_admin_token
         if not token:
             return JSONResponse({"erro": "Não encontrado."}, status_code=404)
         chave = _extrair_key(request)
         if chave is None or not hmac.compare_digest(chave.encode(), token.encode()):
             return JSONResponse({"erro": "Token inválido ou ausente."}, status_code=401)
+        return None
+
+    async def listar_contatos(self, request: Request) -> JSONResponse:
+        """Contatos para novidades com os mapas de cada um (rota administrativa)."""
+        negado = self._negar_admin(request)
+        if negado is not None:
+            return negado
         if self.contatos is None:
             return JSONResponse({"erro": "O cadastro de contatos está desligado."}, status_code=503)
         registros = await anyio.to_thread.run_sync(self.contatos.listar)
+        historico = self.historico
+        if historico is not None:
+            for registro in registros:
+                registro.update(await anyio.to_thread.run_sync(historico.do_contato, registro.get("contato", "")))
         return JSONResponse(
             {"total": len(registros), "contatos": registros},
             headers={"Cache-Control": "no-store"},
+        )
+
+    async def listar_historico(self, request: Request) -> JSONResponse:
+        """Histórico de uso de cada navegador no site (rota administrativa)."""
+        negado = self._negar_admin(request)
+        if negado is not None:
+            return negado
+        if self.historico is None:
+            return JSONResponse({"erro": "O histórico está desligado."}, status_code=503)
+        visitantes = await anyio.to_thread.run_sync(self.historico.por_visitante)
+        return JSONResponse(
+            {"total": len(visitantes), "visitantes": visitantes}, headers={"Cache-Control": "no-store"},
         )
 
     async def estatisticas_endpoint(self, _: Request) -> JSONResponse:
@@ -1048,6 +1100,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
             Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET"]),
             Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET"]),
+            Route("/historico", endpoint=ceu.listar_historico, methods=["GET"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
             # redirect sai em http://, levando o corpo em texto puro.
             Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),

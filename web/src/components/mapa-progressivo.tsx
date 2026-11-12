@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CampoCidade } from "@/components/campo-cidade";
 import { glifoPonto } from "@/lib/glifos";
+import { criarIdsDeMapa, idVisitante } from "@/lib/identidade";
 import type { MapaRapido } from "@/lib/mapa-texto";
 import { promptMapa } from "@/lib/prompt-mapa";
 import { dataValida, signoSolar } from "@/lib/signo-solar";
@@ -19,7 +20,7 @@ const PAUSA_MS = 500;
 
 const so = (s: string, max: number) => s.replace(/\D/g, "").slice(0, max);
 
-type Pedido = { data: string; hora?: string; local?: string };
+type Pedido = { data: string; hora?: string; local?: string; mapa: string; visitante: string };
 type Resposta = { mapa: MapaRapido } | { erro: string };
 
 // `sinal` cancela quando os dados mudam (aí a promessa rejeita); o tempo máximo vira mensagem de erro.
@@ -124,6 +125,7 @@ export function MapaProgressivo() {
   const [erro, setErro] = useState<string | null>(null);
   const [calculando, setCalculando] = useState(false);
   const cache = useRef(new Map<string, MapaRapido>());
+  const idMapa = useRef(criarIdsDeMapa());
   const refMes = useRef<HTMLInputElement>(null);
   const refAno = useRef<HTMLInputElement>(null);
   const refHora = useRef<HTMLInputElement>(null);
@@ -148,7 +150,7 @@ export function MapaProgressivo() {
     }
     const ctrl = new AbortController();
     setCalculando(true);
-    pedirMapa({ data: chaveDia }, ctrl.signal)
+    pedirMapa({ data: chaveDia, mapa: idMapa.current(chaveDia), visitante: idVisitante() }, ctrl.signal)
       .then((r) => {
         if ("mapa" in r) {
           cache.current.set(chaveDia, r.mapa);
@@ -176,7 +178,10 @@ export function MapaProgressivo() {
     // Pausa curta: a hora muda a cada dígito digitado no campo de horário.
     const t = setTimeout(() => {
       setCalculando(true);
-      pedirMapa({ data: dataBr, hora, local: cidadeOk }, ctrl.signal)
+      pedirMapa(
+        { data: dataBr, hora, local: cidadeOk, mapa: idMapa.current(dataBr), visitante: idVisitante() },
+        ctrl.signal,
+      )
         .then((r) => {
           if ("mapa" in r) {
             cache.current.set(chaveCompleta, r.mapa);
@@ -241,10 +246,13 @@ export function MapaProgressivo() {
         <p aria-live="polite" className="min-h-[1.5em] text-sm text-muted-fg">
           {erro ? <span className="text-fg">{erro}</span> : calculando ? "calculando…" : dica}
         </p>
+        <p className="text-xs text-muted-fg">
+          os dados do mapa ficam guardados, sem nome nem conta.{" "}
+          <Link href="/privacidade" className="underline underline-offset-4 hover:text-fg">
+            privacidade
+          </Link>
+        </p>
       </form>
-
-      {/* Contato logo depois dos dados de nascimento, antes do prompt. Fica fora do <form> acima: formulário não se aninha. */}
-      <FormContato />
 
       {comecou ? (
         <div className="revelar grid max-w-[52rem] gap-4">
@@ -266,6 +274,9 @@ export function MapaProgressivo() {
           </div>
         </div>
       ) : null}
+
+      {/* Contato depois do prompt. Fica fora do <form> acima: formulário não se aninha. */}
+      <FormContato />
     </div>
   );
 }
@@ -285,7 +296,7 @@ function FormContato() {
       const r = await fetch(`${site.mcpUrl}/contato`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contato: valor.trim() }),
+        body: JSON.stringify({ contato: valor.trim(), visitante: idVisitante() }),
         signal: AbortSignal.timeout(TEMPO_MAX_MS),
       });
       const json = await r.json().catch(() => null);
@@ -303,7 +314,8 @@ function FormContato() {
   return (
     <form onSubmit={enviar} className="grid max-w-[30rem] gap-3">
       <Label htmlFor="contato" className="leading-[1.5]">
-        vou continuar desenvolvendo, então se quiser receber atualizações, deixe aqui seu telefone ou e-mail
+        vou continuar desenvolvendo, então se quiser receber atualizações, deixe aqui seu telefone ou e-mail. os
+        mapas que você fez aqui ficam guardados junto com ele
       </Label>
       <div className="flex gap-3">
         <Input

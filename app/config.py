@@ -46,6 +46,9 @@ class Settings:
     # SQLite das estatísticas de uso (volume persistente). Vazio = desligado e
     # /estatisticas responde 503.
     estatisticas_path: str = ""
+    # SQLite dos mapas feitos no site, com data, hora e local, ligados ao
+    # navegador e ao contato (volume persistente). Vazio = nada é guardado.
+    historico_path: str = ""
     # Token da rota administrativa GET /contatos (separado da MCP_API_KEY, que
     # pode estar vazia com o MCP aberto). Vazio = a rota responde 404.
     contatos_admin_token: str = ""
@@ -94,5 +97,6 @@ class Settings:
             cors_origins=_lista(env("CORS_ORIGINS", "")),
             contatos_path=env("CONTATOS_PATH", p.contatos_path).strip(),
             estatisticas_path=env("ESTATISTICAS_PATH", p.estatisticas_path).strip(),
+            historico_path=env("HISTORICO_PATH", p.historico_path).strip(),
             contatos_admin_token=env("CONTATOS_ADMIN_TOKEN", p.contatos_admin_token),
         )

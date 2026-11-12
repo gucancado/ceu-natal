@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CaixaPrompt } from "@/components/caixa-prompt";
 import { textoMapa, type MapaRapido } from "@/lib/mapa-texto";
+import { criarIdsDeMapa, idVisitante } from "@/lib/identidade";
 import { site } from "@/lib/site";
 
 // "1990-05-15" (input date) vira "15/05/1990" (formato do servidor).
@@ -26,6 +27,7 @@ export function FormMapa() {
   const [estado, setEstado] = useState<Estado>({ tipo: "vazio" });
   const tituloResultado = useRef<HTMLHeadingElement>(null);
   const campoLocal = useRef<HTMLInputElement>(null);
+  const idMapa = useRef(criarIdsDeMapa());
 
   // Resultado pronto: o foco vai para o título, e o leitor de tela anuncia o que apareceu.
   useEffect(() => {
@@ -49,7 +51,13 @@ export function FormMapa() {
       const r = await fetch(`${site.mcpUrl}/mapa-rapido`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: dataBr(data), hora, local }),
+        body: JSON.stringify({
+          data: dataBr(data),
+          hora,
+          local,
+          mapa: idMapa.current(dataBr(data)),
+          visitante: idVisitante(),
+        }),
         signal: AbortSignal.timeout(TEMPO_MAX_MS),
       });
       const corpo = await r.json().catch(() => null);

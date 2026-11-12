@@ -24,7 +24,7 @@ export const faq: ItemFaq[] = [
   {
     pergunta: "O que acontece com os meus dados?",
     resposta:
-      "Data, hora e local de nascimento servem só para o cálculo e não ficam guardados. Os logs registram o nome da ferramenta, o status, a duração e, quando há cidade, a cidade e o país; nunca a data ou a hora de nascimento, e sem identificador de sessão. Eles ficam guardados por até 90 dias. Os detalhes estão em /privacidade.",
+      "Na conversa com a IA, data, hora e local de nascimento servem só para o cálculo e não ficam guardados. Os mapas feitos no formulário do site ficam guardados. Os logs registram o nome da ferramenta, o status, a duração e, quando há cidade, a cidade e o país; nunca a data ou a hora de nascimento, e sem identificador de sessão. Eles ficam guardados por até 90 dias. Os detalhes estão em /privacidade.",
   },
   {
     pergunta: "Existe limite de uso?",

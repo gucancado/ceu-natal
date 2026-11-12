@@ -1,6 +1,6 @@
 # Céu Natal
 
-> Servidor MCP de astrologia em português: cálculo com efemérides suíças (Kerykeion), sem interpretação, sem armazenar dados.
+> Servidor MCP de astrologia em português: cálculo com efemérides suíças (Kerykeion), sem interpretação; o que chega pelo MCP não é armazenado.
 
 ## Conectar
 
@@ -34,7 +34,7 @@
 
 ## Privacidade
 
-- Nada sobre pessoas é armazenado; o único cache é o de coordenadas de cidade.
+- Nada sobre pessoas que chega pelo MCP é armazenado; o único cache é o de coordenadas de cidade. Os mapas feitos no formulário do site ficam guardados.
 - Os logs guardam por até 90 dias o nome da ferramenta, status, duração e, quando há cidade, o nome da cidade e o país.
 - [Política de privacidade]({site_url}/privacidade)
 

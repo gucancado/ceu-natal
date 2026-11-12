@@ -1,9 +1,9 @@
 # Política de privacidade — Céu Natal
 
-Versão 6 — 2026-11-11 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 7 — 2026-11-11 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
-Este texto explica, em linguagem simples, o que o servidor MCP do Céu Natal
-faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
+Este texto explica, em linguagem simples, o que o Céu Natal (o servidor MCP e
+o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
 
 ## 1. Quem é o controlador
 
@@ -23,27 +23,45 @@ revoluções).
 - O serviço não tem conta, login nem cadastro. Para calcular, não pedimos
   nome, e-mail nem telefone.
 
-Os formulários de mapa do site enviam os mesmos dados (data,
-hora e cidade) direto do seu navegador para o servidor, com o mesmo
-tratamento: o cálculo é feito, o resultado volta para a sua tela e nada é
-guardado. Para limitar abusos, o servidor conta os pedidos por endereço IP
-só na memória, por alguns minutos; o IP não vai para os logs nem para as
-estatísticas (seção 3).
+## 3. Mapas feitos no formulário do site
+
+O formulário de mapa do site é diferente: ali **os dados do mapa ficam
+guardados**.
+
+- O que fica guardado: data, hora e cidade de nascimento que você digitou, as
+  coordenadas e o fuso da cidade, e quando o mapa foi feito e atualizado.
+- O formulário não pede nome, e-mail nem conta. Para saber que vários mapas
+  vieram do mesmo navegador, o site cria um código aleatório e o guarda no
+  armazenamento local do seu navegador (`localStorage`). Esse código vai junto
+  com cada mapa. Ele não identifica você sozinho, e você pode apagá-lo
+  limpando os dados do site no navegador.
+- O mapa feito só com a data e completado depois com hora e cidade é um mapa
+  só; fica guardada a versão mais recente.
+- Uso esses dados para entender como o Céu Natal é usado e para melhorá-lo.
+  Eles não são vendidos nem compartilhados. A base legal é o legítimo
+  interesse (LGPD, art. 7º, IX); você pode pedir para apagar a qualquer
+  momento (seção 7).
+- Eles ficam guardados até você pedir para apagar ou até o projeto acabar.
+
+Para limitar abusos, o servidor conta os pedidos por endereço IP só na
+memória, por alguns minutos; o IP não vai para os logs nem para o histórico de
+mapas.
 
 **Contato para novidades (opcional).** Na página inicial, você pode deixar um
 e-mail ou um telefone para receber novidades do Céu Natal. Só faz isso quem
 quiser, e o mapa funciona sem ele.
 
-- O contato é enviado num pedido separado do cálculo e fica guardado com a
-  data do cadastro. Ele não fica ligado aos seus dados de nascimento, que
-  continuam sem ser armazenados.
-- Uso o contato só para avisar novidades do Céu Natal. Ele não é vendido nem
-  compartilhado.
-- A base legal é o seu consentimento (LGPD, art. 7º, I). Para tirar o seu
-  contato, peça pelos canais em https://gustavocancado.com.br, e ele é apagado.
+- O contato fica guardado com a data do cadastro e **fica ligado aos mapas
+  que você fez no site** naquele navegador, antes ou depois de deixar o
+  contato. Assim dá para saber quais mapas são seus.
+- Uso o contato só para avisar novidades do Céu Natal e para entender o uso
+  do site. Ele não é vendido nem compartilhado.
+- A base legal é o seu consentimento (LGPD, art. 7º, I), dado ao deixar o
+  contato. Para tirar o seu contato e os mapas ligados a ele, peça pelos
+  canais em https://gustavocancado.com.br, e eles são apagados.
 - O contato fica guardado até você pedir para tirar ou até o projeto acabar.
 
-## 3. O que fica guardado
+## 4. O que fica guardado
 
 - **Cache de coordenadas.** Guardamos o nome de uma cidade e sua latitude,
   longitude e fuso horário, para não consultar de novo as bases de geocodificação.
@@ -64,11 +82,15 @@ quiser, e o mapa funciona sem ele.
   valor aleatório são apagados e sobra só o número; não dá para voltar do
   resumo ao IP. Os totais, sem nomes de cidade, aparecem na página de
   status do site.
+- **Mapas do site.** Data, hora, cidade e coordenadas de cada mapa feito no
+  formulário do site, com o código aleatório do navegador (seção 3).
 - **Contatos para novidades.** E-mail ou telefone e a data do cadastro, só de
-  quem deixou o contato no site (seção 2).
-- **Cookies.** Não usamos nenhum.
+  quem deixou o contato no site, ligados aos códigos dos navegadores em que a
+  pessoa fez mapas (seção 3).
+- **Cookies.** Não usamos nenhum. O site usa o armazenamento local do
+  navegador só para o código aleatório descrito na seção 3.
 
-## 4. Terceiros
+## 5. Terceiros
 
 - **GeoNames** e **Nominatim/OpenStreetMap** recebem apenas o nome da cidade,
   para descobrir as coordenadas.
@@ -77,15 +99,16 @@ quiser, e o mapa funciona sem ele.
   própria. É ele que guarda a sua conversa, incluindo o que você escreveu e o
   mapa devolvido. Consulte a política do assistente que você usa.
 
-## 5. Transferência internacional
+## 6. Transferência internacional
 
 O servidor fica em Hillsboro, Oregon, nos Estados Unidos. Como os dados passam
 por lá, há transferência internacional de dados (LGPD, art. 33). Na prática,
-os dados de nascimento só existem na memória do servidor durante o cálculo e
-não ficam guardados. O contato para novidades, se você deixar, fica guardado
+os dados de nascimento que chegam pelo assistente de IA só existem na
+memória do servidor durante o cálculo e não ficam guardados. Os mapas feitos no
+formulário do site e o contato para novidades, se você deixar, ficam guardados
 lá.
 
-## 6. Seus direitos
+## 7. Seus direitos
 
 Pela LGPD, art. 18, você pode pedir:
 
@@ -98,18 +121,20 @@ Pela LGPD, art. 18, você pode pedir:
 - informação sobre com quem os dados são compartilhados;
 - revogação de consentimento, quando ele for a base do tratamento.
 
-Para exercer qualquer direito, fale comigo pelos canais em https://gustavocancado.com.br. Como o
-serviço não armazena dados de nascimento e não tem conta, o único dado seu que
-pode estar guardado é o contato para novidades, se você o deixou. Se não
-houver dado seu, responderemos explicando isso.
+Para exercer qualquer direito, fale comigo pelos canais em https://gustavocancado.com.br. O que
+pode estar guardado sobre você são os mapas que você fez no formulário do site
+e o contato para novidades, se você o deixou. Pelo contato, encontro os mapas
+ligados a ele. Para mapas feitos sem deixar contato, me diga a data, a hora e
+a cidade que você digitou. Se não houver dado seu, responderemos explicando
+isso.
 
-## 7. Código aberto
+## 8. Código aberto
 
 O que roda no servidor é o código do repositório público, sob a licença
 AGPL-3.0: https://github.com/gucancado/ceu-natal. Você pode conferir lá
 exatamente o que é feito com os dados.
 
-## 8. Mudanças nesta política
+## 9. Mudanças nesta política
 
 Se o serviço mudar (por exemplo, com a criação de contas), esta política será
 revista e a versão e a data no topo serão atualizadas. Versões anteriores

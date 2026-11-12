@@ -47,8 +47,12 @@ APPS_CONHECIDOS: dict[str, str] = {
 # Países com menos chamadas que isto entram em "outros" na rota pública.
 PAIS_MINIMO_PUBLICO = 5
 DIAS_SERIE = 30
-# O que conta como "cálculo" (healthcheck e listar_aspectos_tipos não contam).
-_CALCULO = "(ferramenta LIKE 'calcular_%' OR ferramenta = 'mapa_rapido')"
+# Chamadas do MCP que contam como cálculo (healthcheck e listar_aspectos_tipos
+# não contam). No site a conta é por mapa (tabela mapas_site), não por chamada:
+# o formulário recalcula ao ganhar hora e cidade, e isso continua 1 mapa.
+_CALCULO = "(ferramenta LIKE 'calcular_%')"
+# O dia das estatísticas vira no horário de Brasília (sem horário de verão desde 2019).
+FUSO_DIA = timezone(timedelta(hours=-3))
 _TEXTO_APP = re.compile(r"[^a-z0-9 ._-]")
 
 _ESQUEMA = """
@@ -62,6 +66,7 @@ CREATE TABLE IF NOT EXISTS paises (
     dia TEXT NOT NULL, pais TEXT NOT NULL, chamadas INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (dia, pais)
 );
+CREATE TABLE IF NOT EXISTS mapas_site (mapa TEXT PRIMARY KEY, dia TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS cidades (chave TEXT PRIMARY KEY, primeiro_dia TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sal (dia TEXT PRIMARY KEY, valor TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS unicos_abertos (
@@ -109,7 +114,7 @@ class Estatisticas:
         self._con.executescript(_ESQUEMA)
 
     def _dia(self) -> str:
-        return self._relogio().date().isoformat()
+        return self._relogio().astimezone(FUSO_DIA).date().isoformat()
 
     # ── escrita ──────────────────────────────────────────────
     def registrar_chamada(
@@ -122,6 +127,13 @@ class Estatisticas:
                 "ON CONFLICT (dia, origem, ferramenta, app, status) DO UPDATE SET "
                 "chamadas = chamadas + 1, soma_ms = soma_ms + excluded.soma_ms",
                 (self._dia(), origem, ferramenta, app, status, float(duracao_ms)),
+            )
+
+    def registrar_mapa_site(self, mapa_id: str) -> None:
+        """Conta um mapa do site uma vez só, mesmo que ele seja recalculado."""
+        with self._trava:
+            self._con.execute(
+                "INSERT OR IGNORE INTO mapas_site (mapa, dia) VALUES (?, ?)", (mapa_id, self._dia()),
             )
 
     def registrar_lugar(self, cidade: str, pais: str | None) -> None:
@@ -192,13 +204,15 @@ class Estatisticas:
                 "COALESCE(SUM(CASE WHEN status = 'ok' THEN chamadas END), 0), "
                 f"COALESCE(SUM(CASE WHEN status = 'ok' AND {_CALCULO} THEN chamadas END), 0) FROM uso",
             ).fetchone()
+            mapas_site = c.execute("SELECT COUNT(*) FROM mapas_site").fetchone()[0]
+            calculos += mapas_site
             por_ferramenta = c.execute(
-                "SELECT ferramenta, SUM(chamadas) FROM uso WHERE status = 'ok' "
-                "GROUP BY ferramenta ORDER BY 2 DESC",
+                "SELECT ferramenta, SUM(chamadas) FROM uso WHERE status = 'ok' AND origem = 'mcp' "
+                "GROUP BY ferramenta",
             ).fetchall()
-            por_origem = c.execute(
-                "SELECT origem, SUM(chamadas) FROM uso WHERE status = 'ok' GROUP BY origem",
-            ).fetchall()
+            mcp_ok = c.execute(
+                "SELECT COALESCE(SUM(chamadas), 0) FROM uso WHERE status = 'ok' AND origem = 'mcp'",
+            ).fetchone()[0]
             por_app_bruto = c.execute(
                 "SELECT app, SUM(chamadas) FROM uso WHERE status = 'ok' AND origem = 'mcp' GROUP BY app",
             ).fetchall()
@@ -211,6 +225,10 @@ class Estatisticas:
                 "GROUP BY dia",
                 (inicio_serie,),
             ).fetchall())
+            for d, n in c.execute(
+                "SELECT dia, COUNT(*) FROM mapas_site WHERE dia >= ? GROUP BY dia", (inicio_serie,),
+            ).fetchall():
+                serie_uso[d] = serie_uso.get(d, 0) + n
             serie_unicos: dict[tuple[str, str], int] = {
                 (d, t): q for d, t, q in c.execute(
                     "SELECT dia, tipo, quantidade FROM unicos WHERE dia >= ? "
@@ -264,8 +282,12 @@ class Estatisticas:
                 "sessoes_mcp": unicos_total.get("mcp", 0),
             },
             "por_dia": serie,
-            "por_origem": {o: n for o, n in por_origem},
-            "por_ferramenta": [{"ferramenta": f, "chamadas": n} for f, n in por_ferramenta],
+            "por_origem": {o: n for o, n in (("mcp", mcp_ok), ("site", mapas_site)) if n},
+            "por_ferramenta": sorted(
+                [{"ferramenta": f, "chamadas": n} for f, n in por_ferramenta]
+                + ([{"ferramenta": "mapa_rapido", "chamadas": mapas_site}] if mapas_site else []),
+                key=lambda x: -x["chamadas"],
+            ),
             "por_app": sorted(
                 ({"app": a, "chamadas": n} for a, n in por_app.items()),
                 key=lambda x: -x["chamadas"],

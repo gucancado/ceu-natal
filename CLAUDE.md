@@ -5,9 +5,12 @@ Orientação para quem (pessoa ou agente) vai mexer neste repositório.
 ## O que é
 
 Servidor **MCP** (Model Context Protocol) de astrologia em português: calcula
-mapas, não interpreta, não guarda dados de nascimento. A única coisa de pessoa
-que fica guardada é o contato opcional para novidades (`POST /contato`, arquivo
-em `CONTATOS_PATH`). Transporte Streamable HTTP em `/mcp/`. O site de apresentação mora em
+mapas, não interpreta. O que chega pelo MCP não é guardado. O que fica guardado
+vem só do site: os mapas do formulário (`POST /mapa-rapido`, SQLite em
+`HISTORICO_PATH`, ligados a um id anônimo do navegador) e o contato opcional
+para novidades (`POST /contato`, arquivo em `CONTATOS_PATH`, ligado aos mapas
+pelo mesmo id). Contatos e histórico só saem pelas rotas administrativas
+`/contatos` e `/historico` (Bearer `CONTATOS_ADMIN_TOKEN`). Transporte Streamable HTTP em `/mcp/`. O site de apresentação mora em
 `web/` e é um app separado.
 
 ## Stack

@@ -133,7 +133,8 @@ Para desenvolver, instale também `requirements-dev.txt` e rode `ruff check .`, 
 | `GEOCODER_CACHE_PATH` | `<tmp>/ceu-natal-geocode-cache.json` | cache persistente de coordenadas; no Docker, volume em `/var/cache/ceu-natal` |
 | `CONTATOS_PATH` | vazio (desliga o `/contato`) | arquivo JSONL dos contatos para novidades deixados no site; em produção, `/var/lib/ceu-natal/contatos.jsonl` (volume persistente) |
 | `ESTATISTICAS_PATH` | vazio (desliga o `/estatisticas`) | SQLite das estatísticas agregadas de uso (página de status); em produção, `/var/lib/ceu-natal/estatisticas.sqlite3` (volume persistente) |
-| `CONTATOS_ADMIN_TOKEN` | vazio (`/contatos` responde 404) | token Bearer da rota `GET /contatos`, que lista os contatos cadastrados; separado da `MCP_API_KEY` |
+| `HISTORICO_PATH` | vazio (nada é guardado) | SQLite dos mapas feitos no formulário do site (data, hora, cidade), ligados ao id anônimo do navegador e ao contato; em produção, `/var/lib/ceu-natal/historico.sqlite3` |
+| `CONTATOS_ADMIN_TOKEN` | vazio (`/contatos` responde 404) | token Bearer das rotas `GET /contatos` (contatos com os mapas de cada um) e `GET /historico` (histórico por navegador); separado da `MCP_API_KEY` |
 
 ## Site (`web/`)
 
@@ -154,7 +155,8 @@ separado, com imagem Docker própria (`web/Dockerfile`). Para rodar:
   metade do movimento diário dela (em geral de 6° a 7,6°, devolvido em `margem_graus`), e o
   resultado diz quando o signo dela pode mudar.
 - **Limites do endpoint público:** 30 chamadas por minuto por sessão e 600 por minuto no
-  total. Nada sobre pessoas é armazenado; veja a
+  total. Nada do que chega pelo MCP é armazenado (os mapas do formulário do site ficam
+  guardados); veja a
   [política de privacidade](docs/legal/privacidade.md).
 
 ## Contribuir
