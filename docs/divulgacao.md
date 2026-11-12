@@ -30,7 +30,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Página `/en` com o essencial em inglês e `hreflang` com a home | Claude | feito |
 | Seção em inglês no `llms.txt` | Claude | feito |
 | `/.well-known/mcp/server-card.json` no site | Claude | feito |
-| Publicação no MCP Registry oficial (`mcp-publisher login github` + `publish`) | Gustavo | pendente |
+| Publicação no MCP Registry oficial (`io.github.gucancado/ceu-natal` 2.2.6) | Claude | feito (2026-11-12) |
 | Descrição e tópicos do GitHub em inglês e português, seção em inglês no README | Claude | feito |
 | PR no `punkpeye/awesome-mcp-servers` ([#19327](https://github.com/punkpeye/awesome-mcp-servers/pull/19327), em Spirituality & Esoterica) | Claude in Chrome | aberto; o bot exige nota no Glama |
 | Glama: criar conta, reivindicar e obter nota (`glama.json` no repo) | Gustavo | pendente |
