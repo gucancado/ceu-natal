@@ -2,6 +2,7 @@
 
 Prioridade: público brasileiro. Segundo plano: quem usa MCP em qualquer idioma.
 Os passos de cada diretório estão em [distribuicao.md](distribuicao.md) e [diretorios/envio.md](diretorios/envio.md).
+O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-chrome-divulgacao.md).
 
 ## Diagnóstico (2026-11-11)
 
@@ -29,9 +30,9 @@ Os passos de cada diretório estão em [distribuicao.md](distribuicao.md) e [dir
 | Página `/en` com o essencial em inglês e `hreflang` com a home | Claude | feito |
 | Seção em inglês no `llms.txt` | Claude | feito |
 | `/.well-known/mcp/server-card.json` no site | Claude | feito |
-| Publicação no MCP Registry oficial | Claude | feito |
+| Publicação no MCP Registry oficial (`mcp-publisher login github` + `publish`) | Gustavo | pendente |
 | Descrição e tópicos do GitHub em inglês e português, seção em inglês no README | Claude | feito |
-| PR no `punkpeye/awesome-mcp-servers` | Claude | feito |
+| PR no `punkpeye/awesome-mcp-servers` | Claude in Chrome | pendente |
 | Smithery, mcp.so, PulseMCP, reivindicação no Glama | Claude in Chrome | pendente |
 | Diretório de conectores do Claude | Gustavo, com Claude in Chrome | pendente |
 | Server card e `robots.txt` no domínio do servidor MCP | Claude | pendente (há trabalho não commitado em `app/`) |
