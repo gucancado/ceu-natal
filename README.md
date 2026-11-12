@@ -6,6 +6,9 @@ Servidor MCP que calcula mapas astrais com efemérides suíças para o seu assis
 natal charts, synastry, transits, progressions and solar/lunar returns with the Swiss
 Ephemeris, answering in Portuguese. A free public endpoint runs at
 `https://astrologia-mcp.gustavocancado.com.br/mcp/` (no sign-up). Licensed AGPL-3.0.
+Setup for Claude, ChatGPT, Claude Code and Cursor in English:
+<https://mistico.gustavocancado.com.br/en>. Quick start in Claude Code:
+`claude mcp add --transport http --scope user ceu-natal https://astrologia-mcp.gustavocancado.com.br/mcp/`.
 
 [![CI](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml/badge.svg)](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml)
 [![Licença: AGPL-3.0](https://img.shields.io/badge/licen%C3%A7a-AGPL--3.0-blue.svg)](LICENSE)
