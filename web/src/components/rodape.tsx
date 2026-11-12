@@ -8,6 +8,7 @@ const paginas = [
   { href: "/privacidade", rotulo: "Privacidade" },
   { href: "/termos", rotulo: "Termos" },
   { href: "/status", rotulo: "Status" },
+  { href: "/en", rotulo: "English" },
 ];
 
 export function Rodape() {
