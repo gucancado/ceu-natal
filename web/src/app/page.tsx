@@ -11,7 +11,6 @@ import { tituloHome } from "@/lib/site";
 // A descrição continua a do layout.
 export const metadata: Metadata = {
   title: { absolute: tituloHome },
-  alternates: { canonical: "/", languages: { "pt-BR": "/", en: "/en", "x-default": "/" } },
 };
 
 export default function Home() {

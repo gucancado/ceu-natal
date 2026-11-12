@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { clientes } from "../content/clientes";
 import { faq } from "../content/faq";
-import { tecnicas } from "../content/tecnicas";
 import { tools } from "../content/tools";
 import { site } from "./site";
 
@@ -23,10 +22,6 @@ export function gerarLlmsTxt(): string {
     "",
     `- [Mapa natal sem cadastro](${site.url}/mapa): formulário que devolve as posições em texto, com o pedido de conexão incluído, para colar no assistente.`,
     "",
-    "## Técnicas",
-    "",
-    ...tecnicas.map((t) => `- [${t.titulo}](${site.url}/${t.slug}): ${t.descricao}`),
-    "",
     "## Ferramentas",
     "",
     ...tools.map((t) => `- \`${t.nome}\`: ${t.descricao}`),
@@ -45,12 +40,6 @@ export function gerarLlmsTxt(): string {
     "",
     `- Repositório: ${site.repoUrl}`,
     "- Licença: AGPL-3.0",
-    "",
-    "## English",
-    "",
-    `- Free astrology MCP server (natal chart, synastry, composite, transits, progressions, solar and lunar returns) calculated with the Swiss Ephemeris. No login, no API key. Endpoint: ${site.mcpEndpoint}`,
-    "- Tool names and results are in Portuguese; the assistant translates when answering. Dates as DD/MM/YYYY; any city in the world.",
-    `- [English overview and setup](${site.url}/en)`,
     "",
   ];
   return linhas.join("\n");
