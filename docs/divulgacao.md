@@ -40,6 +40,19 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Diretório de conectores do Claude | Gustavo | enviado, em revisão (2026-11-12) |
 | Server card e `robots.txt` no domínio do servidor MCP | Claude | pendente (há trabalho não commitado em `app/`) |
 
+## Próximas frentes (levantadas em 2026-11-12, conferir cada página de envio antes)
+
+| Ação | Responsável | Estado |
+|---|---|---|
+| Docker MCP Catalog: PR em `docker/mcp-registry` como servidor remoto (`server.yaml` + `tools.json` vazio + readme) | Claude | a fazer, com aprovação do PR público |
+| mcp.so pela rota gratuita (issue no GitHub deles, não o plano de US$ 39) | Claude in Chrome | a conferir |
+| Claude Market (claudemarket.ai/submit), mcp.directory/submit, mcpservers.org, MCP Market (fila grátis longa ou pausada) | Claude in Chrome | a conferir |
+| Cline MCP Marketplace (issue em `cline/mcp-marketplace`) e cursor.directory | Claude in Chrome | a conferir |
+| Post em inglês: r/mcp, r/ClaudeAI, Show HN, dev.to (demo do mapa no Claude) | Gustavo | a fazer |
+| Post em português: TabNews, grupos e perfis de astrologia, parceria com astrólogos que usam IA | Gustavo | a fazer |
+| Vídeo curto (30 s) pedindo o mapa ao ChatGPT/Claude com o conector, para o site e redes | Gustavo | a fazer |
+| Pacote PyPI (`uvx ceu-natal` via stdio) e entrada `packages` no `server.json` | Claude | avaliar; pyswisseph é frágil em wheels |
+
 ## Fora do plano
 
 - As páginas `/conectar/<ia>` saíram do ar por decisão em `28ce09b` e continuam redirecionando para a home.
