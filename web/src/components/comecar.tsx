@@ -6,8 +6,13 @@ export function Comecar() {
   return (
     <section aria-labelledby="comecar-titulo" className="mx-auto max-w-[72rem] px-6">
       <div className="py-16 md:py-24">
-        <h1 id="comecar-titulo" className="max-w-[40rem] font-display text-[24px] font-medium leading-[1.25] tracking-tight md:text-[30px]">
-          faça análises astrológicas precisas direto nas suas conversas com o <MarcaRotativa />
+        {/* Largura para "…com o chatgpt" caber na segunda linha no desktop; o "o" fica preso à marca para a
+            quebra nunca cair logo antes dela. */}
+        <h1 id="comecar-titulo" className="max-w-[48rem] font-display text-[24px] font-medium leading-[1.25] tracking-tight md:text-[30px]">
+          faça análises astrológicas precisas direto nas suas conversas com{" "}
+          <span className="whitespace-nowrap">
+            o <MarcaRotativa emLinha />
+          </span>
         </h1>
         <p className="mt-5 max-w-[34rem] text-lg leading-[1.5]">
           grátis e sem cadastro. estou em fase beta e quero testar =]
