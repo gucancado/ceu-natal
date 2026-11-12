@@ -22,3 +22,6 @@ scripts/dados_familia.json
 docs/superpowers/
 # Destino do deploy (host e uuids do Coolify): local, ver scripts/deploy.py
 scripts/deploy.env
+
+# Saída do Playwright MCP (testes manuais)
+.playwright-mcp/
