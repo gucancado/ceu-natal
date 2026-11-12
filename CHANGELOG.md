@@ -9,6 +9,7 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 ### Adicionado
 
 - Estatísticas agregadas de uso (`ESTATISTICAS_PATH`, rota pública `/estatisticas`): chamadas por ferramenta, app de IA, país e dia, pessoas únicas por dia com hash de sal diário, e o painel de uso na página de status.
+- Rota administrativa `GET /contatos` (Bearer `CONTATOS_ADMIN_TOKEN`) para listar os contatos cadastrados.
 
 ### Alterado
 

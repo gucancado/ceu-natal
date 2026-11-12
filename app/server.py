@@ -12,6 +12,8 @@ Endpoints:
   POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
                       CORS, limite por IP; grava em CONTATOS_PATH)
   GET  /estatisticas — números agregados de uso (público; ESTATISTICAS_PATH)
+  GET  /contatos   — lista os contatos cadastrados (Bearer CONTATOS_ADMIN_TOKEN;
+                      sem o token configurado, 404)
 
 Autenticação: header `Authorization: Bearer <key>` (a chave na query string não
 é aceita: vazaria em logs de proxy). Se MCP_API_KEY não estiver configurado,
@@ -66,6 +68,8 @@ CONTATO_GLOBAL_POR_MIN = 60
 # Caminhos que dispensam a chave de API.
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
 _PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatisticas", _DESAFIO_OPENAI]
+# Rotas com autenticação própria: o APIKeyMiddleware não as trata.
+_AUTH_PROPRIA = ["/contatos"]
 # Por quanto tempo a resposta de /estatisticas fica em memória (segundos).
 ESTATISTICAS_CACHE_S = 60
 _LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
@@ -609,7 +613,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         # Caminhos de _PUBLICOS dispensam a chave.
-        if request.url.path in _PUBLICOS:
+        if request.url.path in _PUBLICOS or request.url.path in _AUTH_PROPRIA:
             return await call_next(request)
 
         # Sem chave configurada → libera (modo dev)
@@ -965,6 +969,22 @@ class Aplicacao:
         finally:
             _log_tool_call("contato", status, round((time.monotonic() - inicio) * 1000, 1))
 
+    async def listar_contatos(self, request: Request) -> JSONResponse:
+        """Contatos para novidades, só com o Bearer CONTATOS_ADMIN_TOKEN."""
+        token = self.settings.contatos_admin_token
+        if not token:
+            return JSONResponse({"erro": "Não encontrado."}, status_code=404)
+        chave = _extrair_key(request)
+        if chave is None or not hmac.compare_digest(chave.encode(), token.encode()):
+            return JSONResponse({"erro": "Token inválido ou ausente."}, status_code=401)
+        if self.contatos is None:
+            return JSONResponse({"erro": "O cadastro de contatos está desligado."}, status_code=503)
+        registros = await anyio.to_thread.run_sync(self.contatos.listar)
+        return JSONResponse(
+            {"total": len(registros), "contatos": registros},
+            headers={"Cache-Control": "no-store"},
+        )
+
     async def estatisticas_endpoint(self, _: Request) -> JSONResponse:
         """Números agregados de uso para a página de status; sem cidades nem nomes."""
         if self.estatisticas is None:
@@ -1027,6 +1047,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
             Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET"]),
+            Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
             # redirect sai em http://, levando o corpo em texto puro.
             Route("/mcp", endpoint=_EndpointMcp(ceu), methods=["GET", "POST", "DELETE"]),

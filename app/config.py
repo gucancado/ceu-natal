@@ -46,10 +46,14 @@ class Settings:
     # SQLite das estatísticas de uso (volume persistente). Vazio = desligado e
     # /estatisticas responde 503.
     estatisticas_path: str = ""
+    # Token da rota administrativa GET /contatos (separado da MCP_API_KEY, que
+    # pode estar vazia com o MCP aberto). Vazio = a rota responde 404.
+    contatos_admin_token: str = ""
 
     def __post_init__(self) -> None:
         # Normaliza também quando o objeto é construído à mão (testes).
         object.__setattr__(self, "api_key", self.api_key.strip())
+        object.__setattr__(self, "contatos_admin_token", self.contatos_admin_token.strip())
         object.__setattr__(self, "public_site_url", self.public_site_url.rstrip("/"))
         object.__setattr__(self, "public_mcp_url", self.public_mcp_url.rstrip("/"))
         object.__setattr__(self, "allowed_hosts", tuple(h.strip() for h in self.allowed_hosts if h.strip()))
@@ -90,4 +94,5 @@ class Settings:
             cors_origins=_lista(env("CORS_ORIGINS", "")),
             contatos_path=env("CONTATOS_PATH", p.contatos_path).strip(),
             estatisticas_path=env("ESTATISTICAS_PATH", p.estatisticas_path).strip(),
+            contatos_admin_token=env("CONTATOS_ADMIN_TOKEN", p.contatos_admin_token),
         )

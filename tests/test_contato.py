@@ -87,3 +87,48 @@ def test_preflight_so_para_o_site(tmp_path):
     assert ok.headers["access-control-allow-origin"] == SITE
     fora = client.options("/contato", headers={"Origin": "https://malicioso.com"})
     assert "access-control-allow-origin" not in fora.headers
+
+
+def _client_admin(tmp_path, token="admin-secreto", api_key=""):
+    app = create_app(Settings(
+        api_key=api_key, public_site_url=SITE, contatos_admin_token=token,
+        contatos_path=str(tmp_path / "contatos.jsonl"),
+    ))
+    return TestClient(app)
+
+
+def test_listar_contatos_com_token(tmp_path):
+    client = _client_admin(tmp_path)
+    client.post("/contato", json={"contato": "fulano@exemplo.com"}, headers={"Origin": SITE})
+    client.post("/contato", json={"contato": "(31) 99999-0000"}, headers={"Origin": SITE})
+    r = client.get("/contatos", headers={"Authorization": "Bearer admin-secreto"})
+    assert r.status_code == 200
+    corpo = r.json()
+    assert corpo["total"] == 2
+    assert [c["contato"] for c in corpo["contatos"]] == ["fulano@exemplo.com", "+5531999990000"]
+    assert r.headers["cache-control"] == "no-store"
+
+
+def test_listar_contatos_sem_token_ou_errado_da_401(tmp_path):
+    client = _client_admin(tmp_path)
+    assert client.get("/contatos").status_code == 401
+    assert client.get("/contatos", headers={"Authorization": "Bearer outro"}).status_code == 401
+    assert client.get("/contatos?key=admin-secreto").status_code == 401
+
+
+def test_listar_contatos_nao_aceita_a_chave_do_mcp(tmp_path):
+    client = _client_admin(tmp_path, api_key="chave-mcp")
+    assert client.get("/contatos", headers={"Authorization": "Bearer chave-mcp"}).status_code == 401
+    assert client.get("/contatos", headers={"Authorization": "Bearer admin-secreto"}).status_code == 200
+
+
+def test_listar_contatos_sem_token_configurado_da_404(tmp_path):
+    client = _client_admin(tmp_path, token="")
+    assert client.get("/contatos", headers={"Authorization": "Bearer "}).status_code == 404
+
+
+def test_listar_pula_linha_corrompida(tmp_path):
+    caminho = tmp_path / "c.jsonl"
+    caminho.write_text('{"contato": "a@b.com"}\nlixo\n[1]\n', encoding="utf-8")
+    assert RegistroContatos(str(caminho)).listar() == [{"contato": "a@b.com"}]
+    assert RegistroContatos(str(tmp_path / "nada.jsonl")).listar() == []

@@ -69,3 +69,19 @@ class RegistroContatos:
             with self.caminho.open("a", encoding="utf-8") as arquivo:
                 arquivo.write(json.dumps(registro, ensure_ascii=False) + "\n")
             return True
+
+    def listar(self) -> list[dict]:
+        """Todos os contatos, na ordem do cadastro; linhas corrompidas são puladas."""
+        with self._trava:
+            if not self.caminho.exists():
+                return []
+            registros = []
+            with self.caminho.open(encoding="utf-8") as arquivo:
+                for linha in arquivo:
+                    try:
+                        item = json.loads(linha)
+                    except ValueError:
+                        continue
+                    if isinstance(item, dict):
+                        registros.append(item)
+            return registros
