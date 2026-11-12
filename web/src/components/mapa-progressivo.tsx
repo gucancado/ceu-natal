@@ -308,8 +308,7 @@ function FormContato() {
   return (
     <form onSubmit={enviar} className="grid max-w-[30rem] gap-3">
       <Label htmlFor="contato" className="leading-[1.5]">
-        vou continuar desenvolvendo, então se quiser receber atualizações, deixe aqui seu telefone ou e-mail. os
-        mapas que você fez aqui ficam guardados junto com ele
+        vou continuar desenvolvendo, então se quiser receber atualizações, deixe aqui seu contato
       </Label>
       <div className="flex gap-3">
         <Input
