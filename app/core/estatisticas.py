@@ -129,6 +129,12 @@ class Estatisticas:
                 (self._dia(), origem, ferramenta, app, status, float(duracao_ms)),
             )
 
+    def zerar(self) -> None:
+        """Apaga todas as contagens (recomeço antes do uso real)."""
+        with self._trava:
+            for tabela in ("uso", "paises", "cidades", "mapas_site", "sal", "unicos_abertos", "unicos"):
+                self._con.execute(f"DELETE FROM {tabela}")
+
     def registrar_mapa_site(self, mapa_id: str) -> None:
         """Conta um mapa do site uma vez só, mesmo que ele seja recalculado."""
         with self._trava:

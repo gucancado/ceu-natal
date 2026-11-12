@@ -124,3 +124,18 @@ def test_settings_le_estatisticas_path(monkeypatch):
 def test_relogio_padrao_e_utc(tmp_path):
     est = Estatisticas(str(tmp_path / "e.sqlite3"))
     assert est._relogio().tzinfo == timezone.utc
+
+
+def test_zerar_pela_rota_administrativa(tmp_path):
+    app = create_app(Settings(
+        estatisticas_path=str(tmp_path / "e.sqlite3"), contatos_admin_token="admin-secreto",
+    ))
+    ceu = app.state.ceu
+    ceu.estatisticas.registrar_chamada("mcp", "calcular_mapa_natal", "claude-ai", "ok", 10)
+    ceu.estatisticas.registrar_unico("site", "203.0.113.1")
+    client = TestClient(app)
+    assert client.get("/estatisticas").json()["totais"]["calculos"] == 1
+    assert client.delete("/estatisticas").status_code == 401
+    assert client.delete("/estatisticas", headers={"Authorization": "Bearer admin-secreto"}).json() == {"zerado": True}
+    totais = client.get("/estatisticas").json()["totais"]
+    assert (totais["calculos"], totais["chamadas"]) == (0, 0)

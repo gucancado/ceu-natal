@@ -1082,10 +1082,20 @@ class Aplicacao:
             {"total": len(visitantes), "visitantes": visitantes}, headers={"Cache-Control": "no-store"},
         )
 
-    async def estatisticas_endpoint(self, _: Request) -> JSONResponse:
-        """Números agregados de uso para a página de status; sem cidades nem nomes."""
+    async def estatisticas_endpoint(self, request: Request) -> JSONResponse:
+        """Números agregados de uso para a página de status; sem cidades nem nomes.
+
+        DELETE (Bearer CONTATOS_ADMIN_TOKEN) zera todas as contagens.
+        """
         if self.estatisticas is None:
             return JSONResponse({"erro": "Estatísticas desligadas."}, status_code=503)
+        if request.method == "DELETE":
+            negado = self._negar_admin(request)
+            if negado is not None:
+                return negado
+            await anyio.to_thread.run_sync(self.estatisticas.zerar)
+            self._resumo_cache = None
+            return JSONResponse({"zerado": True})
         agora = time.monotonic()
         if self._resumo_cache is None or agora - self._resumo_cache[0] > ESTATISTICAS_CACHE_S:
             resumo = await anyio.to_thread.run_sync(self.estatisticas.resumo)
@@ -1143,7 +1153,7 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/tools", endpoint=ceu.listar_tools_http, methods=["GET"]),
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
-            Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET"]),
+            Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET", "DELETE"]),
             Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET", "DELETE"]),
             Route("/historico", endpoint=ceu.listar_historico, methods=["GET", "DELETE"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o
