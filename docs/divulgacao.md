@@ -33,7 +33,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Publicação no MCP Registry oficial (`io.github.gucancado/ceu-natal` 2.2.6) | Claude | feito (2026-11-12) |
 | Descrição e tópicos do GitHub em inglês e português, seção em inglês no README | Claude | feito |
 | PR no `punkpeye/awesome-mcp-servers` ([#19327](https://github.com/punkpeye/awesome-mcp-servers/pull/19327), em Spirituality & Esoterica) | Claude | aberto; o bot exige nota no Glama |
-| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | build pendente ([prompt](prompt-chrome-glama-build.md)) |
+| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | aguardando o Glama sincronizar o repo (parado em `cf0b385`, anterior ao stdio); depois, rodar o [prompt](prompt-chrome-glama-build.md) |
 | Smithery | — | fechou envios em 2026-10-31 |
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
