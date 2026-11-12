@@ -1,16 +1,9 @@
-// Páginas por técnica (/sinastria, /transitos...). Cada uma responde a uma busca em português e leva a
-// pessoa a conectar o Céu Natal na IA. O texto descreve o que a tool calcula; a interpretação fica com a IA.
+// Detalhe de cada técnica (uma por tool de cálculo): alimenta o modal da seção "ferramentas do mcp" e as
+// landing pages de content/landings.ts. O texto descreve o que a tool calcula; a interpretação fica com a IA.
 export type Tecnica = {
-  slug: string;
-  /** Nome curto, para links e listas. */
-  nome: string;
-  /** H1 e <title>. */
-  titulo: string;
-  /** Meta description, até ~160 caracteres. */
-  descricao: string;
   tool: string;
-  /** Linha acima do H1. */
-  chamada: string;
+  /** Nome curto, para títulos e listas. */
+  nome: string;
   intro: string;
   calcula: string[];
   precisa: string[];
@@ -20,13 +13,29 @@ export type Tecnica = {
 
 export const tecnicas: Tecnica[] = [
   {
-    slug: "sinastria",
+    tool: "calcular_mapa_natal",
+    nome: "mapa natal",
+    intro:
+      "o mapa natal é a foto do céu no instante e no lugar em que você nasceu. é a base de todas as outras técnicas. o céu natal calcula as posições e a ia lê o mapa a partir delas.",
+    calcula: [
+      "sol, lua e planetas com signo, grau e casa",
+      "ascendente, meio do céu, nodos lunares e quíron",
+      "as cúspides das 12 casas",
+      "os aspectos entre todos eles, com o orbe",
+    ],
+    precisa: [
+      "a data de nascimento",
+      "hora e cidade de nascimento, se souber (sem elas não há ascendente nem casas)",
+    ],
+    pedidos: [
+      "Calcule meu mapa natal: nasci em 12/03/1990 às 14h30 em Belo Horizonte.",
+      "Por que eu sempre me apaixono pelo mesmo tipo de pessoa?",
+    ],
+    perguntas: [],
+  },
+  {
     nome: "sinastria",
-    titulo: "Sinastria amorosa calculada, grátis, no seu chat",
-    descricao:
-      "Compare dois mapas astrais com as efemérides suíças: aspectos entre os planetas dos dois e em que casa do outro cai cada planeta. Grátis, dentro do ChatGPT ou do Claude.",
     tool: "calcular_sinastria",
-    chamada: "dois mapas, um encontro",
     intro:
       "a sinastria compara o mapa de duas pessoas: como os planetas de uma conversam com os planetas da outra. a ia é boa para interpretar e ruim para calcular. com o céu natal conectado, ela recebe os aspectos calculados e lê a relação a partir deles.",
     calcula: [
@@ -59,13 +68,8 @@ export const tecnicas: Tecnica[] = [
     ],
   },
   {
-    slug: "mapa-composto",
     nome: "mapa composto",
-    titulo: "Mapa composto: o mapa astral da relação",
-    descricao:
-      "Calcule o mapa composto de duas pessoas pelo método dos pontos médios, com efemérides suíças, e converse sobre ele no ChatGPT ou no Claude. Grátis.",
     tool: "calcular_mapa_composto",
-    chamada: "o terceiro mapa",
     intro:
       "o mapa composto junta dois mapas num só: cada planeta fica no ponto médio entre a posição dele no mapa de uma pessoa e no da outra. o resultado descreve a relação como uma coisa própria, separada das duas pessoas.",
     calcula: [
@@ -87,19 +91,14 @@ export const tecnicas: Tecnica[] = [
         r: "não pelo método dos pontos médios: ele não corresponde a um instante nem a um lugar. o céu natal entrega ascendente e meio do céu compostos quando as duas pessoas têm hora e cidade.",
       },
       {
-        p: "é melhor que a sinastria?",
+        p: "o mapa composto é melhor que a sinastria?",
         r: "são leituras diferentes. a sinastria mostra como uma pessoa afeta a outra; o composto mostra o que a relação é. muita gente olha os dois.",
       },
     ],
   },
   {
-    slug: "transitos",
     nome: "trânsitos",
-    titulo: "Trânsitos de hoje sobre o seu mapa astral",
-    descricao:
-      "Veja os trânsitos de hoje ou de qualquer data sobre o seu mapa natal, calculados com efemérides suíças: aspectos, casas e planetas lentos em destaque. Grátis, no seu chat.",
     tool: "calcular_transitos",
-    chamada: "o céu de agora no seu mapa",
     intro:
       "trânsito é a posição dos planetas numa data comparada com o seu mapa de nascimento. é a técnica mais usada para entender uma fase. o céu natal calcula os trânsitos de qualquer dia, passado ou futuro, e a ia interpreta.",
     calcula: [
@@ -126,13 +125,8 @@ export const tecnicas: Tecnica[] = [
     ],
   },
   {
-    slug: "revolucao-solar",
     nome: "revolução solar",
-    titulo: "Revolução solar: o mapa do seu ano, do aniversário em diante",
-    descricao:
-      "Calcule sua revolução solar com efemérides suíças: o instante exato em que o Sol volta à posição do seu nascimento, com ascendente, casas e aspectos. Grátis, no seu chat.",
     tool: "calcular_revolucao_solar",
-    chamada: "feliz ano novo pessoal",
     intro:
       "a revolução solar é o mapa do instante em que o sol volta exatamente ao grau em que estava quando você nasceu. acontece perto do aniversário e vale até o próximo. é a técnica clássica de previsão anual.",
     calcula: [
@@ -162,13 +156,8 @@ export const tecnicas: Tecnica[] = [
     ],
   },
   {
-    slug: "revolucao-lunar",
     nome: "revolução lunar",
-    titulo: "Revolução lunar: o mapa do seu mês",
-    descricao:
-      "Calcule sua revolução lunar com efemérides suíças: o momento em que a Lua volta à posição do seu nascimento, a cada 27 dias. Grátis, no ChatGPT ou no Claude.",
     tool: "calcular_revolucao_lunar",
-    chamada: "um ciclo de 27 dias",
     intro:
       "a revolução lunar é como a revolução solar, só que com a lua: o mapa do instante em que ela volta ao grau do seu nascimento. isso acontece a cada 27,3 dias, então cada revolução lunar descreve um mês.",
     calcula: [
@@ -183,19 +172,14 @@ export const tecnicas: Tecnica[] = [
     ],
     perguntas: [
       {
-        p: "qual a diferença para a revolução solar?",
+        p: "qual a diferença entre revolução lunar e revolução solar?",
         r: "a solar descreve o ano, do aniversário em diante. a lunar descreve um ciclo de cerca de 27 dias e muda a cada mês.",
       },
     ],
   },
   {
-    slug: "progressoes",
     nome: "progressões",
-    titulo: "Progressões secundárias: como o seu mapa evoluiu",
-    descricao:
-      "Calcule as progressões secundárias do seu mapa astral (um dia para cada ano de vida) com efemérides suíças: Lua e Sol progredidos e mudanças de signo. Grátis.",
     tool: "calcular_progressoes",
-    chamada: "um dia para cada ano",
     intro:
       "nas progressões secundárias, cada dia depois do nascimento corresponde a um ano de vida. o mapa progredido mostra como o seu mapa amadureceu até hoje. a lua progredida muda de signo a cada dois anos e meio e marca as fases emocionais.",
     calcula: [
@@ -217,6 +201,6 @@ export const tecnicas: Tecnica[] = [
   },
 ];
 
-export function tecnica(slug: string): Tecnica | undefined {
-  return tecnicas.find((t) => t.slug === slug);
+export function tecnicaDa(tool: string): Tecnica | undefined {
+  return tecnicas.find((t) => t.tool === tool);
 }

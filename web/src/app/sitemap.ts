@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
-import { tecnicas } from "@/content/tecnicas";
+import { landings } from "@/content/landings";
 import { site } from "@/lib/site";
 
 // Home e /en se apontam como versões de idioma uma da outra (hreflang).
 export default function sitemap(): MetadataRoute.Sitemap {
   const idiomas = { languages: { "pt-BR": site.url, en: `${site.url}/en` } };
-  const paginas = ["/mapa", ...tecnicas.map((t) => `/${t.slug}`), "/privacidade", "/termos"];
+  const paginas = ["/mapa", ...landings.map((l) => `/${l.slug}`), "/privacidade", "/termos"];
   return [
     { url: site.url, alternates: idiomas, priority: 1 },
     { url: `${site.url}/en`, alternates: idiomas, priority: 0.8 },

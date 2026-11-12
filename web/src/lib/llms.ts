@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { clientes } from "../content/clientes";
 import { faq } from "../content/faq";
-import { tecnicas } from "../content/tecnicas";
+import { landings } from "../content/landings";
 import { tools } from "../content/tools";
 import { site } from "./site";
 
@@ -25,7 +25,7 @@ export function gerarLlmsTxt(): string {
     "",
     "## Técnicas",
     "",
-    ...tecnicas.map((t) => `- [${t.titulo}](${site.url}/${t.slug}): ${t.descricao}`),
+    ...landings.map((l) => `- [${l.titulo}](${site.url}/${l.slug}): ${l.descricao}`),
     "",
     "## Ferramentas",
     "",

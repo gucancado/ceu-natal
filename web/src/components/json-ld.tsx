@@ -16,7 +16,7 @@ const dados = {
   isAccessibleForFree: true,
   sameAs: [site.repoUrl, `${site.url}/en`],
   author: { "@type": "Person", name: "Gustavo Cançado", url: site.autorUrl },
-  featureList: ["mapa natal", ...tecnicas.map((t) => t.nome)],
+  featureList: tecnicas.map((t) => t.nome),
   keywords: "mapa astral, mapa natal, sinastria, trânsitos, revolução solar, astrologia, MCP, efemérides suíças",
 };
 

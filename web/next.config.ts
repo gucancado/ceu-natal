@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { redirecionadas } from "./src/content/landings";
 import { site } from "./src/lib/site";
 
 // Fontes vêm do next/font (servidas pelo próprio site) e o único destino externo é o servidor MCP,
@@ -26,6 +27,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/conectar", destination: "/#conectar", permanent: true },
       { source: "/conectar/:cliente", destination: "/?cliente=:cliente#conectar", permanent: true },
+      // Páginas antigas por técnica que viraram parte de uma landing por busca.
+      ...redirecionadas.map((r) => ({ source: r.de, destination: r.para, permanent: true })),
     ];
   },
   async headers() {

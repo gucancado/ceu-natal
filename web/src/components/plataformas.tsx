@@ -24,7 +24,16 @@ function IconeLogo({ slug }: { slug: string }) {
 }
 
 // Cada cartão abre o passo a passo aqui mesmo; sem JavaScript, o link recarrega a home com ?cliente=.
-export function PlataformasGrade({ inicial, idioma = "pt" }: { inicial: string | null; idioma?: Idioma }) {
+// `base`: página onde a grade está (home, /en ou uma landing), para o link sem JavaScript voltar a ela.
+export function PlataformasGrade({
+  inicial,
+  idioma = "pt",
+  base,
+}: {
+  inicial: string | null;
+  idioma?: Idioma;
+  base?: string;
+}) {
   const [aberto, setAberto] = useState<string | null>(inicial);
   const atual = aberto ? cliente(aberto) : undefined;
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -51,7 +60,7 @@ export function PlataformasGrade({ inicial, idioma = "pt" }: { inicial: string |
           return (
             <li key={c.slug}>
               <a
-                href={`${homeDo[idioma]}?cliente=${c.slug}#conectar`}
+                href={`${base ?? homeDo[idioma]}?cliente=${c.slug}#conectar`}
                 onClick={(e) => alternar(e, c.slug)}
                 aria-expanded={ativo}
                 aria-controls="passo-a-passo"
@@ -84,7 +93,7 @@ export function PlataformasGrade({ inicial, idioma = "pt" }: { inicial: string |
 }
 
 // Lê ?cliente=<slug>; precisa de <Suspense> em volta (a página é estática).
-export function Plataformas({ idioma = "pt" }: { idioma?: Idioma }) {
+export function Plataformas({ idioma = "pt", base }: { idioma?: Idioma; base?: string }) {
   const slug = useSearchParams().get("cliente") ?? "";
-  return <PlataformasGrade key={slug} inicial={cliente(slug)?.slug ?? null} idioma={idioma} />;
+  return <PlataformasGrade key={slug} inicial={cliente(slug)?.slug ?? null} idioma={idioma} base={base} />;
 }

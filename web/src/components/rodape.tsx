@@ -4,7 +4,12 @@ import { site } from "@/lib/site";
 const linkRodape =
   "rounded-sm text-muted-fg underline-offset-4 transition-colors hover:text-fg hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
+// Landings por busca: ficam aqui e no sitemap, fora da navegação da home.
 const paginas = [
+  { href: "/mapa", rotulo: "Mapa astral grátis" },
+  { href: "/sinastria", rotulo: "Sinastria" },
+  { href: "/revolucao-solar", rotulo: "Revolução solar" },
+  { href: "/transitos", rotulo: "Trânsitos" },
   { href: "/privacidade", rotulo: "Privacidade" },
   { href: "/termos", rotulo: "Termos" },
   { href: "/status", rotulo: "Status" },
