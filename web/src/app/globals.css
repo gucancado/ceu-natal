@@ -181,6 +181,10 @@ body::after {
    é medido na foto (components/lua.tsx); este é o valor até a medida chegar, no menor disco possível,
    para não mostrar o anel preto do fundo da foto. */
 .lua-foto {
+  /* A foto da NASA vem com o norte para cima (vista do hemisfério norte). Girada 180°, fica como se vê
+     no hemisfério sul: crescente aceso à esquerda, minguante à direita. `rotate` é independente do
+     `transform` da animação. */
+  rotate: 180deg;
   clip-path: circle(39%);
   transform: translateY(3rem);
   animation: lua-vertical 150s -55s infinite;
