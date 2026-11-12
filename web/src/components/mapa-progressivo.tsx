@@ -18,7 +18,7 @@ const TEMPO_MAX_MS = 15000;
 // Pausa antes do cálculo completo, para não calcular a cada dígito da hora.
 const PAUSA_MS = 500;
 
-const so = (s: string, max: number) => s.replace(/\D/g, "").slice(0, max);
+export const so = (s: string, max: number) => s.replace(/\D/g, "").slice(0, max);
 
 type Pedido = { data: string; hora?: string; local?: string; mapa: string; visitante: string };
 type Resposta = { mapa: MapaRapido } | { erro: string };
@@ -52,7 +52,7 @@ async function pedirMapa(corpo: Pedido, sinal: AbortSignal): Promise<Resposta> {
   }
 }
 
-function CampoNumero({
+export function CampoNumero({
   id,
   rotulo,
   valor,
@@ -99,7 +99,7 @@ function CampoNumero({
 // Linha do prompt na tela: o símbolo do ponto (☉, ☽, AC…) sai colorido; o texto copiado é o mesmo.
 const SIMBOLOS = new Set(Object.values(glifoPonto));
 
-function LinhaPrompt({ texto }: { texto: string }) {
+export function LinhaPrompt({ texto }: { texto: string }) {
   const m = /^- (\S+) (\*\*.*)$/.exec(texto);
   if (m && SIMBOLOS.has(m[1])) {
     return (
@@ -278,7 +278,7 @@ export function MapaProgressivo() {
 
 type EstadoContato = { tipo: "vazio" } | { tipo: "enviando" } | { tipo: "ok" } | { tipo: "erro"; mensagem: string };
 
-function FormContato() {
+export function FormContato() {
   const [valor, setValor] = useState("");
   const [estado, setEstado] = useState<EstadoContato>({ tipo: "vazio" });
 

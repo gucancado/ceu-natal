@@ -2,6 +2,7 @@
 // com texto e pedidos da busca. Uma landing pode juntar várias técnicas: quem procura "sinastria" quase
 // sempre quer também o mapa do casal (composto). O /mapa (mapa astral grátis) é uma página própria, com o
 // formulário. Páginas antigas absorvidas por uma landing redirecionam (301) em next.config.ts.
+import type { Tema } from "../lib/prompt-tema";
 import type { Prompt } from "./prompts";
 
 export type Landing = {
@@ -20,6 +21,8 @@ export type Landing = {
   intro: string;
   /** Tools que a página cobre; a primeira é a principal. Calcula, pedidos e perguntas vêm de tecnicas.ts. */
   tools: string[];
+  /** Formulário da segunda dobra (components/form-tema.tsx). */
+  tema: Tema;
 };
 
 export const landings: Landing[] = [
@@ -39,6 +42,7 @@ export const landings: Landing[] = [
     intro:
       "a sinastria põe os dois mapas lado a lado. o mapa composto junta os dois num terceiro, o mapa da relação. o céu natal calcula os dois e a ia lê a relação a partir deles. grátis e sem cadastro.",
     tools: ["calcular_sinastria", "calcular_mapa_composto"],
+    tema: "sinastria",
   },
   {
     slug: "revolucao-solar",
@@ -55,6 +59,7 @@ export const landings: Landing[] = [
     intro:
       "a revolução solar é o mapa do instante em que o sol volta ao grau do seu nascimento. vale de um aniversário ao outro e muda com a cidade onde você passa o aniversário. grátis e sem cadastro.",
     tools: ["calcular_revolucao_solar"],
+    tema: "revolucao_solar",
   },
   {
     slug: "transitos",
@@ -73,6 +78,7 @@ export const landings: Landing[] = [
     intro:
       "trânsito é o céu de uma data comparado com o seu mapa de nascimento. as progressões mostram como o mapa amadureceu, e a revolução lunar descreve cada mês. o céu natal calcula as três e a ia interpreta. grátis e sem cadastro.",
     tools: ["calcular_transitos", "calcular_progressoes", "calcular_revolucao_lunar"],
+    tema: "transitos",
   },
 ];
 

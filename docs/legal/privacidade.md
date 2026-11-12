@@ -1,6 +1,6 @@
 # Política de privacidade — Céu Natal
 
-Versão 7 — 2026-11-11 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 8 — 2026-11-12 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o Céu Natal (o servidor MCP e
 o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
@@ -23,13 +23,17 @@ revoluções).
 - O serviço não tem conta, login nem cadastro. Para calcular, não pedimos
   nome, e-mail nem telefone.
 
-## 3. Mapas feitos no formulário do site
+## 3. Mapas feitos nos formulários do site
 
-O formulário de mapa do site é diferente: ali **os dados do mapa ficam
-guardados**.
+Os formulários do site (mapa natal, trânsitos, sinastria e revolução solar)
+são diferentes: ali **os seus dados de nascimento ficam guardados**.
 
 - O que fica guardado: data, hora e cidade de nascimento que você digitou, as
-  coordenadas e o fuso da cidade, e quando o mapa foi feito e atualizado.
+  coordenadas e o fuso da cidade (no mapa natal), e quando o mapa foi feito e
+  atualizado.
+- Na sinastria, os dados da outra pessoa são usados só para o cálculo e
+  **não ficam guardados**. A data do trânsito, o ano e a cidade da revolução
+  solar também não.
 - O formulário não pede nome, e-mail nem conta. Para saber que vários mapas
   vieram do mesmo navegador, o site cria um código aleatório e o guarda no
   armazenamento local do seu navegador (`localStorage`). Esse código vai junto

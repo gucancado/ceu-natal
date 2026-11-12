@@ -19,7 +19,7 @@ export type DadosPrompt = {
 
 const dois = (s: string) => s.padStart(2, "0");
 
-function linhaPonto(chave: string, p: Ponto): string {
+export function linhaPonto(chave: string, p: Ponto): string {
   const partes = [`${p.grau} ${signo(p.signo)}`];
   if (typeof p.casa === "number") partes.push(`casa ${p.casa}`);
   if (p.retrogrado) partes.push("retrógrado");

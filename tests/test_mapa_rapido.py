@@ -115,3 +115,52 @@ def test_corpo_grande_demais_sem_content_length(monkeypatch):
     assert r.status_code == 413
     assert r.json() == {"erro": "Corpo grande demais."}
     assert chamadas == []
+
+
+def test_transitos_usa_o_nascimento_e_a_data_do_transito(monkeypatch):
+    _, client, chamadas = _app(monkeypatch)
+    r = client.post("/mapa-rapido", json={
+        "tecnica": "transitos", "data": "15/05/1990", "hora": "14:30", "local": "Belo Horizonte, MG",
+        "data_transito": "12/11/2026",
+    })
+    assert r.status_code == 200
+    assert chamadas == [("calcular_transitos", {
+        "natal": {"data": "15/05/1990", "hora": "14:30", "local": "Belo Horizonte, MG"},
+        "data_transito": "12/11/2026",
+    })]
+    assert client.post("/mapa-rapido", json={"tecnica": "transitos", "data": "15/05/1990"}).status_code == 400
+
+
+def test_sinastria_guarda_so_quem_preenche(monkeypatch):
+    ceu, client, chamadas = _app(monkeypatch)
+    guardados = []
+    monkeypatch.setattr(ceu, "guardar_mapa_site", lambda corpo, natal, resultado: guardados.append(natal))
+    r = client.post("/mapa-rapido", json={
+        "tecnica": "sinastria", "data": "15/05/1990",
+        "outra": {"data": "25/07/1992", "hora": "09:15", "local": "São Paulo, SP"},
+    })
+    assert r.status_code == 200
+    assert chamadas == [("calcular_sinastria", {
+        "pessoa_a": {"data": "15/05/1990", "nome": "pessoa 1"},
+        "pessoa_b": {"data": "25/07/1992", "hora": "09:15", "local": "São Paulo, SP", "nome": "pessoa 2"},
+    })]
+    assert guardados == [{"data": "15/05/1990"}]
+    assert client.post("/mapa-rapido", json={"tecnica": "sinastria", "data": "15/05/1990"}).status_code == 400
+
+
+def test_revolucao_solar_exige_hora_e_local_e_usa_a_cidade_natal_por_padrao(monkeypatch):
+    _, client, chamadas = _app(monkeypatch)
+    natal = {"data": "15/05/1990", "hora": "14:30", "local": "Belo Horizonte, MG"}
+    r = client.post("/mapa-rapido", json={"tecnica": "revolucao_solar", **natal, "ano": "2026"})
+    assert r.status_code == 200
+    esperado = {"natal": natal, "ano": 2026, "local_revolucao": "Belo Horizonte, MG"}
+    assert chamadas == [("calcular_revolucao_solar", esperado)]
+    sem_hora = {"tecnica": "revolucao_solar", "data": "15/05/1990", "local": "Belo Horizonte, MG", "ano": 2026}
+    assert client.post("/mapa-rapido", json=sem_hora).status_code == 400
+    assert client.post("/mapa-rapido", json={"tecnica": "revolucao_solar", **natal, "ano": "x"}).status_code == 400
+
+
+def test_tecnica_desconhecida(monkeypatch):
+    _, client, _ = _app(monkeypatch)
+    r = client.post("/mapa-rapido", json={"tecnica": "tarot", "data": "15/05/1990"})
+    assert r.status_code == 400 and r.json()["erro"] == "Técnica inválida."

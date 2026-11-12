@@ -7,9 +7,11 @@ Endpoints:
   GET  /health     — healthcheck público (sem auth)
   GET  /llms.txt   — redireciona (301) para o llms.txt do site (público)
   GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
-  POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
-                      para PUBLIC_SITE_URL, limite por IP; com HISTORICO_PATH,
-                      guarda o mapa ligado ao id do navegador)
+  POST /mapa-rapido — cálculo dos formulários do site: mapa natal (padrão),
+                      trânsitos, sinastria ou revolução solar pelo campo `tecnica`
+                      (público, CORS só para PUBLIC_SITE_URL, limite por IP; com
+                      HISTORICO_PATH, guarda o nascimento de quem preenche ligado
+                      ao id do navegador)
   POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
                       CORS, limite por IP; grava em CONTATOS_PATH)
   GET  /estatisticas — números agregados de uso (público; ESTATISTICAS_PATH)
@@ -61,6 +63,7 @@ from app.core.contatos import RegistroContatos, normalizar_contato
 from app.core.estatisticas import Estatisticas, normalizar_app
 from app.core.geocoder import GeocodingError
 from app.core.historico import Historico, id_valido
+from app.core.mapa_site import argumentos_do_site
 from app.core.ratelimit import LimitadorTaxa
 from app.core.validators import SISTEMAS_CASAS_VALIDOS
 
@@ -663,7 +666,6 @@ def _ip_cliente(request: Request) -> str | None:
     return host
 
 
-_CAMPOS_MAPA_RAPIDO = ("data", "hora", "local")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -852,13 +854,18 @@ class Aplicacao:
         return {"Vary": "Origin"}
 
     async def mapa_rapido(self, request: Request) -> Response:
-        """Mapa natal para o formulário do site; com HISTORICO_PATH, o mapa fica guardado."""
+        """Cálculo dos formulários do site (mapa natal, trânsitos, sinastria, revolução solar).
+
+        Com HISTORICO_PATH, o nascimento de quem preenche fica guardado; o da outra
+        pessoa na sinastria, não.
+        """
         cors = self._cabecalhos_cors(request)
         if request.method == "OPTIONS":
             return Response(status_code=204, headers=cors)
 
         inicio = time.monotonic()
         status = "ok"
+        tecnica = "mapa_natal"
         try:
             permitido, espera = self.limitador_mapa_rapido.tentar(_ip_cliente(request))
             if not permitido:
@@ -888,20 +895,14 @@ class Aplicacao:
                 corpo = json.loads(bruto)
             except ValueError:
                 corpo = None
-            if not isinstance(corpo, dict) or not isinstance(corpo.get("data"), str):
-                status = "value_error"
-                return JSONResponse({"erro": "Envie um JSON com data (DD/MM/YYYY)."}, status_code=400, headers=cors)
-            argumentos: dict[str, Any] = {}
-            for campo in _CAMPOS_MAPA_RAPIDO:
-                valor = corpo.get(campo)
-                if valor is None or (isinstance(valor, str) and not valor.strip()):
-                    continue
-                if not isinstance(valor, str) or len(valor) > 120:
-                    status = "value_error"
-                    return JSONResponse({"erro": f"Campo inválido: {campo}."}, status_code=400, headers=cors)
-                argumentos[campo] = valor.strip()
             try:
-                resultado = await anyio.to_thread.run_sync(self.dispatch, "calcular_mapa_natal", argumentos)
+                tool, argumentos, natal = argumentos_do_site(corpo)
+            except ValueError as exc:
+                status = "value_error"
+                return JSONResponse({"erro": str(exc)}, status_code=400, headers=cors)
+            tecnica = tool.removeprefix("calcular_")
+            try:
+                resultado = await anyio.to_thread.run_sync(self.dispatch, tool, argumentos)
             except GeocodingError as exc:
                 status = "geocoding_error"
                 return JSONResponse({"erro": str(exc)}, status_code=422, headers=cors)
@@ -912,14 +913,14 @@ class Aplicacao:
                 status = "internal_error"
                 logger.exception("erro inesperado em mapa_rapido")
                 return JSONResponse({"erro": "Erro interno do servidor."}, status_code=500, headers=cors)
-            self.guardar_mapa_site(corpo, argumentos, resultado)
+            self.guardar_mapa_site(corpo, natal, resultado)
             return JSONResponse(resultado, headers=cors)
         finally:
             duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
-            _log_tool_call("mapa_rapido", status, duracao_ms)
-            self.registrar_uso(
-                "site", "mapa_rapido", status, duracao_ms, unico=("site", _ip_cliente(request)),
-            )
+            # O mapa natal continua como "mapa_rapido"; as outras técnicas ganham sufixo.
+            nome = "mapa_rapido" if tecnica == "mapa_natal" else f"mapa_rapido_{tecnica}"
+            _log_tool_call(nome, status, duracao_ms)
+            self.registrar_uso("site", nome, status, duracao_ms, unico=("site", _ip_cliente(request)))
 
     def guardar_mapa_site(self, corpo: dict, argumentos: dict, resultado: dict) -> None:
         """Conta o mapa (uma vez por id) e guarda data, hora e local no histórico."""

@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { CaixaPrompt } from "@/components/caixa-prompt";
 import { ComecarMoldura } from "@/components/comecar";
+import { FormTema } from "@/components/form-tema";
 import { Hero } from "@/components/hero";
 import { jsonLdScript } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
-import { buttonVariants } from "@/components/ui/button";
 import { landing, landings } from "@/content/landings";
 import { tecnicaDa, type Tecnica } from "@/content/tecnicas";
 import { site } from "@/lib/site";
@@ -110,14 +109,7 @@ export default async function PaginaLanding({ params }: Props) {
       {jsonLdScript(jsonLd)}
       <Hero chamada={l.chamada} prompts={l.prompts} comoH1 />
       <ComecarMoldura comoH2 titulo={l.titulo2} texto={l.intro}>
-        <div className="flex flex-wrap gap-3">
-          <Link href={`${base}#conectar`} className={buttonVariants({ variant: "default", size: "lg" })}>
-            conectar na minha ia
-          </Link>
-          <Link href="/mapa" className={buttonVariants({ variant: "outline", size: "lg" })}>
-            só o mapa natal, sem conectar
-          </Link>
-        </div>
+        <FormTema tema={l.tema} />
       </ComecarMoldura>
       <Secao id="conectar" titulo="como conectar">
         {/* Sem JavaScript, cada cartão é um link para esta mesma página com o guia aberto. */}
