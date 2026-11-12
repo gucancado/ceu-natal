@@ -77,3 +77,12 @@ test("partesTextoGuia: `código` vira código, **menu** vira menu, o resto é te
     { tipo: "texto", texto: "sem marcação * nem ` solto" },
   ]);
 });
+
+test("todo guia de conexão tem passos em inglês para a /en", async () => {
+  const { guiasEn } = await import("../src/content/clientes/en");
+  for (const c of clientes) {
+    const en = guiasEn[c.slug];
+    assert.ok(en && en.passos.length > 0, c.slug);
+    if (c.abrir) assert.ok(en.abrir, `${c.slug} sem rótulo do botão em inglês`);
+  }
+});

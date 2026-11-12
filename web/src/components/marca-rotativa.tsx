@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { LogoMarca } from "@/components/logo-marca";
 import { logos, type Logo } from "@/content/logos";
+import type { Idioma } from "@/lib/idioma";
 
 // Cores oficiais das marcas, em versão para fundo escuro: o laranja do Claude, o degradê azul-roxo-rosa
 // do Gemini, e branco no ChatGPT e no Manus, cujos logos oficiais são monocromáticos.
@@ -18,7 +19,7 @@ const TROCA_MS = 2600;
 // Troca a marca com fade. Leitores de tela leem a lista inteira, parada.
 // `emLinha`: dentro de uma frase; as marcas se empilham na mesma célula de grid, então a largura é a da
 // maior e o texto em volta não pula na troca. Sem ela, a marca ocupa a própria linha.
-export function MarcaRotativa({ emLinha = false }: { emLinha?: boolean }) {
+export function MarcaRotativa({ emLinha = false, idioma = "pt" }: { emLinha?: boolean; idioma?: Idioma }) {
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export function MarcaRotativa({ emLinha = false }: { emLinha?: boolean }) {
 
   return (
     <>
-      <span className="sr-only">{marcas.map((m) => m.nome).join(", ").replace(/, ([^,]*)$/, " ou $1")}</span>
+      <span className="sr-only">{marcas.map((m) => m.nome).join(", ").replace(/, ([^,]*)$/, idioma === "en" ? " or $1" : " ou $1")}</span>
       <span aria-hidden="true" className={emLinha ? "inline-grid align-bottom" : "relative block h-[1.3em]"}>
         {marcas.map((m, n) => (
           <span

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { prompts } from "@/content/prompts";
+import { prompts as promptsPt, type Prompt } from "@/content/prompts";
 
 const MS_POR_LETRA = 22;
 const PAUSA_MS = 6500;
@@ -10,7 +10,7 @@ const FADE_MS = 600;
 // Um pedido por vez: digita rápido, fica na tela, some com fade e o próximo começa.
 // O primeiro já vem escrito do servidor. Leitores de tela recebem a lista inteira, estática.
 // Com "reduzir movimento" o primeiro pedido fica parado; o mouse em cima pausa.
-export function RotadorPrompts() {
+export function RotadorPrompts({ prompts = promptsPt }: { prompts?: Prompt[] }) {
   const [i, setI] = useState(0);
   const [letras, setLetras] = useState(prompts[0].texto.length);
   const [visivel, setVisivel] = useState(true);
@@ -34,7 +34,7 @@ export function RotadorPrompts() {
     aplicar();
     mq.addEventListener("change", aplicar);
     return () => mq.removeEventListener("change", aplicar);
-  }, []);
+  }, [prompts]);
 
   useEffect(() => {
     if (parado) return;
@@ -57,7 +57,7 @@ export function RotadorPrompts() {
       // Pausou no meio do fade: o texto volta a aparecer.
       setVisivel(true);
     };
-  }, [letras, digitando, parado]);
+  }, [letras, digitando, parado, prompts.length]);
 
   return (
     <div onMouseEnter={() => setEmCima(true)} onMouseLeave={() => setEmCima(false)}>

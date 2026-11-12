@@ -6,6 +6,7 @@ import { GuiaPassos } from "@/components/guia";
 import { cliente, clientesDaGrade } from "@/content/clientes";
 import { LogoMarca } from "@/components/logo-marca";
 import type { Logo } from "@/content/logos";
+import { homeDo, type Idioma } from "@/lib/idioma";
 
 const logoDe: Record<string, Logo> = {
   "claude-ai": "claude",
@@ -23,7 +24,7 @@ function IconeLogo({ slug }: { slug: string }) {
 }
 
 // Cada cartão abre o passo a passo aqui mesmo; sem JavaScript, o link recarrega a home com ?cliente=.
-export function PlataformasGrade({ inicial }: { inicial: string | null }) {
+export function PlataformasGrade({ inicial, idioma = "pt" }: { inicial: string | null; idioma?: Idioma }) {
   const [aberto, setAberto] = useState<string | null>(inicial);
   const atual = aberto ? cliente(aberto) : undefined;
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -50,7 +51,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
           return (
             <li key={c.slug}>
               <a
-                href={`/?cliente=${c.slug}#conectar`}
+                href={`${homeDo[idioma]}?cliente=${c.slug}#conectar`}
                 onClick={(e) => alternar(e, c.slug)}
                 aria-expanded={ativo}
                 aria-controls="passo-a-passo"
@@ -73,7 +74,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
               {atual.nome}
             </h3>
             <div className="mt-6">
-              <GuiaPassos c={atual} />
+              <GuiaPassos c={atual} idioma={idioma} />
             </div>
           </div>
         ) : null}
@@ -83,7 +84,7 @@ export function PlataformasGrade({ inicial }: { inicial: string | null }) {
 }
 
 // Lê ?cliente=<slug>; precisa de <Suspense> em volta (a página é estática).
-export function Plataformas() {
+export function Plataformas({ idioma = "pt" }: { idioma?: Idioma }) {
   const slug = useSearchParams().get("cliente") ?? "";
-  return <PlataformasGrade key={slug} inicial={cliente(slug)?.slug ?? null} />;
+  return <PlataformasGrade key={slug} inicial={cliente(slug)?.slug ?? null} idioma={idioma} />;
 }

@@ -1,3 +1,4 @@
+import type { Idioma } from "@/lib/idioma";
 import { site } from "@/lib/site";
 
 // Ícones de traço, os mesmos de gustavocancado.com.br.
@@ -47,16 +48,16 @@ const perfis = [
 
 const foco = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function Autor({ className = "" }: { className?: string }) {
+export function Autor({ className = "", idioma = "pt" }: { className?: string; idioma?: Idioma }) {
   return (
     <div className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-muted-fg ${className}`}>
       <p>
-        autor:{" "}
+        {idioma === "en" ? "by" : "autor:"}{" "}
         <a href={site.autorUrl} className={`${foco} transition-colors hover:text-fg`}>
           gustavo cançado
         </a>
       </p>
-      <nav aria-label="Perfis do autor" className="flex items-center gap-3">
+      <nav aria-label={idioma === "en" ? "Author profiles" : "Perfis do autor"} className="flex items-center gap-3">
         {perfis.map((p) => (
           <a
             key={p.rotulo}
