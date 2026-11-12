@@ -67,16 +67,18 @@ export function Lua({ className = "" }: { className?: string }) {
 
   return (
     <span aria-hidden="true" className={`lua ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        ref={ref}
-        src="/lua-de-hoje"
-        alt=""
-        width={730}
-        height={730}
-        decoding="async"
-        className="lua-foto size-full"
-      />
+      <span className="lua-arco">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={ref}
+          src="/lua-de-hoje"
+          alt=""
+          width={730}
+          height={730}
+          decoding="async"
+          className="lua-foto size-full"
+        />
+      </span>
     </span>
   );
 }

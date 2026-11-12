@@ -180,14 +180,20 @@ body::after {
 /* Opaca e recortada no disco: a Lua tapa o Sol e as estrelas, inclusive na parte escura. O raio exato
    é medido na foto (components/lua.tsx); este é o valor até a medida chegar, no menor disco possível,
    para não mostrar o anel preto do fundo da foto. */
-.lua-foto {
-  /* A foto da NASA vem com o norte para cima (vista do hemisfério norte). Girada 180°, fica como se vê
-     no hemisfério sul: crescente aceso à esquerda, minguante à direita. `rotate` é independente do
-     `transform` da animação. */
-  rotate: 180deg;
-  clip-path: circle(39%);
+.lua-arco {
+  display: block;
+  width: 100%;
+  height: 100%;
   transform: translateY(3rem);
   animation: lua-vertical 150s -55s infinite;
+}
+
+/* A foto da NASA vem com o norte para cima (vista do hemisfério norte). Girada 180°, fica como se vê
+   no hemisfério sul: crescente aceso à esquerda, minguante à direita. O giro fica na foto e a subida
+   no invólucro (.lua-arco), para um transform não apagar o outro. */
+.lua-foto {
+  clip-path: circle(39%);
+  transform: rotate(180deg);
 }
 
 /* Sol: o mesmo arco da Lua, com o dobro do período (mais lento), bem menor, atrás dela.
