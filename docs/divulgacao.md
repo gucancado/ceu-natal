@@ -44,7 +44,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 
 | Ação | Responsável | Estado |
 |---|---|---|
-| Docker MCP Catalog: PR em `docker/mcp-registry` como servidor remoto (`server.yaml` + `tools.json` vazio + readme) | Claude | a fazer, com aprovação do PR público |
+| Docker MCP Catalog: PR em `docker/mcp-registry` como servidor remoto (`server.yaml` + `tools.json` vazio + readme) | Claude | PR aberto: [docker/mcp-registry#7024](https://github.com/docker/mcp-registry/pull/7024) |
 | mcp.so pela rota gratuita (issue no GitHub deles, não o plano de US$ 39) | Claude in Chrome | a conferir |
 | Claude Market (claudemarket.ai/submit), mcp.directory/submit, mcpservers.org, MCP Market (fila grátis longa ou pausada) | Claude in Chrome | a conferir |
 | Cline MCP Marketplace (issue em `cline/mcp-marketplace`) e cursor.directory | Claude in Chrome | a conferir |
