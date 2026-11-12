@@ -1,10 +1,9 @@
 import { Secao } from "@/components/secao";
 import { tools } from "@/content/tools";
-import { planeta } from "@/lib/glifos";
 
 export function Ferramentas() {
   return (
-    <Secao id="ferramentas" titulo="ferramentas do mcp" simbolo={planeta.saturno}>
+    <Secao id="ferramentas" titulo="ferramentas do mcp">
       <dl className="grid gap-x-12 gap-y-6 md:grid-cols-2">
         {tools.map((t) => (
           <div key={t.nome}>
