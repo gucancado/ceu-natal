@@ -27,6 +27,7 @@ pelo mesmo id). Contatos e histórico só saem pelas rotas administrativas
 |-------|----------|
 | `app/config.py` | `Settings` imutável; todas as envs do servidor (`Settings.do_ambiente()`) |
 | `app/server.py` | `create_app(settings)`, schemas das tools (`TOOLS`), rotas HTTP, auth, limites |
+| `app/stdio.py` | o mesmo servidor por stdio (`python -m app.stdio`), usado pelo Glama |
 | `app/core/` | cálculo: `entrada.py` (entrada única de nascimento), `kerykeion.py`, `aspectos.py`, `sintese.py`, `geocoder.py`, `periodos.py`, `revolucoes.py`, `formatter.py`, `validators.py`, `ratelimit.py` |
 | `app/tools/` | um handler por técnica |
 | `app/static/llms.txt` | texto servido em `/llms.txt` |

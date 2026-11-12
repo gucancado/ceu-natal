@@ -106,6 +106,8 @@ pip install -r requirements.txt
 uvicorn app.server:app --port 8000
 ```
 
+Por stdio, para cliente que só abre processo local: `python -m app.stdio` (mesmas variáveis de ambiente).
+
 Rotas: `/mcp/` (MCP Streamable HTTP), `/health`,
 `/tools` (lista de tools; pública quando `MCP_API_KEY` está vazia), `/llms.txt`,
 `/mapa-rapido` (formulário do site) e `/` (redireciona para `PUBLIC_SITE_URL`).
