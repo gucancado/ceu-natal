@@ -1,22 +1,22 @@
 import { FerramentaModal } from "@/components/ferramenta-modal";
 import { Secao } from "@/components/secao";
-import { tecnicaDa } from "@/content/tecnicas";
+import { fichaDa } from "@/content/fichas";
 import { tools } from "@/content/tools";
 import type { Idioma } from "@/lib/idioma";
 
-// Em português, o nome de cada tool de cálculo abre o detalhe num modal, sem sair da página. O detalhe
-// existe só em português: em inglês, e nas tools utilitárias, o nome fica como texto.
+// Em português, o nome de cada tool abre a ficha técnica num modal, sem sair da página. A ficha existe só
+// em português: em inglês o nome fica como texto.
 export function Ferramentas({ idioma = "pt" }: { idioma?: Idioma }) {
   const en = idioma === "en";
   return (
     <Secao id="ferramentas" titulo={en ? "mcp tools" : "ferramentas do mcp"}>
       <dl className="grid gap-x-12 gap-y-6 md:grid-cols-2">
         {tools.map((t) => {
-          const detalhe = en ? undefined : tecnicaDa(t.nome);
+          const ficha = en ? undefined : fichaDa(t.nome);
           return (
             <div key={t.nome}>
               <dt>
-                {detalhe ? <FerramentaModal t={detalhe} /> : <span className="break-words font-mono text-sm">{t.nome}</span>}
+                {ficha ? <FerramentaModal f={ficha} /> : <span className="break-words font-mono text-sm">{t.nome}</span>}
               </dt>
               <dd className="mt-1 text-muted-fg">{en ? t.descricaoEn : t.descricao}</dd>
             </div>

@@ -15,7 +15,7 @@ export function Cabecalho() {
     <header className="mx-auto max-w-[72rem] px-6">
       <div className="flex items-center justify-between gap-x-8 py-6">
         <Link href={en ? homeDo.en : homeDo.pt} className={`${foco} font-display text-2xl font-medium`}>
-          Céu<span className="text-[#FFAA5A]">Natal</span>
+          Céu<span className="text-honey">Natal</span>
         </Link>
         <div className="flex items-center gap-5">
           <Link

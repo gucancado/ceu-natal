@@ -7,7 +7,7 @@ export const contentType = "image/png";
 
 // O next/og não lê as variáveis CSS: as cores repetem os tokens de :root em globals.css
 // (--color-bg, --color-fg, --color-muted-fg, --color-honey).
-const cor = { fundo: "#05060F", texto: "#ECEEF8", apagado: "#9BA2C2", destaque: "#F0616B" };
+const cor = { fundo: "#05060F", texto: "#ECEEF8", apagado: "#9BA2C2", destaque: "#FFAA5A" };
 
 // Fonte padrão do next/og: nenhum fetch de fonte no build nem em runtime.
 export default function OpengraphImage() {

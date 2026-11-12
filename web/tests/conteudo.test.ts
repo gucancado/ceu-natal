@@ -19,3 +19,12 @@ test("9 tools, prompts do hero com tools existentes, 5 FAQ", () => {
 test("a FAQ não fala em cancelar", () => {
   assert.ok(faq.every((f) => !/cancel/i.test(`${f.pergunta} ${f.resposta}`)));
 });
+
+test("toda tool da seção de ferramentas tem ficha técnica", async () => {
+  const { tools } = await import("../src/content/tools");
+  const { fichaDa } = await import("../src/content/fichas");
+  for (const t of tools) {
+    const f = fichaDa(t.nome);
+    assert.ok(f && f.resumo && f.retorna.length > 0, t.nome);
+  }
+});
