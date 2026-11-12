@@ -38,7 +38,6 @@ def test_settings_do_ambiente_le_todas_as_variaveis(monkeypatch):
         "RATE_LIMIT_SESSION_PER_MIN": "7",
         "RATE_LIMIT_GLOBAL_PER_MIN": "70",
         "PUBLIC_SITE_URL": "https://site.test/",
-        "PUBLIC_MCP_URL": "https://mcp.test/",
         "RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN": "3",
         "RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN": "30",
         "CORS_ORIGINS": "https://a.test/, https://b.test",
@@ -54,7 +53,6 @@ def test_settings_do_ambiente_le_todas_as_variaveis(monkeypatch):
         rate_limit_session_per_min=7,
         rate_limit_global_per_min=70,
         public_site_url="https://site.test",
-        public_mcp_url="https://mcp.test",
         rate_limit_mapa_rapido_ip_per_min=3,
         rate_limit_mapa_rapido_global_per_min=30,
         cors_origins=("https://a.test", "https://b.test"),
@@ -65,7 +63,7 @@ def test_settings_do_ambiente_le_todas_as_variaveis(monkeypatch):
 def test_settings_do_ambiente_vazio_usa_os_defaults(monkeypatch):
     for nome in ("MCP_SERVER_NAME", "MCP_SERVER_VERSION", "MCP_API_KEY", "MCP_ALLOWED_HOSTS",
                  "RATE_LIMIT_SESSION_PER_MIN", "RATE_LIMIT_GLOBAL_PER_MIN", "PUBLIC_SITE_URL",
-                 "PUBLIC_MCP_URL", "RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN",
+                 "RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN",
                  "RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN", "CORS_ORIGINS"):
         monkeypatch.delenv(nome, raising=False)
     s = Settings.do_ambiente()
@@ -74,7 +72,6 @@ def test_settings_do_ambiente_vazio_usa_os_defaults(monkeypatch):
     assert (s.rate_limit_session_per_min, s.rate_limit_global_per_min) == (30, 600)
     assert (s.rate_limit_mapa_rapido_ip_per_min, s.rate_limit_mapa_rapido_global_per_min) == (12, 120)
     assert s.public_site_url == "https://github.com/gucancado/ceu-natal"
-    assert s.public_mcp_url == "https://astrologia-mcp.gustavocancado.com.br"
     assert s.cors_efetivos == (s.public_site_url,)
 
 
@@ -388,19 +385,11 @@ def test_health_expoe_limites():
 # ─────────────────────────────────────────────────────────────
 # /llms.txt e / (públicos)
 # ─────────────────────────────────────────────────────────────
-def test_llms_txt_publico_utf8_e_com_urls():
-    app, _ = _app(
-        api_key="segredo",
-        public_mcp_url="https://mcp.exemplo.test/",
-        public_site_url="https://site.exemplo.test",
-    )
-    resp = TestClient(app).get("/llms.txt")
-    assert resp.status_code == 200
-    assert resp.headers["content-type"].startswith("text/plain") and "charset=utf-8" in resp.headers["content-type"]
-    assert resp.text.startswith("# Céu Natal")
-    assert "https://mcp.exemplo.test/mcp/" in resp.text and "https://mcp.exemplo.test//" not in resp.text
-    assert "https://site.exemplo.test" in resp.text
-    assert "calcular_revolucao_lunar" in resp.text and "trânsitos" in resp.text
+def test_llms_txt_publico_redireciona_para_o_do_site():
+    app, _ = _app(api_key="segredo", public_site_url="https://site.exemplo.test/")
+    resp = TestClient(app).get("/llms.txt", follow_redirects=False)
+    assert resp.status_code == 301
+    assert resp.headers["location"] == "https://site.exemplo.test/llms.txt"
 
 
 def test_raiz_redireciona_para_o_site_default():

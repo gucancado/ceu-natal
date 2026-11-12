@@ -5,7 +5,7 @@ Servidor MCP do céu-natal: expõe tools de astrologia por Streamable HTTP (`/mc
 Endpoints:
   POST /mcp        — Streamable HTTP (protocolo MCP >= 2025-03-26)
   GET  /health     — healthcheck público (sem auth)
-  GET  /llms.txt   — descrição do servidor para LLMs (público)
+  GET  /llms.txt   — redireciona (301) para o llms.txt do site (público)
   GET  /           — redireciona (302) para PUBLIC_SITE_URL (público)
   POST /mapa-rapido — mapa natal para o formulário do site (público, CORS só
                       para PUBLIC_SITE_URL, limite por IP; com HISTORICO_PATH,
@@ -39,7 +39,6 @@ import math
 import time
 import uuid
 from collections.abc import AsyncIterator, Callable
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -78,7 +77,6 @@ _PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatist
 _AUTH_PROPRIA = ["/contatos", "/historico"]
 # Por quanto tempo a resposta de /estatisticas fica em memória (segundos).
 ESTATISTICAS_CACHE_S = 60
-_LLMS_TXT_PATH = Path(__file__).parent / "static" / "llms.txt"
 TRANSPORTE = "streamable-http"
 
 logger = logging.getLogger("ceu-natal")
@@ -693,9 +691,6 @@ class Aplicacao:
             geocoder.ao_resolver = self.estatisticas.registrar_lugar
         self._resumo_cache: tuple[float, dict] | None = None
         self.historico = Historico(settings.historico_path) if settings.historico_path else None
-        self.llms_txt = _LLMS_TXT_PATH.read_text(encoding="utf-8").format(
-            mcp_url=settings.public_mcp_url, site_url=settings.public_site_url,
-        )
         self.registro: dict[str, Callable[[dict], dict]] = {
             **REGISTRO,
             "healthcheck": lambda a: {
@@ -830,8 +825,9 @@ class Aplicacao:
             },
         })
 
-    async def llms_txt_endpoint(self, _: Request) -> PlainTextResponse:
-        return PlainTextResponse(self.llms_txt, media_type="text/plain; charset=utf-8")
+    async def llms_txt_endpoint(self, _: Request) -> RedirectResponse:
+        """O llms.txt mora no site, gerado do mesmo conteúdo das páginas: uma fonte só."""
+        return RedirectResponse(f"{self.settings.public_site_url}/llms.txt", status_code=301)
 
     async def desafio_openai(self, _: Request) -> PlainTextResponse:
         """Token de verificação de domínio do portal de plugins da OpenAI."""

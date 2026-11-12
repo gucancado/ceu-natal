@@ -127,8 +127,7 @@ Para desenvolver, instale também `requirements-dev.txt` e rode `ruff check .`, 
 | `RATE_LIMIT_GLOBAL_PER_MIN` | `600` | chamadas de tool por minuto no total (0 desliga) |
 | `RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN` | `6` | pedidos ao `/mapa-rapido` por minuto por IP (0 desliga) |
 | `RATE_LIMIT_MAPA_RAPIDO_GLOBAL_PER_MIN` | `120` | pedidos ao `/mapa-rapido` por minuto no total (0 desliga) |
-| `PUBLIC_SITE_URL` | `https://github.com/gucancado/ceu-natal` | destino do redirect de `/` e link do site no `/llms.txt` |
-| `PUBLIC_MCP_URL` | `https://astrologia-mcp.gustavocancado.com.br` | URL do MCP exibida no `/llms.txt` |
+| `PUBLIC_SITE_URL` | `https://github.com/gucancado/ceu-natal` | destino do redirect de `/` e do `/llms.txt` (vai para `<site>/llms.txt`) |
 | `CORS_ORIGINS` | *(vazio = `PUBLIC_SITE_URL`)* | origens aceitas pelo CORS do `/mapa-rapido`, separadas por vírgula |
 | `GEONAMES_USERNAME` | *(vazio) — sem ele só o Nominatim é usado* | conta GeoNames da geocodificação (crie a sua, gratuita, em geonames.org) |
 | `NOMINATIM_USER_AGENT` | `ceu-natal-mcp/2.0` | User-Agent enviado ao Nominatim (OSM) |

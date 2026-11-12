@@ -30,7 +30,6 @@ pelo mesmo id). Contatos e histórico só saem pelas rotas administrativas
 | `app/stdio.py` | o mesmo servidor por stdio (`python -m app.stdio`), usado pelo Glama |
 | `app/core/` | cálculo: `entrada.py` (entrada única de nascimento), `kerykeion.py`, `aspectos.py`, `sintese.py`, `geocoder.py`, `periodos.py`, `revolucoes.py`, `formatter.py`, `validators.py`, `ratelimit.py` |
 | `app/tools/` | um handler por técnica |
-| `app/static/llms.txt` | texto servido em `/llms.txt` |
 | `tests/` | pytest; fixtures fictícias em `tests/conftest.py` |
 | `scripts/` | `deploy.py` (deploy manual), `validacao_producao.py` |
 | `docs/` | guia de conexão, distribuição, validação em produção e política de privacidade (`docs/legal/`; os termos ficam em `web/src/content/legal/`) |

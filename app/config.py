@@ -31,7 +31,6 @@ class Settings:
     rate_limit_global_per_min: int = 600
     # URLs públicas (a landing troca de domínio só por env), sem barra final.
     public_site_url: str = "https://github.com/gucancado/ceu-natal"
-    public_mcp_url: str = "https://astrologia-mcp.gustavocancado.com.br"
     # Mapa rápido do site: limite por IP (o formulário roda no navegador da
     # pessoa, então o IP é dela; os IPs compartilhados de Anthropic/OpenAI não
     # passam aqui). O formulário da home recalcula a cada campo preenchido
@@ -58,7 +57,6 @@ class Settings:
         object.__setattr__(self, "api_key", self.api_key.strip())
         object.__setattr__(self, "contatos_admin_token", self.contatos_admin_token.strip())
         object.__setattr__(self, "public_site_url", self.public_site_url.rstrip("/"))
-        object.__setattr__(self, "public_mcp_url", self.public_mcp_url.rstrip("/"))
         object.__setattr__(self, "allowed_hosts", tuple(h.strip() for h in self.allowed_hosts if h.strip()))
         object.__setattr__(
             self, "cors_origins",
@@ -87,7 +85,6 @@ class Settings:
             rate_limit_session_per_min=int(env("RATE_LIMIT_SESSION_PER_MIN", p.rate_limit_session_per_min)),
             rate_limit_global_per_min=int(env("RATE_LIMIT_GLOBAL_PER_MIN", p.rate_limit_global_per_min)),
             public_site_url=env("PUBLIC_SITE_URL", p.public_site_url),
-            public_mcp_url=env("PUBLIC_MCP_URL", p.public_mcp_url),
             rate_limit_mapa_rapido_ip_per_min=int(
                 env("RATE_LIMIT_MAPA_RAPIDO_IP_PER_MIN", p.rate_limit_mapa_rapido_ip_per_min)
             ),
