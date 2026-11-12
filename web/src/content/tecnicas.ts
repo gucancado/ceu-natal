@@ -107,7 +107,7 @@ export const tecnicas: Tecnica[] = [
       "em que casa do seu mapa cada planeta está passando",
       "destaque para os planetas lentos (saturno, urano, netuno, plutão e quíron) com orbe menor que 2°",
     ],
-    precisa: ["a sua data de nascimento", "hora e cidade de nascimento, para saber as casas"],
+    precisa: ["data, hora e cidade de nascimento", "a data que você quer olhar (hoje ou outra)"],
     pedidos: [
       "Quais são os trânsitos de hoje sobre o meu mapa? Nasci em 12/03/1990 às 14h30 em Belo Horizonte.",
       "Esse ano está pesado. Tem algum trânsito de Saturno no meu mapa?",

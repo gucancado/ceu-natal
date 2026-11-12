@@ -101,7 +101,10 @@ export const fichas: Ficha[] = [
         desc: "aspectos aplicando e separando, trânsitos para luminares e pessoais, lentos em destaque",
       },
     ],
-    notas: ["lentos em destaque: saturno, urano, netuno, plutão e quíron com orbe menor que 2°"],
+    notas: [
+      "exige hora e local de nascimento, para as casas natais",
+      "lentos em destaque: saturno, urano, netuno, plutão e quíron com orbe menor que 2°",
+    ],
   },
   {
     tool: "calcular_progressoes",

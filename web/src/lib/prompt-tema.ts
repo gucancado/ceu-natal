@@ -134,9 +134,8 @@ export function promptTransitos(n: Nascimento, dataTransito: string, r: Resultad
       const g = glifoPonto[k];
       linhas.push(`- ${g ? `${g} ` : ""}**${nome(k)}:** ${partes.join(", ")}`);
     }
-    if (!n.hora || !n.cidade) linhas.push("", "_Sem hora e cidade de nascimento, ainda não dá para saber em que casa cada trânsito cai._");
   } else {
-    linhas.push("_Ainda não calculado._");
+    linhas.push("_Ainda não calculado. Os trânsitos precisam da data, da hora e da cidade de nascimento._");
   }
   linhas.push(
     ...instrucoes(

@@ -195,9 +195,11 @@ function FormTransitos() {
   const p = usePessoa();
   const [hoje] = useState(hojeBr);
   const ids = useIdMapa(p);
-  const corpo = p.corpo ? { tecnica: "transitos", ...p.corpo, data_transito: hoje, ...ids } : null;
+  // A tool de trânsitos exige hora e cidade de nascimento (casas natais).
+  const completo = p.corpo && p.corpo.hora && p.corpo.local;
+  const corpo = completo ? { tecnica: "transitos", ...p.corpo, data_transito: hoje, ...ids } : null;
   const { dados, erro, calculando } = useCalculo<ResultadoTransitos>(corpo);
-  const dica = p.hora && !p.cidadeOk && p.dataBr ? "escolha a cidade na lista para ver as casas." : null;
+  const dica = p.dataBr && !completo ? "os trânsitos precisam da hora e da cidade de nascimento." : null;
   return (
     <div className="grid gap-12">
       <form onSubmit={(e) => e.preventDefault()} className="grid max-w-[30rem] content-start gap-6">
