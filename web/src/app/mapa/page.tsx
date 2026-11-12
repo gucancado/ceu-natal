@@ -93,11 +93,7 @@ export default function PaginaMapa() {
       <h1 className="font-display text-4xl font-medium leading-[1.15] tracking-tight md:text-5xl">{titulo}</h1>
       <p className="mt-6 max-w-[36rem] text-lg leading-[1.6] text-muted-fg">
         eu calculo as posições, sem interpretação. você copia e cola no chatgpt, no claude ou no gemini, e a ia lê o
-        seu mapa a partir delas. os dados do mapa ficam guardados, sem nome nem conta (
-        <Link href="/privacidade" className="text-honey underline underline-offset-4">
-          privacidade
-        </Link>
-        ).
+        seu mapa a partir delas.
       </p>
       <div className="mt-12">
         <FormMapa />

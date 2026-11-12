@@ -246,12 +246,6 @@ export function MapaProgressivo() {
         <p aria-live="polite" className="min-h-[1.5em] text-sm text-muted-fg">
           {erro ? <span className="text-fg">{erro}</span> : calculando ? "calculando…" : dica}
         </p>
-        <p className="text-xs text-muted-fg">
-          os dados do mapa ficam guardados, sem nome nem conta.{" "}
-          <Link href="/privacidade" className="underline underline-offset-4 hover:text-fg">
-            privacidade
-          </Link>
-        </p>
       </form>
 
       {comecou ? (
