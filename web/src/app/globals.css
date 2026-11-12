@@ -177,10 +177,11 @@ body::after {
   animation: lua-horizontal 150s linear -55s infinite;
 }
 
-/* Opaca e recortada no disco (raio ~41% da foto, com folga para o perigeu): a Lua tapa o Sol e as estrelas,
-   inclusive na parte escura. */
+/* Opaca e recortada no disco: a Lua tapa o Sol e as estrelas, inclusive na parte escura. O raio exato
+   é medido na foto (components/lua.tsx); este é o valor até a medida chegar, no menor disco possível,
+   para não mostrar o anel preto do fundo da foto. */
 .lua-foto {
-  clip-path: circle(44%);
+  clip-path: circle(39%);
   transform: translateY(3rem);
   animation: lua-vertical 150s -55s infinite;
 }
