@@ -9,7 +9,7 @@ export function Comecar() {
         {/* Largura para "…com o chatgpt" caber na segunda linha no desktop; o "o" fica preso à marca para a
             quebra nunca cair logo antes dela. */}
         <h1 id="comecar-titulo" className="max-w-[48rem] font-display text-[24px] font-medium leading-[1.25] tracking-tight md:text-[30px]">
-          faça análises astrológicas precisas direto nas suas conversas com{" "}
+          faça análises astrológicas precisas nas suas conversas com{" "}
           <span className="whitespace-nowrap">
             o <MarcaRotativa emLinha />
           </span>
