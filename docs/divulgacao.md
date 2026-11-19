@@ -38,11 +38,11 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Publicação no MCP Registry oficial (`io.github.gucancado/ceu-natal` 2.2.6) | Claude | feito (2026-11-12) |
 | Descrição e tópicos do GitHub em inglês e português, seção em inglês no README | Claude | feito |
 | PR no `punkpeye/awesome-mcp-servers` ([#19327](https://github.com/punkpeye/awesome-mcp-servers/pull/19327), em Spirituality & Esoterica) | Claude | aberto; o bot exige nota no Glama |
-| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | o Glama já sincronizou `7c00de2` (2026-11-19), que tem o stdio; falta rodar o [prompt](prompt-chrome-glama-build.md) |
+| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | configurado em 2026-11-19; o primeiro build falhou no `pip install` (`externally-managed-environment`, Python instalado pelo uv). Falta rodar o [prompt](prompt-chrome-glama-build.md), que troca o passo de build e faz a release 2.2.6 |
 | Smithery | — | fechou envios em 2026-10-31 |
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
-| Diretório de conectores do Claude | Gustavo | aprovado, pronto para publicar (2026-11-19); a documentação do envio aponta para `mistico…/en`, que redireciona. Editar antes de publicar devolve o envio para revisão; depois de publicado, a troca é pedida por e-mail ao diretório |
+| Diretório de conectores do Claude | Gustavo | aprovado (2026-11-19); falta clicar em Publicar em `claude.ai/directory/manage` (o Claude in Chrome não consegue). A documentação do envio aponta para `mistico…/en`, que redireciona; depois de publicado, a troca é pedida a `directory@anthropic.com` (rascunho pronto no Gmail do Gustavo) |
 | Endereço novo no PR do Docker (#7024) e no campo de site do repositório no GitHub | Claude | feito (2026-11-19) |
 | Endereço novo no Glama | — | não há campo de site; o endereço vem do README do repositório, já corrigido, e entra no próximo sync |
 | Endereço novo no MCP Registry | Claude | pendente; vai na próxima versão do servidor (o `server.json` já está certo) |

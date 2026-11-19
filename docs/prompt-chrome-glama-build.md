@@ -1,27 +1,22 @@
-Configure o build do Céu Natal no Glama, no meu navegador, com a conta GitHub `gucancado` já logada. O servidor já está reivindicado. Agora o repositório tem um modo stdio, que é o que o Glama exige.
+Refaça o build do Céu Natal no Glama, no meu navegador, com a conta GitHub `gucancado` já logada. A configuração já está salva (imagem `debian:trixie-slim`, Python 3.11, CMD `["mcp-proxy","--","python","-m","app.stdio"]`, commit fixo vazio, schema de ambiente vazio). O build anterior falhou no passo de instalação com `externally-managed-environment`: o Python da imagem é instalado pelo uv e recusa o `pip install` sem uma opção a mais. Só o passo de build muda.
 
 Regras:
-- Não pague nada.
-- Use só os dados abaixo. Não invente informação.
-- Se o formulário pedir algo que não está aqui, anote o que ele pede e pare.
+- Não pague nada. Não ligue o Boost.
+- Não mude nenhum campo além do passo de build.
+- Use só os dados abaixo. Não invente informação. Se o formulário pedir algo que não está aqui, anote o que ele pede e pare.
 
 Dados:
-- Repositório: https://github.com/gucancado/ceu-natal (branch `main`, Python 3.11)
-- Instalação: `python -m pip install --require-hashes -r requirements.txt`
-- Comando do servidor (stdio): `python -m app.stdio`
-- Nenhuma variável de ambiente é obrigatória e não há chave de API.
+- Página do servidor: https://glama.ai/mcp/servers/gucancado/ceu-natal
+- Passo de build novo: `["python -m pip install --break-system-packages --require-hashes -r requirements.txt"]`
+- Passo de build reserva: `["uv pip install --system --break-system-packages --require-hashes -r requirements.txt"]`
+- Versão para a release: `2.2.6`
 
 Passos:
-1. Abra https://glama.ai/mcp/servers/gucancado/ceu-natal e confira o commit que o Glama mostra para o repositório. Se ainda for `cf0b385` (ou outro sem o arquivo `app/stdio.py`), o Glama não sincronizou: pare e me avise. Se for mais novo, entre na área de administração do servidor (Admin, Settings, Dockerfile ou Build).
-2. Preencha:
-   - Imagem base: `debian:trixie-slim` (a que o Glama oferece); Python 3.11.
-   - Passos de build: `["python -m pip install --require-hashes -r requirements.txt"]`. Se o build falhar dizendo que não há `pip`, troque por `["uv pip install --system --require-hashes -r requirements.txt"]`.
-   - Commit fixo (pinned commit): deixe vazio.
-   - Comando de execução (CMD): `python -m app.stdio`. Se o formulário montar o comando como lista, use `["python", "-m", "app.stdio"]`. Se ele já puser um `mcp-proxy --` na frente, mantenha e acrescente o comando depois.
-   - Variáveis de ambiente: nenhuma. Se pedir um JSON Schema de ambiente, use `{"type": "object", "properties": {}}`.
-3. Salve e dispare o build ("Deploy", "Build" ou "Re-evaluate"). Espere até 10 minutos, recarregando a página.
-4. Se o build falhar, copie as últimas 30 linhas do log.
-5. Abra https://glama.ai/mcp/servers/gucancado/ceu-natal/score e anote a nota e o que o Glama pede para melhorar.
-6. Confira se as 9 tools aparecem na página do servidor (calcular_mapa_natal, calcular_sinastria, calcular_transitos, calcular_progressoes, calcular_mapa_composto, calcular_revolucao_solar, calcular_revolucao_lunar, listar_aspectos_tipos, healthcheck).
+1. Abra a página do servidor, entre na administração e abra a página Dockerfile.
+2. Troque o passo de build pelo passo novo. Confira na pré-visualização que os outros campos continuam como descrito acima e salve.
+3. Dispare **Build** (não "Build & Release"). Espere até 10 minutos, recarregando a página.
+4. Se o build falhar no passo de instalação, troque pelo passo reserva, salve e dispare **Build** de novo, uma vez só. Se falhar outra vez, ou falhar em outro passo, copie as últimas 40 linhas do log e pare.
+5. Com o build aprovado, clique em **Make Release** e use a versão `2.2.6`. Se a tela pedir notas da release, escreva `Céu Natal 2.2.6`. Se pedir qualquer outra coisa, anote e pare.
+6. Abra a página pública do servidor e anote: a nota (score) e cada item que o Glama ainda pede para melhorar, se a release aparece, e se as 9 tools continuam listadas.
 
-Relatório final: estado do build (passou / falhou, com o log), a nota, as tools que apareceram e a lista de melhorias pedidas.
+Relatório final: uma tabela com tarefa | estado (feito / travou) | o que ficou registrado ou o motivo. Depois da tabela, traga o passo de build que funcionou, o log se algum build falhou, e a nota com a lista de melhorias pedidas.
