@@ -14,6 +14,8 @@ export type Estatisticas = {
     paises: number;
     pessoasDiaSite: number;
     sessoesMcp: number;
+    sessoesMcpComCalculo: number;
+    visitasSite: number;
   };
   porDia: { dia: string; calculos: number; pessoasSite: number; sessoesMcp: number }[];
   porOrigem: { mcp: number; site: number };
@@ -50,6 +52,8 @@ export function interpretarEstatisticas(j: unknown): Estatisticas | null {
       paises: num(t.paises),
       pessoasDiaSite: num(t.pessoas_dia_site),
       sessoesMcp: num(t.sessoes_mcp),
+      sessoesMcpComCalculo: num(t.sessoes_mcp_com_calculo),
+      visitasSite: num(t.visitas_site),
     },
     porDia: (o.por_dia as Record<string, unknown>[]).map((d) => ({
       dia: String(d.dia ?? ""),

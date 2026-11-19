@@ -1,6 +1,6 @@
 # Política de privacidade — Céu Natal
 
-Versão 8 — 2026-11-12 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 9 — 2026-11-19 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o Céu Natal (o servidor MCP e
 o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://ceunatal.gustavocancado.com.br.
@@ -79,9 +79,14 @@ quiser, e o mapa funciona sem ele.
 - **Estatísticas de uso.** Contagens por dia: quantas chamadas cada
   ferramenta recebeu, de qual app de IA (o nome que o app informa ao
   conectar), com qual resultado e em quanto tempo; quantos cálculos por país;
-  e quantas cidades diferentes já foram calculadas. Para contar pessoas
-  únicas por dia, o servidor guarda um resumo criptográfico (hash) do IP de
-  quem usa o site, ou do identificador da conversa no MCP, misturado a um
+  e quantas cidades diferentes já foram calculadas. No site, também conto
+  quantas vezes cada página foi aberta e de qual site a pessoa veio (só o
+  domínio, como `google.com`, sem o endereço completo). Para isso, cada página
+  avisa o servidor quando abre; o aviso não leva cookie, código do navegador
+  nem dado de nascimento. Se o seu navegador pede para não ser rastreado (Do
+  Not Track ou Global Privacy Control), esse aviso não é enviado. Para contar
+  pessoas únicas por dia, o servidor guarda um resumo criptográfico (hash) do IP de
+  quem usa ou visita o site, ou do identificador da conversa no MCP, misturado a um
   valor aleatório que vale só naquele dia. Ao virar o dia, os resumos e o
   valor aleatório são apagados e sobra só o número; não dá para voltar do
   resumo ao IP. Os totais, sem nomes de cidade, aparecem na página de

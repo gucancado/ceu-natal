@@ -15,6 +15,13 @@ Endpoints:
   POST /contato    — e-mail ou telefone para avisos de novidades (público, mesmo
                       CORS, limite por IP; grava em CONTATOS_PATH)
   GET  /estatisticas — números agregados de uso (público; ESTATISTICAS_PATH)
+  GET  /estatisticas/detalhe — app pelo nome, páginas e referências (Bearer
+                      CONTATOS_ADMIN_TOKEN)
+  POST /visita     — contador de páginas abertas no site (público, sem cookie;
+                      só caminho da página e host de referência)
+  GET  /.well-known/mcp.json, /.well-known/mcp/server-card.json, /mcp/server-card
+                    — cartão do servidor para catálogos (público)
+  GET  /robots.txt — libera robôs (público)
   GET  /contatos   — lista os contatos cadastrados com os mapas de cada um
                       (Bearer CONTATOS_ADMIN_TOKEN; sem o token configurado, 404)
   GET  /historico  — histórico de cada navegador no site (mesmo token)
@@ -38,6 +45,7 @@ import ipaddress
 import json
 import logging
 import math
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator, Callable
@@ -48,7 +56,7 @@ import anyio
 from mcp.server import Server
 from mcp.server.streamable_http import TransportSecuritySettings
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
-from mcp.types import CallToolResult, TextContent, Tool, ToolAnnotations
+from mcp.types import LATEST_PROTOCOL_VERSION, CallToolResult, TextContent, Tool, ToolAnnotations
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -60,7 +68,12 @@ from app.config import Settings
 from app.core import geocoder
 from app.core.aspectos import listar_tipos_aspectos
 from app.core.contatos import RegistroContatos, normalizar_contato
-from app.core.estatisticas import Estatisticas, normalizar_app
+from app.core.estatisticas import (
+    Estatisticas,
+    normalizar_app,
+    normalizar_pagina,
+    normalizar_referencia,
+)
 from app.core.geocoder import GeocodingError
 from app.core.historico import Historico, id_valido
 from app.core.mapa_site import argumentos_do_site
@@ -73,11 +86,21 @@ MAPA_RAPIDO_BODY_MAX = 4096
 CONTATO_BODY_MAX = 1024
 CONTATO_POR_IP_POR_MIN = 3
 CONTATO_GLOBAL_POR_MIN = 60
+# /visita: corpo pequeno e limites por IP e global, por minuto.
+VISITA_BODY_MAX = 512
+VISITA_POR_IP_POR_MIN = 30
+VISITA_GLOBAL_POR_MIN = 600
+# User-agent de robô não conta visita (o contador roda em JavaScript, mas há robôs que o executam).
+_UA_ROBO = re.compile(r"bot|crawl|spider|slurp|preview|headless|lighthouse|python|curl|wget", re.I)
+_CARTAO = ["/.well-known/mcp.json", "/.well-known/mcp/server-card.json", "/mcp/server-card"]
 # Caminhos que dispensam a chave de API.
 _DESAFIO_OPENAI = "/.well-known/openai-apps-challenge"
-_PUBLICOS = ["/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatisticas", _DESAFIO_OPENAI]
+_PUBLICOS = [
+    "/health", "/llms.txt", "/", "/mapa-rapido", "/contato", "/estatisticas", "/visita",
+    "/robots.txt", _DESAFIO_OPENAI, *_CARTAO,
+]
 # Rotas com autenticação própria: o APIKeyMiddleware não as trata.
-_AUTH_PROPRIA = ["/contatos", "/historico"]
+_AUTH_PROPRIA = ["/contatos", "/historico", "/estatisticas/detalhe"]
 # Por quanto tempo a resposta de /estatisticas fica em memória (segundos).
 ESTATISTICAS_CACHE_S = 60
 TRANSPORTE = "streamable-http"
@@ -687,6 +710,7 @@ class Aplicacao:
             settings.rate_limit_mapa_rapido_global_per_min,
         )
         self.limitador_contato = LimitadorTaxa(CONTATO_POR_IP_POR_MIN, CONTATO_GLOBAL_POR_MIN)
+        self.limitador_visita = LimitadorTaxa(VISITA_POR_IP_POR_MIN, VISITA_GLOBAL_POR_MIN)
         self.contatos = RegistroContatos(settings.contatos_path) if settings.contatos_path else None
         self.estatisticas = Estatisticas(settings.estatisticas_path) if settings.estatisticas_path else None
         if self.estatisticas is not None:
@@ -797,10 +821,22 @@ class Aplicacao:
         finally:
             duracao_ms = round((time.monotonic() - inicio) * 1000, 1)
             _log_tool_call(name, status, duracao_ms)
+            sessao = self.chave_sessao()
             self.registrar_uso(
                 "mcp", name if name in self.registro else "desconhecida", status, duracao_ms,
-                app=self.app_cliente(), unico=("mcp", self.chave_sessao()),
+                app=self.app_cliente(), unico=("mcp", sessao),
             )
+            if status == "ok" and name.startswith("calcular_") and name in self.registro:
+                self.registrar_uso_unico("mcp_calculo", sessao)
+
+    def registrar_uso_unico(self, tipo: str, identificador: str | None) -> None:
+        """Conta só a pessoa ou sessão única do dia; falha aqui nunca afeta a resposta."""
+        if self.estatisticas is None:
+            return
+        try:
+            self.estatisticas.registrar_unico(tipo, identificador)
+        except Exception:  # noqa: BLE001
+            logger.warning("falha ao registrar estatística", exc_info=True)
 
     @contextlib.asynccontextmanager
     async def lifespan(self, _app: Any) -> AsyncIterator[None]:
@@ -837,6 +873,60 @@ class Aplicacao:
         if not token:
             return PlainTextResponse("", status_code=404)
         return PlainTextResponse(token, media_type="text/plain; charset=utf-8")
+
+    async def robots(self, _: Request) -> PlainTextResponse:
+        return PlainTextResponse("User-agent: *\nAllow: /\n")
+
+    async def cartao_servidor(self, _: Request) -> JSONResponse:
+        """Cartão do servidor (proposta de server card do MCP) para catálogos e scanners."""
+        s = self.settings
+        return JSONResponse({
+            "version": "1.0",
+            "protocolVersion": LATEST_PROTOCOL_VERSION,
+            "serverInfo": {"name": s.server_name, "title": "Céu Natal", "version": s.server_version},
+            "description": INSTRUCOES,
+            "documentationUrl": s.public_site_url,
+            "repository": CODIGO_FONTE,
+            "transport": {"type": TRANSPORTE, "endpoint": "/mcp/"},
+            "capabilities": {"tools": {"listChanged": False}},
+            "authentication": {"required": bool(s.api_key), "schemes": ["bearer"] if s.api_key else []},
+            "tools": [
+                {"name": t.name, "title": t.title, "description": t.description, "inputSchema": t.inputSchema}
+                for t in TOOLS
+            ],
+        }, headers={"Cache-Control": "public, max-age=3600", "Access-Control-Allow-Origin": "*"})
+
+    async def visita(self, request: Request) -> Response:
+        """Conta uma página aberta no site: caminho e host de referência, sem cookie nem IP guardado."""
+        cors = self._cabecalhos_cors(request)
+        if request.method == "OPTIONS":
+            return Response(status_code=204, headers=cors)
+        vazio = Response(status_code=204, headers=cors)
+        if self.estatisticas is None or _UA_ROBO.search(request.headers.get("user-agent", "")):
+            return vazio
+        ip = _ip_cliente(request)
+        permitido, _ = self.limitador_visita.tentar(ip)
+        if not permitido:
+            return vazio
+        partes = bytearray()
+        async for pedaco in request.stream():
+            partes.extend(pedaco)
+            if len(partes) > VISITA_BODY_MAX:
+                return vazio
+        try:
+            corpo = json.loads(bytes(partes))
+        except ValueError:
+            return vazio
+        pagina = normalizar_pagina(corpo.get("pagina")) if isinstance(corpo, dict) else None
+        if pagina is None:
+            return vazio
+        referencia = normalizar_referencia(corpo.get("referencia"))
+        try:
+            await anyio.to_thread.run_sync(self.estatisticas.registrar_visita, pagina, referencia)
+            await anyio.to_thread.run_sync(self.estatisticas.registrar_unico, "visita", ip)
+        except Exception:  # noqa: BLE001
+            logger.warning("falha ao registrar visita", exc_info=True)
+        return vazio
 
     async def raiz(self, _: Request) -> RedirectResponse:
         return RedirectResponse(self.settings.public_site_url, status_code=302)
@@ -1101,6 +1191,20 @@ class Aplicacao:
             self._resumo_cache[1], headers={"Cache-Control": f"public, max-age={ESTATISTICAS_CACHE_S}"},
         )
 
+    async def estatisticas_detalhe(self, request: Request) -> JSONResponse:
+        """Recortes administrativos: app pelo nome bruto, páginas e referências do site."""
+        negado = self._negar_admin(request)
+        if negado is not None:
+            return negado
+        if self.estatisticas is None:
+            return JSONResponse({"erro": "Estatísticas desligadas."}, status_code=503)
+        try:
+            dias = max(1, min(int(request.query_params.get("dias", "30")), 365))
+        except ValueError:
+            dias = 30
+        detalhe = await anyio.to_thread.run_sync(self.estatisticas.detalhe, dias)
+        return JSONResponse(detalhe, headers={"Cache-Control": "no-store"})
+
     async def listar_tools_http(self, _: Request) -> JSONResponse:
         """Lista as tools registradas via HTTP puro (debug). Reutiliza TOOLS."""
         payload_tools = []
@@ -1151,6 +1255,10 @@ def create_app(settings: Settings | None = None) -> Starlette:
             Route("/mapa-rapido", endpoint=ceu.mapa_rapido, methods=["POST", "OPTIONS"]),
             Route("/contato", endpoint=ceu.contato, methods=["POST", "OPTIONS"]),
             Route("/estatisticas", endpoint=ceu.estatisticas_endpoint, methods=["GET", "DELETE"]),
+            Route("/estatisticas/detalhe", endpoint=ceu.estatisticas_detalhe, methods=["GET"]),
+            Route("/visita", endpoint=ceu.visita, methods=["POST", "OPTIONS"]),
+            Route("/robots.txt", endpoint=ceu.robots, methods=["GET"]),
+            *(Route(c, endpoint=ceu.cartao_servidor, methods=["GET"]) for c in _CARTAO),
             Route("/contatos", endpoint=ceu.listar_contatos, methods=["GET", "DELETE"]),
             Route("/historico", endpoint=ceu.listar_historico, methods=["GET", "DELETE"]),
             # Rota exata: sem ela, POST /mcp recebe 307 para /mcp/, e atrás do proxy o

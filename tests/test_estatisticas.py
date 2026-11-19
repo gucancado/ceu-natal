@@ -139,3 +139,58 @@ def test_zerar_pela_rota_administrativa(tmp_path):
     assert client.delete("/estatisticas", headers={"Authorization": "Bearer admin-secreto"}).json() == {"zerado": True}
     totais = client.get("/estatisticas").json()["totais"]
     assert (totais["calculos"], totais["chamadas"]) == (0, 0)
+
+
+def test_visitas_contam_pagina_referencia_e_pessoa(tmp_path):
+    app = create_app(Settings(
+        estatisticas_path=str(tmp_path / "e.sqlite3"), contatos_admin_token="admin-secreto",
+        public_site_url="https://site.test",
+    ))
+    client = TestClient(app)
+    ua = {"User-Agent": "Mozilla/5.0 Firefox/130"}
+    for corpo in (
+        '{"pagina": "/sinastria/?x=1", "referencia": "www.Google.com"}',
+        '{"pagina": "/sinastria", "referencia": ""}',
+        '{"pagina": "/", "referencia": "chatgpt.com"}',
+    ):
+        r = client.post("/visita", content=corpo, headers={**ua, "Content-Type": "text/plain"})
+        assert r.status_code == 204
+    # Ignorados: robô, página fora do formato, corpo inválido.
+    client.post("/visita", content='{"pagina": "/"}', headers={"User-Agent": "Googlebot/2.1"})
+    client.post("/visita", content='{"pagina": "<script>"}', headers=ua)
+    client.post("/visita", content="nada", headers=ua)
+
+    totais = client.get("/estatisticas").json()["totais"]
+    assert totais["visitas_site"] == 3
+    assert totais["visitantes_dia_site"] == 1
+    assert "google.com" not in client.get("/estatisticas").text
+
+    assert client.get("/estatisticas/detalhe").status_code == 401
+    det = client.get("/estatisticas/detalhe", headers={"Authorization": "Bearer admin-secreto"}).json()
+    assert det["paginas"] == [{"pagina": "/sinastria", "visitas": 2}, {"pagina": "/", "visitas": 1}]
+    assert {r["referencia"] for r in det["referencias"]} == {"google.com", "direto", "chatgpt.com"}
+
+
+def test_resumo_separa_sondagem_de_calculo_e_erros(tmp_path):
+    est, _ = _est(tmp_path)
+    est.registrar_chamada("mcp", "healthcheck", "scanner", "ok", 1)
+    est.registrar_chamada("mcp", "desconhecida", "scanner", "value_error", 1)
+    est.registrar_chamada("mcp", "calcular_mapa_natal", "claude-ai", "value_error", 1)
+    est.registrar_unico("mcp_calculo", "sessao-a")
+    r = est.resumo()
+    assert r["totais"]["sondagens_mcp"] == 2
+    assert r["totais"]["sessoes_mcp_com_calculo"] == 1
+    assert r["erros_por_tipo"] == {"value_error": 2}
+    assert r["por_dia"][-1]["sessoes_mcp_com_calculo"] == 1
+
+
+def test_cartao_do_servidor_e_robots_publicos(tmp_path):
+    client = TestClient(create_app(Settings(api_key="segredo")))
+    for caminho in ("/.well-known/mcp.json", "/.well-known/mcp/server-card.json", "/mcp/server-card"):
+        r = client.get(caminho)
+        assert r.status_code == 200, caminho
+        corpo = r.json()
+        assert corpo["serverInfo"]["name"] == "ceu-natal"
+        assert corpo["transport"]["endpoint"] == "/mcp/"
+        assert len(corpo["tools"]) == 9
+    assert client.get("/robots.txt").text.startswith("User-agent: *")

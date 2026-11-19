@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cabecalho } from "@/components/cabecalho";
+import { ContadorVisita } from "@/components/contador-visita";
 import { EstrelasCadentes } from "@/components/estrelas-cadentes";
 import { Rodape } from "@/components/rodape";
 import { jetbrainsMono } from "@/lib/fontes";
@@ -50,6 +51,7 @@ export function Documento({ idioma, children }: { idioma: Idioma; children: Reac
         <Cabecalho />
         <main id="conteudo">{children}</main>
         <Rodape idioma={idioma} />
+        <ContadorVisita />
       </body>
     </html>
   );

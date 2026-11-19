@@ -96,6 +96,7 @@ def test_dia_vira_no_horario_de_brasilia(tmp_path):
     est.registrar_mapa_site(MAPA)
     assert est.resumo()["por_dia"][-1] == {
         "dia": "2026-11-11", "calculos": 1, "pessoas_site": 0, "sessoes_mcp": 0,
+        "sessoes_mcp_com_calculo": 0, "visitas": 0, "visitantes": 0,
     }
 
 

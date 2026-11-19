@@ -82,19 +82,20 @@ export function PainelUso({ e }: { e: Estatisticas }) {
 
       <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Numero valor={formatarInteiro(t.calculos)} rotulo="cálculos feitos" />
-        <Numero valor={formatarInteiro(t.sessoesMcp)} rotulo="conversas na ia" nota="sessões mcp únicas por dia" />
-        <Numero valor={formatarInteiro(t.pessoasDiaSite)} rotulo="pessoas no site" nota="únicas por dia, somadas" />
+        <Numero
+          valor={formatarInteiro(t.sessoesMcpComCalculo)}
+          rotulo="conversas na ia"
+          nota="com ao menos um cálculo; sem robôs de catálogo"
+        />
+        <Numero valor={formatarInteiro(t.pessoasDiaSite)} rotulo="pessoas no site" nota="fizeram mapa; únicas por dia, somadas" />
         <Numero valor={formatarInteiro(t.cidades)} rotulo={`cidades em ${formatarInteiro(t.paises)} países`} />
         <Numero valor={formatarInteiro(hoje?.calculos ?? 0)} rotulo="cálculos hoje" />
-        <Numero
-          valor={formatarInteiro((hoje?.sessoesMcp ?? 0) + (hoje?.pessoasSite ?? 0))}
-          rotulo="pessoas e conversas hoje"
-        />
+        <Numero valor={formatarInteiro(t.visitasSite)} rotulo="páginas abertas no site" nota="sem cookie" />
         <Numero valor={`${formatarInteiro(Math.round(t.tempoMedioMs))} ms`} rotulo="tempo médio por chamada" />
         <Numero
           valor={`${(t.taxaErro * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`}
           rotulo="chamadas com erro"
-          nota="inclui data inválida e cidade não encontrada"
+          nota="inclui data inválida, cidade não encontrada e testes de robôs"
         />
       </div>
 
