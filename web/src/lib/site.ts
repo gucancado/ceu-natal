@@ -35,6 +35,9 @@ export const alternativaLlmsEn = { "text/plain": [{ url: "/en/llms.txt", title: 
 // layout, então a largura, a altura e o texto alternativo precisam vir junto).
 export const imagemOg = { url: "/opengraph-image", width: 1200, height: 630, alt: tituloHome, type: "image/png" };
 
+// Código público com que o Bing Webmaster Tools confere quem é o dono do site (meta `msvalidate.01`).
+export const verificacaoBing = "CB94896468FE843241EB33B670B4FC62";
+
 // Robôs de busca e de leitura das IAs, liberados pelo nome no robots.txt.
 export const robosDeIa = [
   "GPTBot",

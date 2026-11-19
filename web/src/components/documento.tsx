@@ -4,7 +4,7 @@ import { EstrelasCadentes } from "@/components/estrelas-cadentes";
 import { Rodape } from "@/components/rodape";
 import { jetbrainsMono } from "@/lib/fontes";
 import type { Idioma } from "@/lib/idioma";
-import { alternativaLlms, descricaoSite, imagemOg, site } from "@/lib/site";
+import { alternativaLlms, descricaoSite, imagemOg, site, verificacaoBing } from "@/lib/site";
 import { scriptCopiar } from "@/lib/script-copiar";
 import "@/app/globals.css";
 
@@ -17,6 +17,7 @@ export const metadataBase: Metadata = {
   // Canonical relativo: resolve para a rota atual via metadataBase.
   alternates: { canonical: "./", types: alternativaLlms },
   authors: [{ name: site.autor, url: site.autorUrl }],
+  verification: { other: { "msvalidate.01": verificacaoBing } },
   // A imagem é a do app/opengraph-image.tsx, apontada aqui à mão: com um layout raiz por grupo de rota, a
   // convenção de arquivo na raiz de app/ não chega às páginas.
   // Sem title/description aqui: o Next herda os de cada página (senão toda página teria og:title da home).
