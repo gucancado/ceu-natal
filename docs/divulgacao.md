@@ -22,6 +22,9 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Schema.org da home com autor, repositório e lista de técnicas | Claude | feito |
 | Cadastro no Google Search Console (domínio `gustavocancado.com.br`) e no Bing (importado do Google), sitemap enviado | Claude in Chrome | feito (2026-11-12) |
 | Post no TabNews e em comunidades de astrologia mostrando o `/mapa` no ChatGPT | Gustavo | pendente |
+| Site em `ceunatal.gustavocancado.com.br`; o endereço antigo (`mistico`) redireciona com o caminho | Claude | feito (2026-11-19) |
+| `robots.txt` com os robôs das IAs pelo nome, link para o `llms.txt` no cabeçalho, datas e `llms.txt` no sitemap, autor nos dados estruturados | Claude | feito (2026-11-19) |
+| Search Console e Bing: enviar `https://ceunatal.gustavocancado.com.br/sitemap.xml` e pedir indexação da home, `/mapa`, `/en` e das três landings (a propriedade de domínio já cobre o endereço novo) | Gustavo | pendente |
 
 ## Frente 2: global (diretórios de MCP e inglês)
 
@@ -38,6 +41,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
 | Diretório de conectores do Claude | Gustavo | enviado, em revisão (2026-11-12) |
+| Trocar o endereço do site nos envios já feitos: PR do Docker (#7024, `Docs` e `icon` ainda em `mistico`), Glama e MCP Registry (na próxima versão; o `server.json` já está com o endereço novo) | Claude | pendente; o endereço antigo redireciona enquanto isso |
 | Server card e `robots.txt` no domínio do servidor MCP | Claude | pendente (há trabalho não commitado em `app/`) |
 
 ## Próximas frentes (levantadas em 2026-11-12, conferir cada página de envio antes)
