@@ -24,8 +24,8 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Post no TabNews e em comunidades de astrologia mostrando o `/mapa` no ChatGPT | Gustavo | pendente |
 | Site em `ceunatal.gustavocancado.com.br`; o endereço antigo (`mistico`) redireciona com o caminho | Claude | feito (2026-11-19) |
 | `robots.txt` com os robôs das IAs pelo nome, link para o `llms.txt` no cabeçalho, datas e `llms.txt` no sitemap, autor nos dados estruturados | Claude | feito (2026-11-19) |
-| Search Console: sitemap `https://ceunatal.gustavocancado.com.br/sitemap.xml` enviado e indexação pedida para a home, `/mapa`, `/en` e as três landings | Claude in Chrome | feito (2026-11-19); o sitemap apareceu como "Não foi possível buscar" logo depois do envio, conferir de novo |
-| Bing: cadastrar `ceunatal.gustavocancado.com.br`, enviar o sitemap e as seis páginas | Claude in Chrome | parou na verificação; a meta `msvalidate.01` já está no site (2026-11-19), falta clicar em verificar no Bing e enviar |
+| Search Console: sitemap `https://ceunatal.gustavocancado.com.br/sitemap.xml` enviado e indexação pedida para a home, `/mapa`, `/en` e as três landings | Claude in Chrome | feito (2026-11-19); sitemap processado, 11 páginas encontradas |
+| Bing: `ceunatal.gustavocancado.com.br` verificado pela meta `msvalidate.01`, sitemap e as seis páginas enviados | Claude in Chrome | feito (2026-11-19); a meta precisa continuar no site, senão o Bing tira a verificação |
 | `/en` com `<html lang="en">` e `llms.txt` em inglês em `/en/llms.txt` | Claude | feito (2026-11-19) |
 
 ## Frente 2: global (diretórios de MCP e inglês)

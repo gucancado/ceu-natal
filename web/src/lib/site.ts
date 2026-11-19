@@ -36,6 +36,7 @@ export const alternativaLlmsEn = { "text/plain": [{ url: "/en/llms.txt", title: 
 export const imagemOg = { url: "/opengraph-image", width: 1200, height: 630, alt: tituloHome, type: "image/png" };
 
 // Código público com que o Bing Webmaster Tools confere quem é o dono do site (meta `msvalidate.01`).
+// Precisa continuar no ar: sem a meta, o Bing tira a verificação do site.
 export const verificacaoBing = "CB94896468FE843241EB33B670B4FC62";
 
 // Robôs de busca e de leitura das IAs, liberados pelo nome no robots.txt.
