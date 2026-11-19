@@ -15,6 +15,8 @@ Mudanças relevantes do servidor e do site. Formato inspirado no
 
 ### Alterado
 
+- O site passa a ficar em <https://ceunatal.gustavocancado.com.br>. O endereço antigo (`mistico.gustavocancado.com.br`) redireciona para o novo, mantendo o caminho.
+- Site mais fácil de achar por buscadores e por IAs: robôs das IAs liberados pelo nome no `robots.txt`, link para o `llms.txt` no cabeçalho de toda página, datas e os dois `llms.txt` no sitemap, autor nos dados estruturados e no `llms.txt`.
 - Um mapa do site conta como 1, mesmo quando é feito só com a data e completado depois com hora e cidade.
 - O dia das estatísticas vira no horário de Brasília.
 - O cadastro de contato volta a ficar depois do prompt.

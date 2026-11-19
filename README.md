@@ -7,7 +7,7 @@ natal charts, synastry, transits, progressions and solar/lunar returns with the 
 Ephemeris, answering in Portuguese. A free public endpoint runs at
 `https://astrologia-mcp.gustavocancado.com.br/mcp/` (no sign-up). Licensed AGPL-3.0.
 Setup for Claude, ChatGPT, Claude Code and Cursor in English:
-<https://mistico.gustavocancado.com.br/en>. Quick start in Claude Code:
+<https://ceunatal.gustavocancado.com.br/en>. Quick start in Claude Code:
 `claude mcp add --transport http --scope user ceu-natal https://astrologia-mcp.gustavocancado.com.br/mcp/`.
 
 [![CI](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml/badge.svg)](https://github.com/gucancado/ceu-natal/actions/workflows/ci.yml)
@@ -29,7 +29,7 @@ https://astrologia-mcp.gustavocancado.com.br/mcp/
 ```
 
 Passo a passo para Claude, ChatGPT, Gemini, Manus, Cursor e n8n:
-<https://mistico.gustavocancado.com.br/#conectar>.
+<https://ceunatal.gustavocancado.com.br/#conectar>.
 
 ## O que calcula
 
@@ -142,7 +142,7 @@ Para desenvolver, instale também `requirements-dev.txt` e rode `ruff check .`, 
 
 ## Site (`web/`)
 
-O site de apresentação (<https://mistico.gustavocancado.com.br>) é um app Next.js 16
+O site de apresentação (<https://ceunatal.gustavocancado.com.br>) é um app Next.js 16
 separado, com imagem Docker própria (`web/Dockerfile`). Para rodar:
 `cd web && pnpm install && pnpm dev`; as URLs vêm de `web/.env.example`.
 

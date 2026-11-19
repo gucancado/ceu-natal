@@ -6,7 +6,7 @@ import { Hero } from "@/components/hero";
 import { jsonLdScript } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
-import { site } from "@/lib/site";
+import { alternativaLlms, imagemOg, site } from "@/lib/site";
 
 // A home em inglês: o mesmo layout e os mesmos componentes da home em português, com os textos traduzidos.
 // O mapa pelo formulário fica só em português (o resultado sai em português). hreflang nos dois sentidos.
@@ -17,7 +17,7 @@ const descricao =
 export const metadata: Metadata = {
   title: { absolute: `${titulo} | ${site.nome}` },
   description: descricao,
-  alternates: { canonical: "/en", languages: { "pt-BR": "/", en: "/en", "x-default": "/" } },
+  alternates: { canonical: "/en", languages: { "pt-BR": "/", en: "/en", "x-default": "/" }, types: alternativaLlms },
   openGraph: {
     title: titulo,
     description: descricao,
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: site.nome,
     url: "/en",
-    images: ["/opengraph-image"],
+    images: [imagemOg],
   },
-  twitter: { card: "summary_large_image", title: titulo, description: descricao, images: ["/opengraph-image"] },
+  twitter: { card: "summary_large_image", title: titulo, description: descricao, images: [imagemOg] },
 };
 
 const jsonLd = {
@@ -43,7 +43,8 @@ const jsonLd = {
   isAccessibleForFree: true,
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   license: "https://www.gnu.org/licenses/agpl-3.0.html",
-  author: { "@type": "Person", name: "Gustavo Cançado", url: site.autorUrl },
+  sameAs: [site.repoUrl],
+  author: { "@type": "Person", name: site.autor, url: site.autorUrl, sameAs: [...site.autorPerfis] },
 };
 
 export default function HomeIngles() {

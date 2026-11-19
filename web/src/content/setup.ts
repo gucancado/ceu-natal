@@ -12,7 +12,7 @@ export const passosConexao = {
 };
 
 export const promptSetup = [
-  `Quero usar o ${site.nome} aqui. É um servidor MCP gratuito que calcula mapa astral com as efemérides suíças. Endereço: ${site.mcpEndpoint} (sem login e sem chave).`,
+  `Quero usar o ${site.nome} aqui. É um servidor MCP gratuito que calcula mapa astral com efemérides suíças. Endereço: ${site.mcpEndpoint} (sem login e sem chave).`,
   "Se as ferramentas dele já estiverem disponíveis nesta conversa, pule direto para o cálculo do mapa.",
   "Se não, me passe numa única mensagem todos os passos para adicionar o conector, com o link direto e os valores prontos para copiar. Não divida em várias mensagens e só me pergunte qual aplicativo eu uso se não souber.",
   passosConexao.chatgpt,

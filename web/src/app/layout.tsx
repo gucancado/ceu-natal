@@ -3,7 +3,7 @@ import { Cabecalho } from "@/components/cabecalho";
 import { EstrelasCadentes } from "@/components/estrelas-cadentes";
 import { Rodape } from "@/components/rodape";
 import { jetbrainsMono } from "@/lib/fontes";
-import { descricaoSite, site } from "@/lib/site";
+import { alternativaLlms, descricaoSite, site } from "@/lib/site";
 import { scriptCopiar } from "@/lib/script-copiar";
 import "./globals.css";
 
@@ -12,7 +12,8 @@ export const metadata: Metadata = {
   title: { default: site.nome, template: "%s · Céu Natal" },
   description: descricaoSite,
   // Canonical relativo: resolve para a rota atual via metadataBase.
-  alternates: { canonical: "./" },
+  alternates: { canonical: "./", types: alternativaLlms },
+  authors: [{ name: site.autor, url: site.autorUrl }],
   // og:image/twitter:image vêm do app/opengraph-image.tsx (convenção de arquivo).
   // Sem title/description aqui: o Next herda os de cada página (senão toda página teria og:title da home).
   openGraph: {

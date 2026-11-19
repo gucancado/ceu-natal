@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FormMapa } from "@/components/form-mapa";
 import { jsonLdScript } from "@/components/json-ld";
 import { planeta } from "@/lib/glifos";
-import { site } from "@/lib/site";
+import { imagemOg, site } from "@/lib/site";
 
 const titulo = "Mapa astral grátis e sem cadastro";
 const descricao =
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     siteName: site.nome,
     url: "/mapa",
-    images: ["/opengraph-image"],
+    images: [imagemOg],
   },
   twitter: {
     card: "summary_large_image",
     title: titulo,
     description: descricao,
-    images: ["/opengraph-image"],
+    images: [imagemOg],
   },
 };
 

@@ -3,7 +3,7 @@
 Versão 8 — 2026-11-12 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o Céu Natal (o servidor MCP e
-o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://mistico.gustavocancado.com.br.
+o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://ceunatal.gustavocancado.com.br.
 
 ## 1. Quem é o controlador
 

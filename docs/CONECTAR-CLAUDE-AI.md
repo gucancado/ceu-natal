@@ -1,10 +1,10 @@
 # Como conectar o `ceu-natal` no seu Claude.ai
 
 O guia canônico, mantido em dia com a interface e com os limites de cada plano,
-é a versão web: https://mistico.gustavocancado.com.br/conectar/claude-ai. Para os
+é a versão web: https://ceunatal.gustavocancado.com.br/conectar/claude-ai. Para os
 outros clientes da Anthropic, veja
-https://mistico.gustavocancado.com.br/conectar/claude-desktop e
-https://mistico.gustavocancado.com.br/conectar/claude-code. Este arquivo só
+https://ceunatal.gustavocancado.com.br/conectar/claude-desktop e
+https://ceunatal.gustavocancado.com.br/conectar/claude-code. Este arquivo só
 resume o endpoint, as ferramentas e o diagnóstico.
 
 Endpoint MCP (Streamable HTTP): `https://astrologia-mcp.gustavocancado.com.br/mcp/`

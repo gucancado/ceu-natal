@@ -8,10 +8,10 @@ Dados comuns:
 |---|---|
 | URL do servidor | `https://astrologia-mcp.gustavocancado.com.br/mcp/` |
 | Autenticação | nenhuma |
-| Site | `https://mistico.gustavocancado.com.br` |
-| Documentação | `https://mistico.gustavocancado.com.br/conectar` |
-| Privacidade | `https://mistico.gustavocancado.com.br/privacidade` |
-| Termos | `https://mistico.gustavocancado.com.br/termos` |
+| Site | `https://ceunatal.gustavocancado.com.br` |
+| Documentação | `https://ceunatal.gustavocancado.com.br/conectar` |
+| Privacidade | `https://ceunatal.gustavocancado.com.br/privacidade` |
+| Termos | `https://ceunatal.gustavocancado.com.br/termos` |
 | Suporte | `https://github.com/gucancado/ceu-natal/issues` |
 | Ícone | `docs/diretorios/icone.png` (512 × 512) |
 

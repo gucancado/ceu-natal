@@ -60,7 +60,7 @@ representante designado em um evento online ou offline.
 
 Ocorrências de comportamento abusivo, de assédio ou inaceitável podem ser
 relatadas aos líderes da comunidade responsáveis pela aplicação pelo contato da
-[política de privacidade](https://mistico.gustavocancado.com.br/privacidade). Todas as reclamações serão revisadas e investigadas de
+[política de privacidade](https://ceunatal.gustavocancado.com.br/privacidade). Todas as reclamações serão revisadas e investigadas de
 forma rápida e justa.
 
 Todos os líderes da comunidade são obrigados a respeitar a privacidade e a

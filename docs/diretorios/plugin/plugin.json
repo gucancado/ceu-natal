@@ -3,8 +3,8 @@
   "name": "ceu-natal",
   "version": "1.0.0",
   "description": "Astrology calculations with the Swiss Ephemeris: natal chart, synastry, composite chart, transits, secondary progressions and solar and lunar returns.",
-  "author": { "name": "Gustavo Cançado", "url": "https://mistico.gustavocancado.com.br" },
-  "homepage": "https://mistico.gustavocancado.com.br",
+  "author": { "name": "Gustavo Cançado", "url": "https://ceunatal.gustavocancado.com.br" },
+  "homepage": "https://ceunatal.gustavocancado.com.br",
   "extensions": {
     "com.openai": {
       "onboardingSkill": "./skills/mapa-astral/SKILL.md",
@@ -15,10 +15,10 @@
         "developerName": "Gustavo Cançado",
         "category": "Entertainment",
         "capabilities": ["Read"],
-        "websiteURL": "https://mistico.gustavocancado.com.br",
+        "websiteURL": "https://ceunatal.gustavocancado.com.br",
         "supportURL": "https://github.com/gucancado/ceu-natal/issues",
-        "privacyPolicyURL": "https://mistico.gustavocancado.com.br/privacidade",
-        "termsOfServiceURL": "https://mistico.gustavocancado.com.br/termos",
+        "privacyPolicyURL": "https://ceunatal.gustavocancado.com.br/privacidade",
+        "termsOfServiceURL": "https://ceunatal.gustavocancado.com.br/termos",
         "defaultPrompt": [
           "Calculate my natal chart: born 12/03/1990 at 14:30 in Belo Horizonte, Brazil.",
           "What are today's transits over my natal chart?",

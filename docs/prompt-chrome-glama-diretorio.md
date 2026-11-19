@@ -10,10 +10,10 @@ Dados do projeto:
 - Nome: Céu Natal
 - Autor e responsável: Gustavo Cançado, https://gustavocancado.com.br
 - URL do servidor MCP (Streamable HTTP, sem autenticação): https://astrologia-mcp.gustavocancado.com.br/mcp/
-- Site: https://mistico.gustavocancado.com.br (inglês: https://mistico.gustavocancado.com.br/en)
+- Site: https://ceunatal.gustavocancado.com.br (inglês: https://ceunatal.gustavocancado.com.br/en)
 - Repositório: https://github.com/gucancado/ceu-natal (AGPL-3.0, Python). Na raiz há `Dockerfile` e `glama.json` (mantenedor `gucancado`).
 - Suporte: https://github.com/gucancado/ceu-natal/issues
-- Privacidade: https://mistico.gustavocancado.com.br/privacidade · Termos: https://mistico.gustavocancado.com.br/termos
+- Privacidade: https://ceunatal.gustavocancado.com.br/privacidade · Termos: https://ceunatal.gustavocancado.com.br/termos
 - Descrição curta (EN): Free astrology MCP server: natal chart, synastry, transits, progressions and solar/lunar returns with the Swiss Ephemeris. No login, no API key.
 
 ## 1. Glama: reivindicar e conseguir a nota

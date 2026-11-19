@@ -6,12 +6,12 @@ import { Hero } from "@/components/hero";
 import { JsonLd } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
-import { tituloHome } from "@/lib/site";
+import { alternativaLlms, tituloHome } from "@/lib/site";
 
 // A descrição continua a do layout.
 export const metadata: Metadata = {
   title: { absolute: tituloHome },
-  alternates: { canonical: "/", languages: { "pt-BR": "/", en: "/en", "x-default": "/" } },
+  alternates: { canonical: "/", languages: { "pt-BR": "/", en: "/en", "x-default": "/" }, types: alternativaLlms },
 };
 
 export default function Home() {

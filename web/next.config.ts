@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
   // conhecem, caem na seção "como conectar" da home, com o guia daquela IA aberto.
   async redirects() {
     return [
+      // Endereço antigo do site: tudo vai para o mesmo caminho no endereço atual. Vem antes das outras
+      // regras para o visitante dar um salto só.
+      // O filtro evita um laço se o site for publicado de novo num endereço antigo.
+      ...site.hostsAntigos.filter((host) => host !== new URL(site.url).host).map((host) => ({
+        source: "/:caminho*",
+        has: [{ type: "host" as const, value: host }],
+        destination: `${site.url}/:caminho*`,
+        permanent: true,
+      })),
       { source: "/conectar", destination: "/#conectar", permanent: true },
       { source: "/conectar/:cliente", destination: "/?cliente=:cliente#conectar", permanent: true },
       // Páginas antigas por técnica que viraram parte de uma landing por busca.

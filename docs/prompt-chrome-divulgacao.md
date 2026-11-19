@@ -9,10 +9,10 @@ Regras:
 Dados do projeto:
 - Nome: Céu Natal
 - URL do servidor MCP (Streamable HTTP, sem autenticação): https://astrologia-mcp.gustavocancado.com.br/mcp/
-- Site: https://mistico.gustavocancado.com.br (inglês: https://mistico.gustavocancado.com.br/en)
+- Site: https://ceunatal.gustavocancado.com.br (inglês: https://ceunatal.gustavocancado.com.br/en)
 - Repositório: https://github.com/gucancado/ceu-natal (AGPL-3.0, Python)
-- Privacidade: https://mistico.gustavocancado.com.br/privacidade · Termos: https://mistico.gustavocancado.com.br/termos
-- Ícone: https://mistico.gustavocancado.com.br/icon.svg
+- Privacidade: https://ceunatal.gustavocancado.com.br/privacidade · Termos: https://ceunatal.gustavocancado.com.br/termos
+- Ícone: https://ceunatal.gustavocancado.com.br/icon.svg
 - Descrição curta (PT): Mapa natal, sinastria, trânsitos, progressões e revoluções com efemérides suíças, em português.
 - Short description (EN): Free astrology MCP server: natal chart, synastry, transits, progressions and solar/lunar returns with the Swiss Ephemeris. No login, no API key.
 - Long description (EN): Céu Natal gives your AI assistant calculated astrology charts instead of estimated ones. It computes natal charts, synastry, composite charts, transits, secondary progressions and solar and lunar returns with the Swiss Ephemeris, and converts the birth city into coordinates and historical time zone before calculating. Tool results are in Portuguese; the assistant translates when answering. Free, open source, no account and no API key.
@@ -24,13 +24,13 @@ Dados do projeto:
 2. Copie o registro TXT de verificação que o Google mostrar.
 3. Abra https://registro.br, entre na conta, abra o domínio `gustavocancado.com.br` > DNS > editar zona. **Acrescente** um registro TXT na raiz (nome vazio ou `@`) com o valor copiado. Não mexa nos registros que já existem. Salve.
 4. Volte ao Search Console e clique em Verificar. Se ainda não propagou, espere alguns minutos e tente de novo (até 3 vezes).
-5. Em Sitemaps, envie `https://mistico.gustavocancado.com.br/sitemap.xml`.
-6. Em Inspeção de URL, peça indexação de: `/`, `/mapa`, `/en`, `/sinastria`, `/transitos`, `/revolucao-solar` (todos em https://mistico.gustavocancado.com.br).
+5. Em Sitemaps, envie `https://ceunatal.gustavocancado.com.br/sitemap.xml`.
+6. Em Inspeção de URL, peça indexação de: `/`, `/mapa`, `/en`, `/sinastria`, `/transitos`, `/revolucao-solar` (todos em https://ceunatal.gustavocancado.com.br).
 
 ## 2. Bing Webmaster Tools
 1. Abra https://www.bing.com/webmasters e entre com a conta Google.
-2. Escolha **Importar do Google Search Console** e importe o site `mistico.gustavocancado.com.br` (se o domínio ainda não aparecer verificado no Google, adicione o site manualmente e verifique pelo mesmo método de DNS).
-3. Confirme que o sitemap foi importado; se não, envie `https://mistico.gustavocancado.com.br/sitemap.xml`.
+2. Escolha **Importar do Google Search Console** e importe o site `ceunatal.gustavocancado.com.br` (se o domínio ainda não aparecer verificado no Google, adicione o site manualmente e verifique pelo mesmo método de DNS).
+3. Confirme que o sitemap foi importado; se não, envie `https://ceunatal.gustavocancado.com.br/sitemap.xml`.
 
 ## 3. Smithery
 1. Abra https://smithery.ai e entre com GitHub.

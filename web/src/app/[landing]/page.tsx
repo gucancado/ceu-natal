@@ -10,7 +10,7 @@ import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
 import { landing, landings } from "@/content/landings";
 import { tecnicaDa, type Tecnica } from "@/content/tecnicas";
-import { site } from "@/lib/site";
+import { imagemOg, site } from "@/lib/site";
 
 // Landing por intenção de busca, com o layout da home. Só as de content/landings.ts; qualquer outro
 // caminho de um segmento dá 404.
@@ -37,9 +37,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: "pt_BR",
       siteName: site.nome,
       url,
-      images: ["/opengraph-image"],
+      images: [imagemOg],
     },
-    twitter: { card: "summary_large_image", title: l.titulo, description: l.descricao, images: ["/opengraph-image"] },
+    twitter: { card: "summary_large_image", title: l.titulo, description: l.descricao, images: [imagemOg] },
   };
 }
 
