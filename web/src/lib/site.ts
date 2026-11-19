@@ -29,6 +29,7 @@ export const tituloHome = `${site.nome}: ${fraseHome}`;
 // <link rel="alternate" type="text/plain"> para o /llms.txt. Página que define `alternates` repete este
 // campo, porque o Next não mescla `alternates` com o do layout.
 export const alternativaLlms = { "text/plain": [{ url: "/llms.txt", title: "llms.txt" }] };
+export const alternativaLlmsEn = { "text/plain": [{ url: "/en/llms.txt", title: "llms.txt" }] };
 
 // Imagem de compartilhamento das páginas que definem o próprio `openGraph` (o Next não mescla com o do
 // layout, então a largura, a altura e o texto alternativo precisam vir junto).

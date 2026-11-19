@@ -24,7 +24,8 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Post no TabNews e em comunidades de astrologia mostrando o `/mapa` no ChatGPT | Gustavo | pendente |
 | Site em `ceunatal.gustavocancado.com.br`; o endereço antigo (`mistico`) redireciona com o caminho | Claude | feito (2026-11-19) |
 | `robots.txt` com os robôs das IAs pelo nome, link para o `llms.txt` no cabeçalho, datas e `llms.txt` no sitemap, autor nos dados estruturados | Claude | feito (2026-11-19) |
-| Search Console e Bing: enviar `https://ceunatal.gustavocancado.com.br/sitemap.xml` e pedir indexação da home, `/mapa`, `/en` e das três landings (a propriedade de domínio já cobre o endereço novo) | Gustavo | pendente |
+| Search Console e Bing: enviar `https://ceunatal.gustavocancado.com.br/sitemap.xml` e pedir indexação da home, `/mapa`, `/en` e das três landings (a propriedade de domínio já cobre o endereço novo) | Claude in Chrome | pendente; rodar o [prompt](prompt-chrome-troca-endereco.md) |
+| `/en` com `<html lang="en">` e `llms.txt` em inglês em `/en/llms.txt` | Claude | feito (2026-11-19) |
 
 ## Frente 2: global (diretórios de MCP e inglês)
 
@@ -41,7 +42,9 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
 | Diretório de conectores do Claude | Gustavo | enviado, em revisão (2026-11-12) |
-| Trocar o endereço do site nos envios já feitos: PR do Docker (#7024, `Docs` e `icon` ainda em `mistico`), Glama e MCP Registry (na próxima versão; o `server.json` já está com o endereço novo) | Claude | pendente; o endereço antigo redireciona enquanto isso |
+| Endereço novo no PR do Docker (#7024) e no campo de site do repositório no GitHub | Claude | feito (2026-11-19) |
+| Endereço novo no Glama e no envio ao diretório do Claude | Claude in Chrome | pendente; mesmo [prompt](prompt-chrome-troca-endereco.md) |
+| Endereço novo no MCP Registry | Claude | pendente; vai na próxima versão do servidor (o `server.json` já está certo) |
 | Server card e `robots.txt` no domínio do servidor MCP | Claude | pendente (há trabalho não commitado em `app/`) |
 
 ## Próximas frentes (levantadas em 2026-11-12, conferir cada página de envio antes)

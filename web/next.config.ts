@@ -21,6 +21,9 @@ const csp = [
 const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
+  // 404 único para o site todo (app/global-not-found.tsx): com um layout raiz por idioma, é o jeito de o
+  // 404 sair com a moldura do site e o conteúdo já no HTML.
+  experimental: { globalNotFound: true },
   // As páginas de guia (/conectar e /conectar/<ia>) saíram do ar. Links antigos, inclusive os que as IAs já
   // conhecem, caem na seção "como conectar" da home, com o guia daquela IA aberto.
   async redirects() {

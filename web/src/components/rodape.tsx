@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Idioma } from "@/lib/idioma";
 import { site } from "@/lib/site";
 
 const linkRodape =
@@ -15,11 +16,14 @@ const paginas = [
   { href: "/status", rotulo: "Status" },
 ];
 
-export function Rodape() {
+// Na home em inglês os links continuam em português, porque as páginas de destino são em português:
+// a lista leva lang="pt-BR" para leitores de tela e buscadores.
+export function Rodape({ idioma = "pt" }: { idioma?: Idioma }) {
+  const en = idioma === "en";
   return (
     <footer className="mx-auto max-w-[72rem] px-6">
       <div className="flex flex-col gap-6 py-12 md:flex-row md:items-start md:justify-between">
-        <nav aria-label="Rodapé">
+        <nav aria-label={en ? "Footer" : "Rodapé"} lang={en ? "pt-BR" : undefined}>
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {paginas.map((p) => (
               <li key={p.href}>

@@ -6,10 +6,11 @@ import { Hero } from "@/components/hero";
 import { jsonLdScript } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
-import { alternativaLlms, imagemOg, site } from "@/lib/site";
+import { alternativaLlmsEn, imagemOg, site } from "@/lib/site";
 
 // A home em inglês: o mesmo layout e os mesmos componentes da home em português, com os textos traduzidos.
 // O mapa pelo formulário fica só em português (o resultado sai em português). hreflang nos dois sentidos.
+// O <html lang="en"> vem do layout raiz deste grupo.
 const titulo = "Free astrology MCP server with the Swiss Ephemeris";
 const descricao =
   "Céu Natal is a free, open-source MCP server that calculates natal charts, synastry, transits, progressions and solar and lunar returns with the Swiss Ephemeris. No login, no API key.";
@@ -17,7 +18,7 @@ const descricao =
 export const metadata: Metadata = {
   title: { absolute: `${titulo} | ${site.nome}` },
   description: descricao,
-  alternates: { canonical: "/en", languages: { "pt-BR": "/", en: "/en", "x-default": "/" }, types: alternativaLlms },
+  alternates: { canonical: "/en", languages: { "pt-BR": "/", en: "/en", "x-default": "/" }, types: alternativaLlmsEn },
   openGraph: {
     title: titulo,
     description: descricao,
@@ -49,7 +50,7 @@ const jsonLd = {
 
 export default function HomeIngles() {
   return (
-    <div lang="en">
+    <>
       {jsonLdScript(jsonLd)}
       <Hero idioma="en" />
       <Comecar idioma="en" />
@@ -59,6 +60,6 @@ export default function HomeIngles() {
         </Suspense>
       </Secao>
       <Ferramentas idioma="en" />
-    </div>
+    </>
   );
 }

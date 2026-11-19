@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { cliente, clientes } from "../src/content/clientes";
 import { faq } from "../src/content/faq";
 import { tools } from "../src/content/tools";
-import { gerarLlmsFull, gerarLlmsTxt } from "../src/lib/llms";
+import { gerarLlmsFull, gerarLlmsTxt, gerarLlmsTxtEn } from "../src/lib/llms";
 import { site } from "../src/lib/site";
 
 test("llms.txt: título, endpoint, 9 tools, 8 guias e privacidade", () => {
@@ -41,4 +41,16 @@ test("llms-full.txt: política na íntegra, sem o H1 do arquivo", () => {
   assert.ok(h1 && primeira);
   assert.ok(full.includes(primeira.trim()));
   assert.ok(!full.includes(h1));
+});
+
+test("llms.txt em inglês: endpoint, 9 tools, 8 guias e os dois sentidos do link", () => {
+  const en = gerarLlmsTxtEn();
+  assert.ok(en.startsWith("# Céu Natal\n"));
+  assert.ok(en.includes(site.mcpEndpoint));
+  for (const t of tools) assert.ok(en.includes(`\`${t.nome}\`: ${t.descricaoEn}`), t.nome);
+  for (const c of clientes) assert.ok(en.includes(`${site.url}/en?cliente=${c.slug}#conectar`), c.slug);
+  assert.ok(en.includes(`${site.url}/llms.txt`));
+  assert.ok(gerarLlmsTxt().includes(`${site.url}/en/llms.txt`));
+  // Nada do texto em português da versão principal vaza para a em inglês.
+  assert.ok(!/Ferramentas|Privacidade|chamadas/.test(en));
 });

@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Documento } from "@/components/documento";
+import { site } from "@/lib/site";
 
+// 404 do site inteiro. Há um layout raiz por idioma (`(pt)` e `(en)`), então não existe um layout único
+// de onde o Next monte o 404: este arquivo devolve o documento completo, com a mesma moldura das páginas.
 export const metadata: Metadata = {
-  title: "Página não encontrada",
+  metadataBase: new URL(site.url),
+  title: `Página não encontrada · ${site.nome}`,
 };
 
 export default function NaoEncontrada() {
   return (
+    <Documento idioma="pt">
     <article className="mx-auto max-w-[72rem] px-6 py-16 md:py-24">
       <h1 className="font-display text-4xl font-medium leading-[1.15] tracking-tight md:text-5xl">
         Página não encontrada
@@ -27,5 +33,6 @@ export default function NaoEncontrada() {
         </li>
       </ul>
     </article>
+    </Documento>
   );
 }
