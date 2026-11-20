@@ -37,8 +37,8 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | `/.well-known/mcp/server-card.json` no site | Claude | feito |
 | Publicação no MCP Registry oficial (`io.github.gucancado/ceu-natal` 2.2.6) | Claude | feito (2026-11-12) |
 | Descrição e tópicos do GitHub em inglês e português, seção em inglês no README | Claude | feito |
-| PR no `punkpeye/awesome-mcp-servers` ([#19327](https://github.com/punkpeye/awesome-mcp-servers/pull/19327), em Spirituality & Esoterica) | Claude | aberto; o bot exige nota no Glama |
-| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | configurado em 2026-11-19; o primeiro build falhou no `pip install` (`externally-managed-environment`, Python instalado pelo uv). Falta rodar o [prompt](prompt-chrome-glama-build.md), que troca o passo de build e faz a release 2.2.6 |
+| PR no `punkpeye/awesome-mcp-servers` ([#19327](https://github.com/punkpeye/awesome-mcp-servers/pull/19327), em Spirituality & Esoterica) | Claude | aberto, checagens verdes e selo do Glama reconhecido; o servidor já tem release no Glama (2026-11-19). Espera o mantenedor |
+| Glama: conta criada, servidor reivindicado (Discovery 33%); build pelo modo stdio (`python -m app.stdio`) | Claude in Chrome | feito (2026-11-19): build aprovado e release 2.2.6 publicada, Discovery em 67%. O passo de build precisa de `--break-system-packages` (o Python da imagem é instalado pelo uv); ver o [prompt](prompt-chrome-glama-build.md). Auto-Release ligado: cada release no GitHub gera uma no Glama. Falta o Glama calcular a nota das tools (TDQS) e a coerência |
 | Smithery | — | fechou envios em 2026-10-31 |
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
