@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { grauMinuto, textoMapa, type MapaRapido } from "../src/lib/mapa-texto";
+import { grauMinuto, motivoSemCasas, outroSignoPossivel, textoMapa, type MapaRapido } from "../src/lib/mapa-texto";
 import { promptSetup } from "../src/content/setup";
 import { site } from "../src/lib/site";
 
@@ -54,9 +54,48 @@ test("texto do mapa: prompt de integração, acentos, casas e aspectos", () => {
 test("texto do mapa sem hora: sem casas nem ângulos", () => {
   const t = textoMapa({ nascimento: { data: "15/05/1990", hora: null, local: null }, planetas: completo.planetas });
   assert.ok(t.includes("Nascimento: 15/05/1990\n"));
-  assert.ok(t.includes("Sem hora ou cidade: sem casas nem ângulos."));
+  assert.ok(t.includes("Sem hora e cidade, ainda não há ascendente nem casas."));
+  assert.ok(t.includes("calculadas para 12:00 no horário local"));
   assert.ok(!t.includes("Cúspides"));
   assert.ok(!t.includes("Sistema de casas"));
+});
+
+test("sem hora com cidade: fala só da hora e marca a Lua e os aspectos dela", () => {
+  const t = textoMapa({
+    nascimento: { data: "01/01/1990", hora: null, local: "Belo Horizonte, MG" },
+    planetas: {
+      lua: {
+        signo: "Escorpiao", grau: "27°10'", grau_decimal: 27.17,
+        posicao_incerta: true, margem_graus: 6.4, signo_pode_mudar: true,
+      },
+    },
+    aspectos: [{ planeta_a: "sol", planeta_b: "lua", tipo: "sextil", orbe: 2, incerto: true }],
+  });
+  assert.ok(t.includes("Sem hora, ainda não há ascendente nem casas."));
+  assert.ok(!t.includes("cidade, ainda"));
+  assert.ok(t.includes("- Lua: 27°10' Escorpião, posição incerta, até 6,4° para cada lado; pode estar em Sagitário"));
+  assert.ok(t.includes("ela pode estar em Sagitário"));
+  assert.ok(t.includes("Não interprete a Lua nem os aspectos dela como certos."));
+  assert.ok(t.includes("- Sol sextil Lua (orbe 2°00', incerto)"));
+});
+
+test("outroSignoPossivel: perto do início aponta o signo anterior, com volta em Peixes", () => {
+  assert.equal(
+    outroSignoPossivel({ signo: "Aries", grau: "2°00'", grau_decimal: 2, margem_graus: 6.5, signo_pode_mudar: true }),
+    "Peixes",
+  );
+  assert.equal(
+    outroSignoPossivel({ signo: "Aries", grau: "15°00'", grau_decimal: 15, margem_graus: 6.5, signo_pode_mudar: false }),
+    null,
+  );
+});
+
+test("com hora e cidade mas sem casas (latitude): não pede dado que já existe", () => {
+  assert.equal(
+    motivoSemCasas({ data: "01/01/1990", hora: "10:00", local: "Longyearbyen" }),
+    "Nesta latitude não há casas nem ascendente confiáveis.",
+  );
+  assert.equal(motivoSemCasas({ data: "01/01/1990", hora: "10:00", local: null }), "Sem cidade, ainda não há ascendente nem casas.");
 });
 
 test("prompt de setup: endpoint, guia e healthcheck", () => {

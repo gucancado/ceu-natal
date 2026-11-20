@@ -2,7 +2,17 @@
 // Cresce conforme a pessoa preenche os dados. Só dados → string, sem React.
 import { passosConexao } from "../content/setup";
 import { glifoPonto } from "./glifos";
-import { aspecto, grauMinuto, nome, orientacoesIa, signo, type MapaRapido, type Ponto } from "./mapa-texto";
+import {
+  avisoSemHora,
+  linhaAspecto,
+  motivoSemCasas,
+  nome,
+  orientacoesIa,
+  partesPonto,
+  signo,
+  type MapaRapido,
+  type Ponto,
+} from "./mapa-texto";
 import { site } from "./site";
 
 export type DadosPrompt = {
@@ -20,11 +30,8 @@ export type DadosPrompt = {
 const dois = (s: string) => s.padStart(2, "0");
 
 export function linhaPonto(chave: string, p: Ponto): string {
-  const partes = [`${p.grau} ${signo(p.signo)}`];
-  if (typeof p.casa === "number") partes.push(`casa ${p.casa}`);
-  if (p.retrogrado) partes.push("retrógrado");
   const g = glifoPonto[chave];
-  return `- ${g ? `${g} ` : ""}**${nome(chave)}:** ${partes.join(", ")}`;
+  return `- ${g ? `${g} ` : ""}**${nome(chave)}:** ${partesPonto(p).join(", ")}`;
 }
 
 const temItens = (o?: Record<string, unknown> | null): o is Record<string, Ponto> => !!o && Object.keys(o).length > 0;
@@ -51,7 +58,7 @@ function secoesMapa(m: MapaRapido): string[] {
     linhas.push(
       "",
       "### Aspectos",
-      ...aspectos.map((a) => `- ${nome(a.planeta_a)} ${aspecto(a.tipo)} ${nome(a.planeta_b)} (orbe ${grauMinuto(a.orbe)})`),
+      ...aspectos.map((a) => `- ${linhaAspecto(a)}`),
     );
   }
   return linhas;
@@ -79,7 +86,9 @@ export function promptMapa(d: DadosPrompt): string {
       `> Calculado pelo ${site.nome} com as efemérides suíças. Use estas posições como estão: não recalcule nem estime outras.`,
       "",
     );
-    if (!temCasas) linhas.push("_Sem hora e cidade, ainda não há ascendente nem casas._", "");
+    if (!temCasas) linhas.push(`_${motivoSemCasas(d.mapa.nascimento)}_`, "");
+    const semHora = avisoSemHora(d.mapa);
+    if (semHora) linhas.push(`> ${semHora}`, "");
     linhas.push(...secoesMapa(d.mapa));
   } else if (d.solPelaData) {
     linhas.push(

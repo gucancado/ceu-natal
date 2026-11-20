@@ -283,8 +283,9 @@ body::after {
   }
 }
 
-/* Dica de formato nos campos (dd, mm, aaaa, cidade): bem apagada, para não parecer campo já preenchido.
+/* Dica de formato nos campos (dd, mm, aaaa, cidade): apagada, para não parecer campo já preenchido,
+   mas com contraste de 4,85:1 sobre o fundo (WCAG pede 4,5:1; com 50% dava 2,7:1).
    Fora de @layer, vence o placeholder:text-muted-fg do Input. */
 .campo-dica::placeholder {
-  color: color-mix(in srgb, var(--color-muted-fg) 50%, transparent);
+  color: color-mix(in srgb, var(--color-muted-fg) 75%, transparent);
 }

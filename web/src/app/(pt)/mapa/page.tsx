@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Autor } from "@/components/autor";
 import { FormMapa } from "@/components/form-mapa";
 import { jsonLdScript } from "@/components/json-ld";
 import { planeta } from "@/lib/glifos";
@@ -122,6 +123,7 @@ export default function PaginaMapa() {
           .
         </p>
       </section>
+      <Autor className="mt-16" />
     </article>
   );
 }

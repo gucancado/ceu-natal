@@ -3,9 +3,10 @@ import { Suspense } from "react";
 import { Comecar } from "@/components/comecar";
 import { Ferramentas } from "@/components/ferramentas";
 import { Hero } from "@/components/hero";
-import { jsonLdScript } from "@/components/json-ld";
+import { extrasApp, jsonLdScript } from "@/components/json-ld";
 import { Plataformas, PlataformasGrade } from "@/components/plataformas";
 import { Secao } from "@/components/secao";
+import { versaoServidor } from "@/lib/saude";
 import { alternativaLlmsEn, imagemOg, site } from "@/lib/site";
 
 // A home em inglês: o mesmo layout e os mesmos componentes da home em português, com os textos traduzidos.
@@ -48,10 +49,11 @@ const jsonLd = {
   author: { "@type": "Person", name: site.autor, url: site.autorUrl, sameAs: [...site.autorPerfis] },
 };
 
-export default function HomeIngles() {
+export default async function HomeIngles() {
+  const extras = extrasApp(await versaoServidor(site.mcpUrl));
   return (
     <>
-      {jsonLdScript(jsonLd)}
+      {jsonLdScript({ ...jsonLd, ...extras })}
       <Hero idioma="en" />
       <Comecar idioma="en" />
       <Secao id="conectar" titulo="how to connect">

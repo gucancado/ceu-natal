@@ -57,4 +57,24 @@ test("prompt com o mapa completo: seções em markdown e nada faltando", () => {
   assert.ok(!p.includes("Nodo Norte oposição"));
   assert.ok(!p.includes("Ainda falta"));
   assert.ok(!p.includes("ainda não há ascendente"));
+  assert.ok(!p.includes("12:00"));
+});
+
+test("prompt sem hora e com cidade: Lua incerta e frase só sobre a hora", () => {
+  const mapa: MapaRapido = {
+    nascimento: { data: "01/01/1990", hora: null, local: "Belo Horizonte, MG" },
+    planetas: {
+      lua: {
+        signo: "Escorpiao", grau: "27°10'", grau_decimal: 27.17,
+        posicao_incerta: true, margem_graus: 6.4, signo_pode_mudar: true,
+      },
+    },
+    aspectos: [{ planeta_a: "sol", planeta_b: "lua", tipo: "sextil", orbe: 2, incerto: true }],
+  };
+  const p = promptMapa({ ...vazio, dia: "1", mes: "1", ano: "1990", cidade: "Belo Horizonte, MG", mapa });
+  assert.ok(p.includes("_Sem hora, ainda não há ascendente nem casas._"));
+  assert.ok(!p.includes("Sem hora e cidade"));
+  assert.ok(p.includes("> Sem a hora, as posições foram calculadas para 12:00 no horário local."));
+  assert.ok(p.includes(`**Lua:** 27°10' Escorpião, posição incerta, até 6,4° para cada lado; pode estar em Sagitário`));
+  assert.ok(p.includes("- Sol sextil Lua (orbe 2°00', incerto)"));
 });

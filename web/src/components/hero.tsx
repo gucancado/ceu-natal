@@ -25,9 +25,12 @@ export function Hero({ idioma = "pt", chamada, prompts, comoH1 = false }: Props)
       {/* O Sol vem antes no DOM: fica atrás da Lua quando os dois se cruzam. */}
       <Sol className="absolute left-0 top-[3%] size-[16px] md:size-[22px]" />
       <Lua className="absolute left-0 top-[6%] size-[120px] md:size-[180px]" />
-      {/* Ocupa a tela abaixo do cabeçalho (5rem), para a seção seguinte começar na segunda dobra. */}
-      <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-[72rem] place-items-center px-6 py-16">
-        <div className="w-full max-w-[42rem]">
+      {/* Ocupa a tela abaixo do cabeçalho (5rem), para a seção seguinte começar na segunda dobra.
+          A primeira linha reserva a faixa por onde a Lua passa sobre o texto (6% do topo + o disco + a
+          descida do arco nas bordas do texto, ~9vh): com espaço, o texto fica centrado; em tela baixa,
+          desce em vez de ficar por baixo da Lua. */}
+      <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-[72rem] grid-rows-[minmax(calc(15svh+120px+1.5rem),1fr)_auto_1fr] justify-items-center px-6 pb-16 md:grid-rows-[minmax(calc(15svh+180px+1.5rem),1fr)_auto_1fr]">
+        <div className="row-start-2 w-full max-w-[42rem]">
           <Chamada className="mb-8 text-center text-sm font-normal text-muted-fg md:text-base">
             {texto} <MarcaRotativa emLinha idioma={idioma} />
           </Chamada>

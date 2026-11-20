@@ -1,5 +1,6 @@
 import { tecnicas } from "@/content/tecnicas";
-import { descricaoSite, site } from "@/lib/site";
+import { versaoServidor } from "@/lib/saude";
+import { descricaoSite, imagemOg, site } from "@/lib/site";
 
 // O autor, o site e o aplicativo ficam num grafo só, ligados por @id. O @id do autor é o mesmo que
 // gustavocancado.com.br e o pulsobh usam, para os buscadores e as IAs juntarem tudo na mesma pessoa.
@@ -54,7 +55,17 @@ export function jsonLdScript(dados: object) {
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }
 
+/** Versão do servidor e a imagem OG como screenshot, para o SoftwareApplication. */
+export function extrasApp(versao: string | null) {
+  return {
+    ...(versao ? { softwareVersion: versao } : {}),
+    screenshot: `${site.url}${imagemOg.url}`,
+  };
+}
+
 // Schema.org da home.
-export function JsonLd() {
-  return jsonLdScript(dados);
+export async function JsonLd() {
+  const extras = extrasApp(await versaoServidor(site.mcpUrl));
+  const grafo = dados["@graph"].map((no) => (no["@type"] === "SoftwareApplication" ? { ...no, ...extras } : no));
+  return jsonLdScript({ ...dados, "@graph": grafo });
 }

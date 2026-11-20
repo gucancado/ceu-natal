@@ -1,8 +1,18 @@
 // Mapa natal (JSON do /mapa-rapido) → texto para colar no assistente. Só dados → string.
 import { site } from "./site";
 
-export type Ponto = { signo: string; grau: string; retrogrado?: boolean; casa?: number | null };
-export type Aspecto = { planeta_a: string; planeta_b: string; tipo: string; orbe: number };
+export type Ponto = {
+  signo: string;
+  grau: string;
+  retrogrado?: boolean;
+  casa?: number | null;
+  grau_decimal?: number;
+  /** Sem hora: a Lua calculada às 12:00 pode estar até `margem_graus` para cada lado. */
+  posicao_incerta?: boolean;
+  margem_graus?: number;
+  signo_pode_mudar?: boolean;
+};
+export type Aspecto = { planeta_a: string; planeta_b: string; tipo: string; orbe: number; incerto?: boolean };
 
 export type MapaRapido = {
   nascimento: { data: string; hora?: string | null; local?: string | null };
@@ -41,11 +51,61 @@ export function grauMinuto(decimal: number): string {
   return `${Math.floor(total / 60)}°${String(total % 60).padStart(2, "0")}'`;
 }
 
-function linhaPonto(chave: string, p: Ponto): string {
+const ORDEM_SIGNOS = [
+  "Aries", "Touro", "Gemeos", "Cancer", "Leao", "Virgem",
+  "Libra", "Escorpiao", "Sagitario", "Capricornio", "Aquario", "Peixes",
+];
+
+/** Signo vizinho em que o ponto pode estar quando `signo_pode_mudar`; null se não muda. */
+export function outroSignoPossivel(p: Ponto): string | null {
+  if (!p.signo_pode_mudar || typeof p.grau_decimal !== "number" || typeof p.margem_graus !== "number") return null;
+  const i = ORDEM_SIGNOS.indexOf(p.signo);
+  if (i < 0) return null;
+  // Perto do início do signo, o outro possível é o anterior; perto do fim, o seguinte.
+  return signo(ORDEM_SIGNOS[(i + (p.grau_decimal < p.margem_graus ? 11 : 1)) % 12]);
+}
+
+/** "posição incerta, até 6,5° para cada lado; pode estar em Sagitário", ou null. */
+export function notaIncerteza(p: Ponto): string | null {
+  if (!p.posicao_incerta) return null;
+  const margem = typeof p.margem_graus === "number" ? `, até ${p.margem_graus.toFixed(1).replace(".", ",")}° para cada lado` : "";
+  const outro = outroSignoPossivel(p);
+  return `posição incerta${margem}${outro ? `; pode estar em ${outro}` : ""}`;
+}
+
+/** Por que o mapa veio sem casas, só com o que de fato falta. */
+export function motivoSemCasas(n: MapaRapido["nascimento"]): string {
+  const falta = [!n.hora && "hora", !n.local && "cidade"].filter(Boolean);
+  if (falta.length === 0) return "Nesta latitude não há casas nem ascendente confiáveis.";
+  return `Sem ${falta.join(" e ")}, ainda não há ascendente nem casas.`;
+}
+
+/** Aviso para a IA quando o mapa foi calculado sem hora, ou null. */
+export function avisoSemHora(m: MapaRapido): string | null {
+  if (m.nascimento.hora) return null;
+  const lua = m.planetas.lua;
+  const outro = lua ? outroSignoPossivel(lua) : null;
+  return [
+    "Sem a hora, as posições foram calculadas para 12:00 no horário local.",
+    `A Lua anda cerca de 13° por dia, então a posição dela é incerta${outro ? ` e ela pode estar em ${outro}` : ""}.`,
+    "Não interprete a Lua nem os aspectos dela como certos.",
+  ].join(" ");
+}
+
+export function partesPonto(p: Ponto): string[] {
   const partes = [`${p.grau} ${signo(p.signo)}`];
   if (typeof p.casa === "number") partes.push(`casa ${p.casa}`);
   if (p.retrogrado) partes.push("retrógrado");
-  return `- ${nome(chave)}: ${partes.join(", ")}`;
+  const incerteza = notaIncerteza(p);
+  if (incerteza) partes.push(incerteza);
+  return partes;
+}
+
+export const linhaAspecto = (a: Aspecto) =>
+  `${nome(a.planeta_a)} ${aspecto(a.tipo)} ${nome(a.planeta_b)} (orbe ${grauMinuto(a.orbe)}${a.incerto ? ", incerto" : ""})`;
+
+function linhaPonto(chave: string, p: Ponto): string {
+  return `- ${nome(chave)}: ${partesPonto(p).join(", ")}`;
 }
 
 const temItens = (o?: Record<string, unknown> | null) => !!o && Object.keys(o).length > 0;
@@ -63,7 +123,9 @@ export function textoMapa(m: MapaRapido): string {
     `Nascimento: ${quando}`,
   ];
   if (temCasas && m.sistema_casas) linhas.push(`Sistema de casas: ${m.sistema_casas}`);
-  if (!temCasas) linhas.push("Sem hora ou cidade: sem casas nem ângulos.");
+  if (!temCasas) linhas.push(motivoSemCasas(n));
+  const semHora = avisoSemHora(m);
+  if (semHora) linhas.push(semHora);
   linhas.push("", "Planetas", ...Object.entries(m.planetas).map(([k, p]) => linhaPonto(k, p)));
   if (temItens(m.pontos_sensiveis)) {
     linhas.push("", "Pontos sensíveis", ...Object.entries(m.pontos_sensiveis!).map(([k, p]) => linhaPonto(k, p)));
@@ -84,9 +146,7 @@ export function textoMapa(m: MapaRapido): string {
     linhas.push(
       "",
       "Aspectos",
-      ...aspectos.map(
-        (a) => `- ${nome(a.planeta_a)} ${aspecto(a.tipo)} ${nome(a.planeta_b)} (orbe ${grauMinuto(a.orbe)})`,
-      ),
+      ...aspectos.map((a) => `- ${linhaAspecto(a)}`),
     );
   }
   linhas.push("", `Calculado em ${site.url}`, "", ...orientacoesIa());
