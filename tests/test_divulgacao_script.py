@@ -30,6 +30,12 @@ def test_payload_indexnow_aponta_o_arquivo_da_chave():
 def test_env_ausente_sai_com_2(monkeypatch, capsys):
     d = _carregar()
     monkeypatch.setattr(d, "ARQUIVO_ENV", RAIZ / "scripts" / "nao-existe.env")
-    monkeypatch.delenv("GLAMA_API_KEY", raising=False)
-    assert d.main(["glama"]) == 2
-    assert "GLAMA_API_KEY" in capsys.readouterr().err
+    monkeypatch.delenv("BING_API_KEY", raising=False)
+    assert d.main(["bing", "cota"]) == 2
+    assert "BING_API_KEY" in capsys.readouterr().err
+
+
+def test_resumo_do_selo_do_glama():
+    d = _carregar()
+    svg = '<svg><title>Céu Natal – rated A</title><desc>9 tools, maintenance rated B.</desc><path/></svg>'
+    assert d.resumo_do_selo(svg) == "Céu Natal – rated A\n9 tools, maintenance rated B."

@@ -17,7 +17,8 @@ Envs, do ambiente ou de `scripts/deploy.env` (arquivo local, fora do git):
     SITE_URL          endereço do site (padrão https://ceunatal.gustavocancado.com.br)
     INDEXNOW_KEY      chave pública do IndexNow; o site serve `/<chave>.txt` (web/public/)
     BING_API_KEY      chave da API do Bing Webmaster Tools (Settings → API access)
-    GLAMA_API_KEY     chave da API do Glama (glama.ai/settings/api-keys); só leitura
+    GLAMA_API_KEY     opcional; chave da API do Glama (exige cartão no Glama). Sem ela,
+                      `glama` lê o selo e a página pública
     GOOGLE_SA_JSON    caminho do JSON da conta de serviço com acesso à propriedade
                       `sc-domain:gustavocancado.com.br` no Search Console
     GOOGLE_PROPRIEDADE  padrão `sc-domain:gustavocancado.com.br`
@@ -131,7 +132,22 @@ def cmd_bing(acao: str, urls: list[str]) -> int:
 
 # --- Glama ------------------------------------------------------------------
 
+def resumo_do_selo(svg: str) -> str:
+    """Título e descrição do selo público do Glama (nota, tools, manutenção)."""
+    partes = [re.search(rf"<{tag}>([^<]*)</{tag}>", svg) for tag in ("title", "desc")]
+    return "\n".join(m.group(1) for m in partes if m)
+
+
 def cmd_glama() -> int:
+    if not os.environ.get("GLAMA_API_KEY"):
+        # A chave da API do Glama exige cartão cadastrado; sem ela, lê o selo e a página pública.
+        base = f"https://glama.ai/mcp/servers/{GLAMA_SERVIDOR}"
+        _, svg = requisitar(f"{base}/badges/score.svg")
+        _, pagina = requisitar(base, headers={"User-Agent": "Mozilla/5.0"})
+        print(resumo_do_selo(svg if isinstance(svg, str) else ""))
+        antigos = sorted(set(re.findall(r"mistico\.gustavocancado\.com\.br[^\"'<\\\s]*", str(pagina))))
+        print("Endereço antigo na página:", ", ".join(antigos) or "nenhum")
+        return 0
     status, corpo = requisitar(
         f"https://glama.ai/api/mcp/v1/servers/{GLAMA_SERVIDOR}",
         headers={"Authorization": f"Bearer {env('GLAMA_API_KEY')}"},
