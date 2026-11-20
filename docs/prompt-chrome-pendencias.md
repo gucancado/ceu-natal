@@ -1,16 +1,14 @@
 Feche as pendências do Céu Natal no meu navegador, com as minhas contas já logadas (Google e Claude). Faça as tarefas na ordem. Se uma travar, anote o motivo e siga para a próxima.
 
 Regras:
-- Não pague nada e não crie nada novo.
-- Apague só a chave indicada na tarefa 1, nada mais.
+- Não pague nada, não crie nada novo e não apague nada.
 - Não clique em **Editar** no envio do diretório do Claude: editar devolve o envio para revisão.
 - Pare e me pergunte antes de aceitar termos legais ou declarações em meu nome.
 - Se uma proteção do navegador barrar um clique, não tente contornar: anote e siga.
 
-## 1. Google Cloud: apagar a chave que nunca foi usada
+## 1. Google Cloud: só conferir (a exclusão já foi feita em 2026-11-20)
 1. Abra https://console.cloud.google.com/iam-admin/serviceaccounts?project=bloquim-integracao e entre na conta `ceu-natal-divulgacao@bloquim-integracao.iam.gserviceaccount.com` → aba **Chaves**.
-2. A conta deve ter duas chaves. Apague só a de id começando com `44d7ed257207`. A outra, de id começando com `d2436df1d134`, está em uso: não mexa nela.
-3. Se o id `44d7ed257207` não aparecer, não apague nada; anote os ids que aparecem.
+2. Anote os ids que aparecem. O esperado é só a chave de id começando com `d2436df1d134`. Não apague nada.
 
 ## 2. Diretório de conectores do Claude: publicar
 1. Abra https://claude.ai/directory/manage e abra o envio do Céu Natal.
