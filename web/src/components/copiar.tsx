@@ -10,6 +10,8 @@ type Props = {
   /** id do elemento que mostra o texto; se a cópia falhar, ele fica selecionado para copiar à mão. */
   alvoId?: string;
   idioma?: Idioma;
+  /** Evento do Umami no clique (atributos data-umami-event-*). */
+  evento?: { nome: string; dados?: Record<string, string> };
 };
 
 const textos = {
@@ -32,11 +34,17 @@ const textos = {
 } as const;
 
 // A cópia e a troca de rótulo ficam em lib/script-copiar.ts, para funcionar antes da hidratação.
-export function Copiar({ texto, rotulo, copiado, variant = "outline", size = "sm", alvoId, idioma = "pt" }: Props) {
+export function Copiar({ texto, rotulo, copiado, variant = "outline", size = "sm", alvoId, idioma = "pt", evento }: Props) {
   const t = textos[idioma];
+  const atributosEvento = evento
+    ? {
+        "data-umami-event": evento.nome,
+        ...Object.fromEntries(Object.entries(evento.dados ?? {}).map(([k, v]) => [`data-umami-event-${k}`, v])),
+      }
+    : {};
   return (
     <span className="contents">
-      <button type="button" data-copiar={texto} data-alvo={alvoId} className={buttonVariants({ variant, size })}>
+      <button type="button" data-copiar={texto} data-alvo={alvoId} {...atributosEvento} className={buttonVariants({ variant, size })}>
         <span className="copiar-rotulo">{rotulo ?? t.rotulo}</span>
         <span className="copiar-ok items-center gap-2">
           <svg

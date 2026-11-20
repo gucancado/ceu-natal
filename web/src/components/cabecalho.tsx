@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { logos } from "@/content/logos";
 import { homeDo } from "@/lib/idioma";
 import { site } from "@/lib/site";
+import { rastrear } from "@/lib/umami";
 
 const foco = "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -21,6 +22,8 @@ export function Cabecalho() {
           <Link
             href={en ? homeDo.pt : homeDo.en}
             hrefLang={en ? "pt-BR" : "en"}
+            // Evento por JS: o atributo data-umami-event num link interno faz o Umami recarregar a página.
+            onClick={() => rastrear("idioma", { para: en ? "pt" : "en" })}
             lang={en ? "pt-BR" : "en"}
             className={`${foco} font-mono text-sm text-muted-fg transition-colors hover:text-fg`}
           >

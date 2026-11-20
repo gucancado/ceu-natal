@@ -7,6 +7,7 @@ import { cliente, clientesDaGrade } from "@/content/clientes";
 import { LogoMarca } from "@/components/logo-marca";
 import type { Logo } from "@/content/logos";
 import { homeDo, type Idioma } from "@/lib/idioma";
+import { rastrear } from "@/lib/umami";
 
 const logoDe: Record<string, Logo> = {
   "claude-ai": "claude",
@@ -46,6 +47,7 @@ export function PlataformasGrade({
   }, [aberto]);
 
   function alternar(e: MouseEvent<HTMLAnchorElement>, slug: string) {
+    if (aberto !== slug) rastrear("conectar-mcp", { cliente: slug, acao: "guia" });
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     abriuAgora.current = aberto !== slug;

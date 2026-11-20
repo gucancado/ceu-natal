@@ -19,6 +19,7 @@ import {
 } from "@/lib/prompt-tema";
 import { dataValida } from "@/lib/signo-solar";
 import { site } from "@/lib/site";
+import { rastrear } from "@/lib/umami";
 
 const TEMPO_MAX_MS = 15000;
 // Pausa antes de calcular, para não pedir a cada dígito digitado.
@@ -93,12 +94,14 @@ function CamposPessoa({ p, prefixo, legenda }: { p: Pessoa; prefixo: string; leg
 }
 
 // Um pedido por vez: dados novos cancelam o anterior; o resultado só vale para a chave que o pediu.
-function useCalculo<T>(corpo: Record<string, unknown> | null) {
+function useCalculo<T>(corpo: Record<string, unknown> | null, pagina: string) {
   const chave = corpo ? JSON.stringify(corpo) : "";
   const [resultado, setResultado] = useState<{ chave: string; dados: T } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [calculando, setCalculando] = useState(false);
   const cache = useRef(new Map<string, T>());
+  // Um evento "mapa" por visita à página, no primeiro cálculo que dá certo.
+  const contado = useRef(false);
 
   useEffect(() => {
     if (!chave) return;
@@ -124,6 +127,10 @@ function useCalculo<T>(corpo: Record<string, unknown> | null) {
           cache.current.set(chave, json as T);
           setResultado({ chave, dados: json as T });
           setErro(null);
+          if (!contado.current) {
+            contado.current = true;
+            rastrear("mapa", { pagina });
+          }
         }
       } catch {
         if (!ctrl.signal.aborted) setErro("Sem conexão com o servidor. Tente de novo em instantes.");
@@ -198,7 +205,7 @@ function FormTransitos() {
   // A tool de trânsitos exige hora e cidade de nascimento (casas natais).
   const completo = p.corpo && p.corpo.hora && p.corpo.local;
   const corpo = completo ? { tecnica: "transitos", ...p.corpo, data_transito: hoje, ...ids } : null;
-  const { dados, erro, calculando } = useCalculo<ResultadoTransitos>(corpo);
+  const { dados, erro, calculando } = useCalculo<ResultadoTransitos>(corpo, "transitos");
   const dica = p.dataBr && !completo ? "os trânsitos precisam da hora e da cidade de nascimento." : null;
   return (
     <div className="grid gap-12">
@@ -217,7 +224,7 @@ function FormSinastria() {
   const b = usePessoa();
   const ids = useIdMapa(a);
   const corpo = a.corpo && b.corpo ? { tecnica: "sinastria", ...a.corpo, outra: b.corpo, ...ids } : null;
-  const { dados, erro, calculando } = useCalculo<ResultadoSinastria>(corpo);
+  const { dados, erro, calculando } = useCalculo<ResultadoSinastria>(corpo, "sinastria");
   const dica = a.corpo && !b.corpo ? "falta a data de nascimento da outra pessoa." : null;
   return (
     <div className="grid gap-12">
@@ -248,7 +255,7 @@ function FormRevolucaoSolar() {
   const corpo = completo && ano
     ? { tecnica: "revolucao_solar", ...p.corpo, ano, ...(cidadeAnivOk ? { local_revolucao: cidadeAnivOk } : {}), ...ids }
     : null;
-  const { dados, erro, calculando } = useCalculo<ResultadoRevolucao>(corpo);
+  const { dados, erro, calculando } = useCalculo<ResultadoRevolucao>(corpo, "revolucao-solar");
   const dica = p.dataBr && !completo ? "a revolução solar precisa da hora e da cidade de nascimento." : null;
   return (
     <div className="grid gap-12">

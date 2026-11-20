@@ -8,6 +8,7 @@ import { CaixaPrompt } from "@/components/caixa-prompt";
 import { textoMapa, type MapaRapido } from "@/lib/mapa-texto";
 import { criarIdsDeMapa, idVisitante } from "@/lib/identidade";
 import { site } from "@/lib/site";
+import { rastrear } from "@/lib/umami";
 
 // "1990-05-15" (input date) vira "15/05/1990" (formato do servidor).
 function dataBr(iso: string): string {
@@ -66,6 +67,7 @@ export function FormMapa() {
         return;
       }
       setEstado({ tipo: "pronto", texto: textoMapa(corpo as MapaRapido) });
+      rastrear("mapa", { pagina: "mapa", completo: hora && local ? "sim" : "nao" });
     } catch (err) {
       const estourou = err instanceof DOMException && err.name === "TimeoutError";
       setEstado({

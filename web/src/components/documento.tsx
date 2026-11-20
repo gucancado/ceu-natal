@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cabecalho } from "@/components/cabecalho";
 import { ContadorVisita } from "@/components/contador-visita";
 import { EstrelasCadentes } from "@/components/estrelas-cadentes";
@@ -7,6 +8,7 @@ import { jetbrainsMono } from "@/lib/fontes";
 import type { Idioma } from "@/lib/idioma";
 import { alternativaLlms, descricaoSite, imagemOg, site, verificacaoBing } from "@/lib/site";
 import { scriptCopiar } from "@/lib/script-copiar";
+import { umami } from "@/lib/umami";
 import "@/app/globals.css";
 
 // Metadata comum aos layouts raiz. Há um layout por idioma (grupos de rota `(pt)` e `(en)`) só para o
@@ -52,6 +54,14 @@ export function Documento({ idioma, children }: { idioma: Idioma; children: Reac
         <main id="conteudo">{children}</main>
         <Rodape idioma={idioma} />
         <ContadorVisita />
+        {/* Umami no próprio servidor: sem cookie, respeita Do Not Track, conta só no domínio do site. */}
+        <Script
+          src={umami.script}
+          strategy="afterInteractive"
+          data-website-id={umami.siteId}
+          data-domains={new URL(site.url).host}
+          data-do-not-track="true"
+        />
       </body>
     </html>
   );

@@ -3,7 +3,15 @@ import { Copiar } from "@/components/copiar";
 import type { Idioma } from "@/lib/idioma";
 import { partesTextoGuia } from "@/lib/texto-guia";
 
-export function BlocoCodigo({ codigo, idioma = "pt" }: { codigo: string; idioma?: Idioma }) {
+export function BlocoCodigo({
+  codigo,
+  idioma = "pt",
+  evento,
+}: {
+  codigo: string;
+  idioma?: Idioma;
+  evento?: { nome: string; dados?: Record<string, string> };
+}) {
   const id = useId();
   return (
     <div className="relative max-w-[48rem] rounded-md border border-border bg-muted">
@@ -11,7 +19,7 @@ export function BlocoCodigo({ codigo, idioma = "pt" }: { codigo: string; idioma?
         <code>{codigo}</code>
       </pre>
       <div className="absolute right-2 top-2">
-        <Copiar texto={codigo} alvoId={id} idioma={idioma} />
+        <Copiar texto={codigo} alvoId={id} idioma={idioma} evento={evento} />
       </div>
     </div>
   );

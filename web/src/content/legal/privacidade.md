@@ -1,6 +1,6 @@
 # Política de privacidade — Céu Natal
 
-Versão 9 — 2026-11-19 — vale para o serviço gratuito sem conta; será revista quando houver contas
+Versão 10 — 2026-11-20 — vale para o serviço gratuito sem conta; será revista quando houver contas
 
 Este texto explica, em linguagem simples, o que o Céu Natal (o servidor MCP e
 o site) faz com os seus dados. O serviço fica em https://astrologia-mcp.gustavocancado.com.br; o site, em https://ceunatal.gustavocancado.com.br.
@@ -91,19 +91,33 @@ quiser, e o mapa funciona sem ele.
   valor aleatório são apagados e sobra só o número; não dá para voltar do
   resumo ao IP. Os totais, sem nomes de cidade, aparecem na página de
   status do site.
+- **Contagem de visitas do site (Umami).** Além da contagem acima, o site
+  usa o Umami, um programa de estatísticas de código aberto que roda no
+  mesmo servidor do Céu Natal (https://estatisticas.gustavocancado.com.br),
+  sem passar por empresa de fora. Ele registra a página aberta, o site de
+  onde a pessoa veio, o tipo de aparelho, o navegador, o sistema, o idioma, o
+  tamanho da tela e o país, o estado e a cidade aproximados a partir do IP. O
+  IP em si não é guardado. Também conta alguns cliques, como calcular um
+  mapa, deixar o contato, abrir o guia de conexão de um assistente ou trocar
+  de idioma, sem levar data, hora ou cidade de nascimento, nome nem contato.
+  O Umami não usa cookie nem guarda código no navegador: para juntar as
+  páginas de uma mesma visita, calcula um resumo (hash) do IP e do navegador
+  misturado a um valor que muda todo mês, então não há identificador que siga
+  você de um mês para outro. Se o seu navegador pede para não ser rastreado
+  (Do Not Track), o Umami não registra nada.
 - **Mapas do site.** Data, hora, cidade e coordenadas de cada mapa feito no
   formulário do site, com o código aleatório do navegador (seção 3).
 - **Contatos para novidades.** E-mail ou telefone e a data do cadastro, só de
   quem deixou o contato no site, ligados aos códigos dos navegadores em que a
   pessoa fez mapas (seção 3).
-- **Cookies.** Não usamos nenhum. O site usa o armazenamento local do
-  navegador só para o código aleatório descrito na seção 3.
+- **Cookies.** Não usamos nenhum, nem o Umami. O site usa o armazenamento
+  local do navegador só para o código aleatório descrito na seção 3.
 
 ## 5. Terceiros
 
 - **GeoNames** e **Nominatim/OpenStreetMap** recebem apenas o nome da cidade,
   para descobrir as coordenadas.
-- **Hetzner Cloud** hospeda o servidor.
+- **Hetzner Cloud** hospeda o servidor, inclusive o Umami.
 - **O seu assistente de IA** (Anthropic, OpenAI, Google ou outro) tem política
   própria. É ele que guarda a sua conversa, incluindo o que você escreveu e o
   mapa devolvido. Consulte a política do assistente que você usa.

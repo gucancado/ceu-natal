@@ -1,17 +1,18 @@
 import type { NextConfig } from "next";
 import { redirecionadas } from "./src/content/landings";
 import { site } from "./src/lib/site";
+import { umami } from "./src/lib/umami";
 
 // Fontes vêm do next/font (servidas pelo próprio site) e o único destino externo é o servidor MCP,
-// chamado pelo formulário do /mapa. 'unsafe-inline' fica por causa do runtime inline do Next e dos estilos.
+// chamado pelo formulário do /mapa, e o Umami (contagem de visitas sem cookie, no próprio servidor). 'unsafe-inline' fica por causa do runtime inline do Next e dos estilos.
 const csp = [
   "default-src 'self'",
   // O next dev avalia código com eval (Fast Refresh); em produção isso não existe.
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' ${umami.origem}${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
-  `connect-src 'self' ${site.mcpUrl}`,
+  `connect-src 'self' ${site.mcpUrl} ${umami.origem}`,
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",

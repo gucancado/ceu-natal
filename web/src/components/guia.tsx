@@ -18,9 +18,22 @@ export function GuiaPassos({ c, idioma = "pt" }: { c: Cliente; idioma?: Idioma }
           </li>
         ))}
       </ol>
-      {c.snippet ? <BlocoCodigo codigo={c.snippet.codigo} idioma={idioma} /> : null}
+      {c.snippet ? (
+        <BlocoCodigo
+          codigo={c.snippet.codigo}
+          idioma={idioma}
+          evento={{ nome: "conectar-mcp", dados: { cliente: c.slug, acao: "copiar" } }}
+        />
+      ) : null}
       {c.abrir ? (
-        <a href={c.abrir.url} target="_blank" rel="noopener" className={buttonVariants({ variant: "default", size: "lg" })}>
+        <a
+          href={c.abrir.url}
+          target="_blank"
+          rel="noopener"
+          data-umami-event="conectar-mcp"
+          data-umami-event-cliente={c.slug}
+          data-umami-event-acao="abrir"
+          className={buttonVariants({ variant: "default", size: "lg" })}>
           {rotuloAbrir}
         </a>
       ) : null}

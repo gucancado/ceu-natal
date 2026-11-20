@@ -13,6 +13,7 @@ import type { MapaRapido } from "@/lib/mapa-texto";
 import { promptMapa } from "@/lib/prompt-mapa";
 import { dataValida, signoSolar } from "@/lib/signo-solar";
 import { site } from "@/lib/site";
+import { rastrear } from "@/lib/umami";
 
 const TEMPO_MAX_MS = 15000;
 // Pausa antes do cálculo completo, para não calcular a cada dígito da hora.
@@ -130,6 +131,13 @@ export function MapaProgressivo() {
   const refAno = useRef<HTMLInputElement>(null);
   const refHora = useRef<HTMLInputElement>(null);
   const idPrompt = useId();
+  // Um evento "mapa" por tipo (só a data / completo) a cada visita: os campos recalculam a cada mudança.
+  const contados = useRef(new Set<string>());
+  const contar = (completo: "sim" | "nao") => {
+    if (contados.current.has(completo)) return;
+    contados.current.add(completo);
+    rastrear("mapa", { pagina: "inicio", completo });
+  };
 
   const d = Number(dia);
   const m = Number(mes);
@@ -156,6 +164,7 @@ export function MapaProgressivo() {
           cache.current.set(chaveDia, r.mapa);
           setDoDia({ chave: chaveDia, mapa: r.mapa });
           setErro(null);
+          contar("nao");
         } else setErro(r.erro);
         setCalculando(false);
       })
@@ -187,6 +196,7 @@ export function MapaProgressivo() {
             cache.current.set(chaveCompleta, r.mapa);
             setCompleto({ chave: chaveCompleta, mapa: r.mapa });
             setErro(null);
+            contar("sim");
           } else setErro(r.erro);
           setCalculando(false);
         })
@@ -300,6 +310,7 @@ export function FormContato() {
       }
       setEstado({ tipo: "ok" });
       setValor("");
+      rastrear("contato");
     } catch {
       setEstado({ tipo: "erro", mensagem: "Sem conexão com o servidor. Tente de novo em instantes." });
     }

@@ -62,7 +62,7 @@ export function Comecar({ idioma = "pt" }: { idioma?: Idioma }) {
       {en ? (
         <div className="max-w-[48rem]">
           <p className="mb-4 text-muted-fg">server URL (Streamable HTTP, no authentication, no API key):</p>
-          <BlocoCodigo codigo={site.mcpEndpoint} idioma="en" />
+          <BlocoCodigo codigo={site.mcpEndpoint} idioma="en" evento={{ nome: "conectar-mcp", dados: { cliente: "endereco", acao: "copiar" } }} />
         </div>
       ) : (
         <MapaProgressivo />
