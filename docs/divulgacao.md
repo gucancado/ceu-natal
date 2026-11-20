@@ -45,6 +45,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Diretório de conectores do Claude | Gustavo | aprovado (2026-11-19); falta clicar em Publicar em `claude.ai/directory/manage` (o Claude in Chrome não consegue). A documentação do envio aponta para `mistico…/en`, que redireciona; depois de publicado, a troca é pedida a `directory@anthropic.com` (rascunho pronto no Gmail do Gustavo) |
 | Endereço novo no PR do Docker (#7024) e no campo de site do repositório no GitHub | Claude | feito (2026-11-19) |
 | Endereço novo no Glama | — | não há campo de site; o endereço vem do README do repositório, já corrigido, e entra no próximo sync |
+| Divulgação pela API (`scripts/divulgacao.py`): IndexNow ligado (chave em `web/public/`), Bing, Glama (só leitura) e Search Console | Claude | IndexNow feito e aceito (2026-11-19); Bing, Glama e Google esperam as chaves do [prompt](prompt-chrome-chaves-api.md). Diretório do Claude e Docker não têm API (e-mail e PR) |
 | Endereço novo no MCP Registry | Claude | pendente; vai na próxima versão do servidor (o `server.json` já está certo) |
 | Server card e `robots.txt` no domínio do servidor MCP | Claude | pendente (há trabalho não commitado em `app/`) |
 
