@@ -14,7 +14,7 @@ import { alternativaLlmsEn, imagemOg, site } from "@/lib/site";
 // O <html lang="en"> vem do layout raiz deste grupo.
 const titulo = "Free astrology MCP server with the Swiss Ephemeris";
 const descricao =
-  "Céu Natal is a free, open-source MCP server that calculates natal charts, synastry, transits, progressions and solar and lunar returns with the Swiss Ephemeris. No login, no API key.";
+  "Céu Natal is a free, open-source MCP server for Claude, ChatGPT, Gemini and Manus: natal charts, synastry, transits and returns with the Swiss Ephemeris. No login.";
 
 export const metadata: Metadata = {
   title: { absolute: `${titulo} | ${site.nome}` },
