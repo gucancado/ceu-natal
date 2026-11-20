@@ -31,7 +31,7 @@ pelo mesmo id). Contatos e histórico só saem pelas rotas administrativas
 | `app/core/` | cálculo: `entrada.py` (entrada única de nascimento), `kerykeion.py`, `aspectos.py`, `sintese.py`, `geocoder.py`, `periodos.py`, `revolucoes.py`, `formatter.py`, `validators.py`, `ratelimit.py` |
 | `app/tools/` | um handler por técnica |
 | `tests/` | pytest; fixtures fictícias em `tests/conftest.py` |
-| `scripts/` | `deploy.py` (deploy manual), `validacao_producao.py` |
+| `scripts/` | `deploy.py` (deploy manual), `divulgacao.py` (IndexNow, Bing, Glama e Search Console pela API), `validacao_producao.py` |
 | `docs/` | guia de conexão, distribuição, validação em produção e política de privacidade (`docs/legal/`; os termos ficam em `web/src/content/legal/`) |
 | `web/` | site Next.js |
 
@@ -69,7 +69,7 @@ pelo mesmo id). Contatos e histórico só saem pelas rotas administrativas
 ## Testes
 
 - **Windows:** só a parte que não importa Kerykeion (pyswisseph não compila):
-  `python -m pytest tests/test_server.py tests/test_ratelimit.py tests/test_server_json.py tests/test_deploy_script.py tests/test_periodos.py tests/test_validators.py -q`
+  `python -m pytest tests/test_server.py tests/test_ratelimit.py tests/test_server_json.py tests/test_deploy_script.py tests/test_divulgacao_script.py tests/test_periodos.py tests/test_validators.py -q`
 - **Linux, WSL ou CI:** suíte completa com
   `pip install --require-hashes -r requirements.txt`, `pip install -r requirements-dev.txt`, depois `ruff check .`, `mypy app`
   e `python -m pytest -q`.
