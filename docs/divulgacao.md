@@ -42,7 +42,7 @@ O roteiro para o Claude in Chrome está em [prompt-chrome-divulgacao.md](prompt-
 | Smithery | — | fechou envios em 2026-10-31 |
 | PulseMCP | — | envios pausados; importa do MCP Registry |
 | mcp.so | — | só envio pago (US$ 39); não fazer |
-| Diretório de conectores do Claude | Gustavo | aprovado (2026-11-19); falta clicar em Publicar em `claude.ai/directory/manage` (o Claude in Chrome não consegue). A documentação do envio aponta para `mistico…/en`, que redireciona; depois de publicado, a troca é pedida a `directory@anthropic.com` (rascunho pronto no Gmail do Gustavo) |
+| Diretório de conectores do Claude | Gustavo | publicado em 2026-11-20: https://claude.ai/directory/ceu-natal. A documentação do envio aponta para `mistico…/en`, que redireciona; a troca é pedida a `directory@anthropic.com` (rascunho no Gmail corrigido em 2026-11-20, falta enviar) |
 | Endereço novo no PR do Docker (#7024) e no campo de site do repositório no GitHub | Claude | feito (2026-11-19) |
 | Endereço novo no Glama | — | não há campo de site; o endereço vem do README do repositório, já corrigido, e entra no próximo sync |
 | Divulgação pela API (`scripts/divulgacao.py`): IndexNow ligado (chave em `web/public/`), Bing, Glama (só leitura) e Search Console | Claude | feito (2026-11-20): IndexNow, Bing, Glama e Search Console respondem pelo script; chaves em `scripts/deploy.env` (fora do git). Diretório do Claude e Docker não têm API (e-mail e PR) |
