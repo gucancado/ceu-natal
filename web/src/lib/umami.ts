@@ -3,7 +3,7 @@
 // (data de nascimento, nome, cidade, contato): só o que a pessoa fez e onde.
 export const umami = {
   origem: "https://estatisticas.gustavocancado.com.br",
-  script: "https://estatisticas.gustavocancado.com.br/e.js",
+  script: "https://estatisticas.gustavocancado.com.br/visita.js",
   siteId: "d9f86bab-1b70-4f98-8cfe-5c1d707b47f5",
 } as const;
 
