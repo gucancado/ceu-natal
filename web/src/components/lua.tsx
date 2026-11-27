@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSurgir } from "@/lib/surgir";
 
 // Foto da Lua na fase de agora (NASA, rota /lua-de-hoje), recortada no disco e opaca: tapa o Sol e as
 // estrelas que passam atrás, inclusive na parte escura, como no céu de verdade. A travessia fica em
@@ -48,6 +49,7 @@ function medirRaio(img: HTMLImageElement): number | null {
 
 export function Lua({ className = "" }: { className?: string }) {
   const ref = useRef<HTMLImageElement>(null);
+  useSurgir(ref);
 
   useEffect(() => {
     const img = ref.current;
@@ -76,7 +78,7 @@ export function Lua({ className = "" }: { className?: string }) {
           width={730}
           height={730}
           decoding="async"
-          className="lua-foto size-full"
+          className="lua-foto surge size-full"
         />
       </span>
     </span>
