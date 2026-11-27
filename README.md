@@ -28,7 +28,7 @@ Endpoint MCP público e gratuito (Streamable HTTP, sem login):
 https://astrologia-mcp.gustavocancado.com.br/mcp/
 ```
 
-Passo a passo para Claude, ChatGPT, Gemini, Manus, Cursor e n8n:
+Passo a passo para Claude, ChatGPT, Gemini, Manus, Grok, Cursor e n8n:
 <https://ceunatal.gustavocancado.com.br/#conectar>.
 
 ## O que calcula

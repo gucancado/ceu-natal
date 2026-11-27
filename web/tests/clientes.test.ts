@@ -10,16 +10,16 @@ import { partesTextoGuia } from "../src/lib/texto-guia";
 test("a home mostra um botão só para o Claude e o Manus depois do Gemini", () => {
   assert.deepEqual(
     clientesDaGrade.map((c) => c.nome),
-    ["Claude", "ChatGPT", "Gemini", "Manus", "Cursor", "n8n"],
+    ["Claude", "ChatGPT", "Gemini", "Manus", "Grok", "Cursor", "n8n"],
   );
 });
 
-test("8 clientes com slugs únicos, passos e pelo menos 1 fonte", () => {
+test("9 clientes com slugs únicos, passos e pelo menos 1 fonte", () => {
   assert.deepEqual(
     clientes.map((c) => c.slug),
-    ["claude-ai", "claude-desktop", "claude-code", "chatgpt", "gemini", "manus", "cursor", "n8n"],
+    ["claude-ai", "claude-desktop", "claude-code", "chatgpt", "gemini", "manus", "grok", "cursor", "n8n"],
   );
-  assert.equal(new Set(clientes.map((c) => c.slug)).size, 8);
+  assert.equal(new Set(clientes.map((c) => c.slug)).size, 9);
   for (const c of clientes) {
     assert.ok(c.nome && c.resumo && c.planoMinimo, c.slug);
     assert.ok(c.passos.length > 0, c.slug);

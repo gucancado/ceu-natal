@@ -33,6 +33,13 @@ export const guiasEn: Record<string, GuiaEn> = {
       `Name \`Céu Natal\`, URL \`${site.mcpEndpoint}\`, no authentication. Save.`,
     ],
   },
+  grok: {
+    passos: [
+      "At `grok.com/connectors`, click **New Connector** > **Custom**.",
+      `Name \`Céu Natal\`, URL \`${site.mcpEndpoint}\`, no authentication. Click **Add Connector**.`,
+    ],
+    abrir: "Open Grok connectors",
+  },
   cursor: {
     passos: [
       "Paste the block below into `~/.cursor/mcp.json` and save.",

@@ -54,4 +54,4 @@ export const robosDeIa = [
 
 // Descrição padrão do site (metadata e schema.org).
 export const descricaoSite =
-  "Mapa astral, sinastria, trânsitos e revolução solar calculados com efemérides suíças dentro do Claude, ChatGPT, Gemini e Manus. Grátis e sem cadastro.";
+  "Mapa astral, sinastria, trânsitos e revolução solar calculados com efemérides suíças dentro do Claude, ChatGPT, Gemini, Manus e Grok. Grátis e sem cadastro.";

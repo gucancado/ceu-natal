@@ -16,6 +16,7 @@ const logoDe: Record<string, Logo> = {
   chatgpt: "openai",
   gemini: "gemini",
   manus: "manus",
+  grok: "grok",
   cursor: "cursor",
   n8n: "n8n",
 };

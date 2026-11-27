@@ -42,6 +42,8 @@ APPS_CONHECIDOS: dict[str, str] = {
     "le chat": "Le Chat",
     "mistral": "Le Chat",
     "manus": "Manus",
+    "grok": "Grok",
+    "xai": "Grok",
     "gemini-cli": "Gemini CLI",
     "mcp-inspector": "MCP Inspector",
 }

@@ -8,13 +8,13 @@ import { tools } from "../src/content/tools";
 import { gerarLlmsFull, gerarLlmsTxt, gerarLlmsTxtEn } from "../src/lib/llms";
 import { site } from "../src/lib/site";
 
-test("llms.txt: título, endpoint, 9 tools, 8 guias e privacidade", () => {
+test("llms.txt: título, endpoint, 9 tools, 9 guias e privacidade", () => {
   const txt = gerarLlmsTxt();
   assert.ok(txt.startsWith("# Céu Natal\n"));
   assert.ok(txt.includes(site.mcpEndpoint));
   assert.equal(tools.length, 9);
   for (const t of tools) assert.ok(txt.includes(t.nome), t.nome);
-  assert.equal(clientes.length, 8);
+  assert.equal(clientes.length, 9);
   for (const c of clientes) assert.ok(txt.includes(`${site.url}/?cliente=${c.slug}#conectar`), c.slug);
   assert.ok(txt.includes(`${site.url}/privacidade`));
   assert.ok(txt.includes(String(site.limites.porSessaoPorMin)));
@@ -43,7 +43,7 @@ test("llms-full.txt: política na íntegra, sem o H1 do arquivo", () => {
   assert.ok(!full.includes(h1));
 });
 
-test("llms.txt em inglês: endpoint, 9 tools, 8 guias e os dois sentidos do link", () => {
+test("llms.txt em inglês: endpoint, 9 tools, 9 guias e os dois sentidos do link", () => {
   const en = gerarLlmsTxtEn();
   assert.ok(en.startsWith("# Céu Natal\n"));
   assert.ok(en.includes(site.mcpEndpoint));
