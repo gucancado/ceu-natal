@@ -1,11 +1,14 @@
 // Foto da Lua de agora, servida pelo próprio site (a CSP só libera imagens de 'self').
-import { luaDaHora } from "@/lib/lua-nasa";
+import { luaDaHora, luaReserva } from "@/lib/lua-nasa";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const lua = await luaDaHora();
-  if (!lua) return new Response("Lua indisponível.", { status: 503, headers: { "Cache-Control": "no-store" } });
+  // NASA fora e nada guardado: a foto de reserva na fase mais próxima. Cache curto, para a foto da
+  // NASA voltar assim que ela responder.
+  if (!lua)
+    return new Response(null, { status: 302, headers: { Location: luaReserva(), "Cache-Control": "public, max-age=300" } });
   return new Response(lua.imagem, {
     headers: {
       "Content-Type": "image/jpeg",

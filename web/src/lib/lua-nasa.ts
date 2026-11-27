@@ -13,6 +13,22 @@ export function horaUtc(agora: Date): string {
   return `${agora.toISOString().slice(0, 13)}:00`;
 }
 
+// Reserva para quando a NASA falha: as 8 fases da biblioteca de imagens da NASA (images.nasa.gov,
+// domínio público, mesmo estilo e orientação do Dial-A-Moon) em public/lua/0.jpg (nova) a 7.jpg (minguante).
+const MES_SINODICO = 29.530588853;
+const LUA_NOVA_REF = Date.UTC(2000, 0, 6, 18, 14); // lua nova de 6/1/2000, 18h14 UTC
+
+/** Idade da Lua em dias (0 = nova), pela média do mês sinódico; erra no máximo cerca de meio dia. */
+export function idadeDaLua(agora: Date): number {
+  const dias = (agora.getTime() - LUA_NOVA_REF) / 86400000;
+  return ((dias % MES_SINODICO) + MES_SINODICO) % MES_SINODICO;
+}
+
+/** Caminho da foto de reserva com a fase mais próxima de agora. */
+export function luaReserva(agora = new Date()): string {
+  return `/lua/${Math.round((idadeDaLua(agora) / MES_SINODICO) * 8) % 8}.jpg`;
+}
+
 export async function luaDaHora(agora = new Date()): Promise<LuaDaHora | null> {
   const hora = horaUtc(agora);
   if (guardada?.hora === hora) return guardada;
