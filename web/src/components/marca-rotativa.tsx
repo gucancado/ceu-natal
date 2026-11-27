@@ -6,12 +6,13 @@ import { logos, type Logo } from "@/content/logos";
 import type { Idioma } from "@/lib/idioma";
 
 // Cores oficiais das marcas, em versão para fundo escuro: o laranja do Claude, o degradê azul-roxo-rosa
-// do Gemini, e branco no ChatGPT e no Manus, cujos logos oficiais são monocromáticos.
+// do Gemini, e branco no ChatGPT, no Manus e no Grok, cujos logos oficiais são monocromáticos.
 const marcas: { nome: string; logo: Logo; cor: string; degrade?: string }[] = [
   { nome: "claude", logo: "claude", cor: "#D97757" },
   { nome: "chatgpt", logo: "openai", cor: "#FFFFFF" },
   { nome: "gemini", logo: "gemini", cor: "#9177C7", degrade: "linear-gradient(90deg, #4796E3, #9177C7, #CA6673)" },
   { nome: "manus", logo: "manus", cor: "#FFFFFF" },
+  { nome: "grok", logo: "grok", cor: "#FFFFFF" },
 ];
 
 const TROCA_MS = 2600;
